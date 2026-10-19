@@ -1,0 +1,23 @@
+.hud {
+    position: absolute;
+    top: 20px;
+    right: 24px;
+    padding: 14px 18px;
+    background-color: rgba(9, 15, 24, 0.9);
+    color: rgb(232, 242, 250);
+    font-size: 19px;
+    -unity-text-align: upper-right;
+}
+
+.frame-count {
+    font-size: 26px;
+    -unity-font-style: bold;
+    color: rgb(72, 217, 242);
+    margin-bottom: 8px;
+}
+
+.status {
+    margin-top: 6px;
+    font-size: 16px;
+    color: rgb(247, 201, 124);
+}

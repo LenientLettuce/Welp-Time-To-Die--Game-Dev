@@ -1,0 +1,6 @@
+{
+    "name": "WelpTimeToDie.DashDemo.Tests",
+    "rootNamespace": "WelpTimeToDie.TestDummies.Tests",
+    "references": ["WelpTimeToDie.Combat", "WelpTimeToDie.DashDemo"],
+    "optionalUnityReferences": ["TestAssemblies"]
+}

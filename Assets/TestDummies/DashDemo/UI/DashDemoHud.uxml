@@ -1,0 +1,8 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:Style src="DashDemoHud.uss" />
+    <ui:VisualElement name="demoHud" class="hud" picking-mode="Ignore">
+        <ui:Label name="frameCount" class="frame-count" text="Frames elapsed: 0" picking-mode="Ignore" />
+        <ui:Label name="dashStrength" text="Dash strength: 0.5  [Up / Down]" picking-mode="Ignore" />
+        <ui:Label name="playbackStatus" class="status" text="12 frames/s  |  Space to pause" picking-mode="Ignore" />
+    </ui:VisualElement>
+</ui:UXML>
