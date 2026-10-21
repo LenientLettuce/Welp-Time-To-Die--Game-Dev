@@ -1,0 +1,6 @@
+{
+    "name": "WelpTimeToDie.RectanglePrototype",
+    "rootNamespace": "WelpTimeToDie.RectanglePrototype",
+    "references": ["Unity.InputSystem"],
+    "autoReferenced": false
+}

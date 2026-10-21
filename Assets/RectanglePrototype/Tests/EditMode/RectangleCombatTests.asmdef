@@ -1,0 +1,7 @@
+{
+    "name": "WelpTimeToDie.RectanglePrototype.Tests",
+    "references": ["WelpTimeToDie.RectanglePrototype"],
+    "includePlatforms": ["Editor"],
+    "optionalUnityReferences": ["TestAssemblies"],
+    "autoReferenced": false
+}
