@@ -12,6 +12,12 @@ namespace WelpTimeToDie.Levels
         public Grid Grid => GetComponent<Grid>();
         public BoundsInt PlayableCells => playableCells;
 
+        public void SetPlayableCells(BoundsInt cells)
+        {
+            cells.size = Vector3Int.Max(Vector3Int.one, cells.size);
+            playableCells = cells;
+        }
+
         public Bounds WorldBounds
         {
             get

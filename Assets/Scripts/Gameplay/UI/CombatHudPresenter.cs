@@ -25,10 +25,10 @@ namespace WelpTimeToDie.UI
                 statusLabel = document.rootVisualElement.Q<Label>("playbackStatus");
             }
             if (frameLabel != null) frameLabel.text = $"Frames elapsed: {playback.CurrentFrame}";
-            if (strengthLabel != null) strengthLabel.text = $"Dash strength: {playback.DashStrength:0.0}  [Up / Down]";
+            if (strengthLabel != null) strengthLabel.text = playback.ActionPlayer != null ? "Combat clock: 24 frames / second" : $"Dash strength: {playback.DashStrength:0.0}  [Up / Down]";
             if (statusLabel != null) statusLabel.text = playback.IsPaused
-                ? "PAUSED  |  Space to resume"
-                : $"{CombatPlaybackController.PlaybackFramesPerSecond} frames/s  |  Space to pause";
+                ? "PAUSED · use Play or Next frame"
+                : playback.IsActionActive ? $"Playing at {CombatPlaybackController.PlaybackFramesPerSecond} frames/s" : "Time stopped · choose a move";
         }
 
         private void OnDisable() => frameLabel = strengthLabel = statusLabel = null;

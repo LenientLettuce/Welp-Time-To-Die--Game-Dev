@@ -94,6 +94,7 @@ namespace WelpTimeToDie.Gameplay.Tests
             player.ResetToSpawn();
 
             Assert.That(body.position, Is.EqualTo(start));
+            Assert.That(Vector2.Distance(playerObject.transform.position, start), Is.LessThan(0.001f));
             Assert.That(player.IsDashing, Is.False);
             Assert.That(clock.CurrentFrame, Is.EqualTo(3));
             clock.AdvanceFrames(6);

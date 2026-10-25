@@ -16,8 +16,10 @@ namespace WelpTimeToDie.Player
         [SerializeField] private CombatPhysicsController combatPhysics;
         [SerializeField, Range(0.1f, 1f)] private float dashStrength = 0.5f;
         [SerializeField] private LevelLayout level;
+        [Tooltip("Disable to retain the tuned dash distance when terrain dimensions change.")]
+        [SerializeField] private bool scaleDashWithLevel = true;
         [FormerlySerializedAs("mapWidth")]
-        [Tooltip("Used by isolated actors without a LevelLayout; scene players use the level bounds.")]
+        [Tooltip("Reference width when Scale Dash With Level is off, or no LevelLayout is assigned.")]
         [SerializeField, Min(0.01f)] private float fallbackLevelWidth = 20f;
 
         private Rigidbody2D body;
@@ -27,7 +29,7 @@ namespace WelpTimeToDie.Player
 
         public int FramesRemaining { get; private set; }
         public bool IsDashing => FramesRemaining > 0;
-        public float DashReferenceWidth => level != null ? level.WorldBounds.size.x : fallbackLevelWidth;
+        public float DashReferenceWidth => scaleDashWithLevel && level != null ? level.WorldBounds.size.x : fallbackLevelWidth;
         public float DashDistance => DashReferenceWidth * 0.5f * dashStrength;
         public LevelLayout Level { get => level; set => level = value; }
 
@@ -121,8 +123,18 @@ namespace WelpTimeToDie.Player
                 throw new InvalidOperationException("Reset the player between combat frames.");
             CancelDash();
             body.position = startingPosition;
+            // Manual simulation can remain idle after reset; update the rendered pose too.
+            transform.position = new Vector3(startingPosition.x, startingPosition.y, transform.position.z);
             body.angularVelocity = 0f;
             Physics2D.SyncTransforms();
+        }
+
+        public void SetSpawnPosition(Vector2 position)
+        {
+            if (combatPhysics != null && combatPhysics.IsAdvancing)
+                throw new InvalidOperationException("Set the spawn between combat frames.");
+            startingPosition = position;
+            ResetToSpawn();
         }
 
         private void CancelDash()

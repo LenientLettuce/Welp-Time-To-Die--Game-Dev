@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 using WelpTimeToDie.Playback;
+using UnityEngine.UIElements;
 
 namespace WelpTimeToDie.Input
 {
@@ -8,12 +9,15 @@ namespace WelpTimeToDie.Input
     public sealed class PlayerKeyboardInput : MonoBehaviour
     {
         [SerializeField] private CombatPlaybackController playback;
+        [SerializeField] private UIDocument hud;
 
         private void Update()
         {
             if (playback == null || !playback.isActiveAndEnabled || !playback.IsReady) return;
             var keyboard = Keyboard.current;
-            if (keyboard != null)
+            var focused = hud != null ? hud.rootVisualElement?.focusController?.focusedElement as VisualElement : null;
+            bool enteringText = focused is TextField || focused?.GetFirstAncestorOfType<TextField>() != null;
+            if (keyboard != null && !enteringText)
             {
                 int strengthSteps = (keyboard.upArrowKey.wasPressedThisFrame ? 1 : 0)
                     - (keyboard.downArrowKey.wasPressedThisFrame ? 1 : 0);

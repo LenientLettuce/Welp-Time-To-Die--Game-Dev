@@ -13,6 +13,7 @@ namespace WelpTimeToDie.Playback
 
         [SerializeField] private CombatPhysicsController combatPhysics;
         [SerializeField] private PlayerDashController player;
+        [SerializeField] private PlayerActionController actionPlayer;
 
         private double playbackSeconds;
 
@@ -27,20 +28,50 @@ namespace WelpTimeToDie.Playback
 
         public void SetPaused(bool paused) => IsPaused = paused;
 
+        public void BindActions(CombatPhysicsController clock, PlayerActionController actor)
+        {
+            combatPhysics = clock != null ? clock : throw new ArgumentNullException(nameof(clock));
+            actionPlayer = actor != null ? actor : throw new ArgumentNullException(nameof(actor));
+            player = null;
+            playbackSeconds = 0d;
+        }
+
+        public bool IsActionActive => actionPlayer != null ? actionPlayer.IsBusy : player != null && player.IsDashing;
+        public PlayerActionController ActionPlayer => actionPlayer;
+
+        public bool TryAction(PlayerMove move, Vector2 direction, float strength)
+        {
+            if (!IsReady || actionPlayer == null) return false;
+            bool started = actionPlayer.TryStart(move, direction, strength);
+            if (started) playbackSeconds = 0d;
+            return started;
+        }
+
+        public bool StepFrame()
+        {
+            if (!IsReady || combatPhysics.IsAdvancing) return false;
+            IsPaused = true;
+            playbackSeconds = 0d;
+            combatPhysics.AdvanceFrames(1);
+            return true;
+        }
+
         public void AdjustStrength(int steps)
         {
             if (player != null)
                 player.DashStrength = Mathf.Round((player.DashStrength + steps * 0.1f) * 10f) / 10f;
         }
 
-        public bool IsReady => combatPhysics != null && player != null &&
-            player.isActiveAndEnabled && combatPhysics.isActiveAndEnabled && !combatPhysics.IsFaulted;
+        public bool IsReady => combatPhysics != null &&
+            (actionPlayer != null ? actionPlayer.isActiveAndEnabled : player != null && player.isActiveAndEnabled) &&
+            combatPhysics.isActiveAndEnabled && !combatPhysics.IsFaulted;
         public long CurrentFrame => combatPhysics != null ? combatPhysics.CurrentFrame : 0;
         public float DashStrength => player != null ? player.DashStrength : 0f;
 
         public bool TryDash(int direction)
         {
             if (!IsReady || IsPaused || direction == 0) return false;
+            if (actionPlayer != null) return TryAction(PlayerMove.Dash, Vector2.right * direction, 0.5f);
             bool started = direction < 0 ? player.DashLeft() : player.DashRight();
             if (started) playbackSeconds = 0d;
             return started;
@@ -48,6 +79,7 @@ namespace WelpTimeToDie.Playback
 
         public void ResetPlayer()
         {
+            if (actionPlayer != null) actionPlayer.ResetToSpawn();
             if (player != null) player.ResetToSpawn();
             playbackSeconds = 0d;
         }
@@ -62,20 +94,19 @@ namespace WelpTimeToDie.Playback
                 throw new ArgumentOutOfRangeException(nameof(realSeconds));
             if (IsPaused)
                 return;
-            if (combatPhysics == null || player == null || !player.isActiveAndEnabled ||
-                !combatPhysics.isActiveAndEnabled || combatPhysics.IsFaulted || !player.IsDashing)
+            if (!IsReady || !IsActionActive)
             {
                 playbackSeconds = 0d;
                 return;
             }
 
             playbackSeconds += realSeconds;
-            while (!IsPaused && player.IsDashing && playbackSeconds >= PlaybackFrameDuration)
+            while (!IsPaused && IsActionActive && playbackSeconds >= PlaybackFrameDuration)
             {
                 playbackSeconds -= PlaybackFrameDuration;
                 combatPhysics.AdvanceFrames(1);
             }
-            if (!player.IsDashing)
+            if (!IsActionActive)
                 playbackSeconds = 0d;
         }
 
