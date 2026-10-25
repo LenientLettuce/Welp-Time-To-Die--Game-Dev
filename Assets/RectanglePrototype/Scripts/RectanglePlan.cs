@@ -34,7 +34,7 @@ namespace WelpTimeToDie.RectanglePrototype
             else if (dealt > 0) plan.Summary = $"Attack hits: enemy loses {dealt} HP. You take no damage.";
             else if (taken > 0) plan.Summary = $"You get hit: lose {taken} HP. Try blocking or moving away.";
             else if (!live.Player.IsReady) plan.Summary = "Your move finishes. Ready to choose again.";
-            else if (move == CombatMove.Punch) plan.Summary = "Attack misses. Face the enemy and move closer.";
+            else if (RectangleCombat.Spec(live.Player, move).Damage > 0) plan.Summary = "Attack misses. Face the enemy and move closer.";
             else if (move == CombatMove.Move) plan.Summary = Math.Abs(simulation.Player.X - live.Player.X) < 0.05f
                 ? "Movement blocked by the arena edge." : "Move finishes safely. Neither fighter takes damage.";
             else if (move == CombatMove.Block)

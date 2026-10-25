@@ -6,17 +6,17 @@ namespace WelpTimeToDie.RectanglePrototype
     public struct MoveSpec
     {
         public string Name;
-        public int Startup, Duration, Recharge, Damage, Stun;
-        public float Reach, Push;
+        public int Startup, Duration, Recharge, Damage, Stun, Active;
+        public float Reach, Push, Launch;
         public bool Projectile, Unstoppable;
 
         public MoveSpec(string name, int startup, int duration, int recharge = 0,
             int damage = 0, float reach = 0, float push = 0, int stun = 0,
-            bool projectile = false, bool unstoppable = false)
+            bool projectile = false, bool unstoppable = false, int active = 1, float launch = 0)
         {
             Name = name; Startup = startup; Duration = duration; Recharge = recharge;
             Damage = damage; Reach = reach; Push = push; Stun = stun;
-            Projectile = projectile; Unstoppable = unstoppable;
+            Projectile = projectile; Unstoppable = unstoppable; Active = active; Launch = launch;
         }
     }
 
@@ -86,6 +86,9 @@ namespace WelpTimeToDie.RectanglePrototype
                 case CombatMove.Dash: return new MoveSpec("Dash", 0, 6, 12);
                 case CombatMove.Jump: return new MoveSpec("Jump", 0, 12, 16);
                 case CombatMove.Punch: return new MoveSpec("Punch", 4, 9, 12, 2, 2.3f, 3, 4);
+                case CombatMove.Uppercut: return new MoveSpec("Uppercut", 6, 15, 15, 3, 2.1f, 2, 12, active: 2, launch: 11);
+                case CombatMove.Kick: return new MoveSpec("Kick", 7, 16, 16, 3, 3.3f, 9, 9, active: 3);
+                case CombatMove.DashKick: return new MoveSpec("Dash kick", 8, 21, 24, 3, 2.5f, 11, 10, active: 4);
                 case CombatMove.Heavy: return fighter.Armored
                     ? new MoveSpec("UNSTOPPABLE SLAM", 12, 22, 28, 4, 3.2f, 9, 8, unstoppable: true)
                     : new MoveSpec("Heavy strike", 9, 18, 24, 4, 3, 8, 7);
@@ -93,7 +96,7 @@ namespace WelpTimeToDie.RectanglePrototype
                 case CombatMove.Special:
                     if (fighter.Class == FighterClass.Wizard) return new MoveSpec("Fireball", 10, 16, 28, 3, 0, 7, 6, true);
                     if (fighter.Class == FighterClass.Rogue) return new MoveSpec("Throw dagger", 5, 11, 18, 2, 0, 3, 4, true);
-                    return new MoveSpec("Uppercut", 7, 14, 22, 3, 2.6f, 6, 8);
+                    return new MoveSpec("Uppercut", 7, 14, 22, 3, 2.6f, 6, 8, launch: 8);
                 case CombatMove.Wait: return new MoveSpec("Hold", 0, 4);
                 default: return new MoveSpec("Ready", 0, 0);
             }
@@ -101,7 +104,7 @@ namespace WelpTimeToDie.RectanglePrototype
 
         public bool CanStart(int index, CombatMove move)
         {
-            if (Finished || index < 0 || index >= Fighters.Count || move == CombatMove.None) return false;
+            if (Finished || index < 0 || index >= Fighters.Count || move <= CombatMove.None || (int)move >= Enum.GetValues(typeof(CombatMove)).Length) return false;
             var fighter = Fighters[index];
             return fighter.IsReady && fighter.Cooldowns[(int)move] == 0 && (move != CombatMove.Jump || fighter.IsGrounded);
         }
@@ -114,7 +117,7 @@ namespace WelpTimeToDie.RectanglePrototype
             if (length < 0.001) { aimX = fighter.Facing; aimY = 0; length = 1; }
             fighter.AimX = (float)(aimX / length); fighter.AimY = (float)(aimY / length);
             if (Math.Abs(aimX) > 0.01f) fighter.Facing = aimX < 0 ? -1 : 1;
-            fighter.Move = move; fighter.Elapsed = 0;
+            fighter.Move = move; fighter.Elapsed = 0; fighter.HitTargets = 0;
             fighter.Power = Clamp(power, 0.1f, 1);
             fighter.Cooldowns[(int)move] = Spec(fighter, move).Recharge;
             return true;
@@ -177,8 +180,17 @@ namespace WelpTimeToDie.RectanglePrototype
                         if (fighter.Move == CombatMove.Move) move = fighter.Facing * 2.4f / 8 * FramesPerSecond;
                         if (fighter.Move == CombatMove.Dash) move = fighter.Facing * 5f * fighter.Power / 6 * FramesPerSecond;
                         if (fighter.Move == CombatMove.Jump) move = fighter.Facing * 3;
+                        if (fighter.Move == CombatMove.DashKick && fighter.Elapsed <= Spec(fighter, fighter.Move).Startup)
+                            move = fighter.Facing * 10.5f;
                     }
-                    fighter.X = Clamp(fighter.X + (move + fighter.VelocityX) * dt, 0.6f, Width - 0.6f);
+                    float nextX = Clamp(fighter.X + (move + fighter.VelocityX) * dt, 0.6f, Width - 0.6f);
+                    if (fighter.Move == CombatMove.DashKick && move != 0)
+                        foreach (var other in Fighters)
+                            if (other.IsAlive && other.IsPlayer != fighter.IsPlayer && Math.Abs(other.Y - fighter.Y) < 1.6f
+                                && (other.X - fighter.X) * fighter.Facing > 0
+                                && (other.X - nextX) * fighter.Facing < 0.9f)
+                                nextX = (other.X - fighter.X) * fighter.Facing < 0.9f ? fighter.X : other.X - fighter.Facing * 0.9f;
+                    fighter.X = nextX;
                     fighter.VelocityX *= 0.90f;
                     fighter.VelocityY -= 30 * dt; fighter.Y += fighter.VelocityY * dt;
                     if (fighter.Y < Ground) { fighter.Y = Ground; fighter.VelocityY = 0; }
@@ -191,7 +203,7 @@ namespace WelpTimeToDie.RectanglePrototype
                 var attacker = Fighters[i];
                 if (!attacker.IsAlive || stunnedThisFrame.Contains(attacker) || attacker.Move == CombatMove.None) continue;
                 MoveSpec spec = Spec(attacker, attacker.Move);
-                if (spec.Damage == 0 || attacker.Elapsed != spec.Startup) continue;
+                if (spec.Damage == 0 || (attacker.Elapsed < spec.Startup || attacker.Elapsed >= spec.Startup + spec.Active)) continue;
                 if (spec.Projectile)
                 {
                     float speed = attacker.Class == FighterClass.Rogue ? 26 : 18;
@@ -200,8 +212,11 @@ namespace WelpTimeToDie.RectanglePrototype
                     LastEvent = $"{attacker.Name} released {spec.Name}. Travel time still matters.";
                 }
                 else for (int t = 0; t < Fighters.Count; t++)
-                    if (Opponents(i, t) && Fighters[t].IsAlive && MeleeOverlaps(attacker, Fighters[t], spec.Reach))
+                    if (Opponents(i, t) && Fighters[t].IsAlive && (attacker.HitTargets & (1 << t)) == 0 && MeleeOverlaps(attacker, Fighters[t], spec.Reach))
+                    {
+                        attacker.HitTargets |= 1 << t;
                         hits.Add(new Hit { Attacker = i, Target = t, Spec = spec, Direction = attacker.Facing });
+                    }
             }
             foreach (var hit in hits) ApplyHit(hit);
             foreach (var fighter in Fighters)
@@ -278,7 +293,7 @@ namespace WelpTimeToDie.RectanglePrototype
                 target.Move = CombatMove.None; target.Elapsed = 0;
                 target.Stun = target.IsAlive ? hit.Spec.Stun : 0;
                 target.VelocityX = hit.Direction * hit.Spec.Push;
-                if (attacker.Move == CombatMove.Special && attacker.Class == FighterClass.Barbarian) target.VelocityY = 8;
+                if (hit.Spec.Launch > 0) target.VelocityY = hit.Spec.Launch;
             }
             LastEvent = !target.IsAlive ? $"{target.Name} defeated." : counter
                 ? $"COUNTER! {target.Name}'s wind-up cancelled. Stunned for {hit.Spec.Stun} frames."

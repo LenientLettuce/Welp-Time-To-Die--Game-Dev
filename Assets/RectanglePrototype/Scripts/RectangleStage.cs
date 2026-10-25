@@ -31,7 +31,7 @@ namespace WelpTimeToDie.RectanglePrototype
             var enemy = world.Fighters[1];
             enemy.Move = CombatMove.None;
             enemy.Elapsed = 0;
-            enemy.Cooldowns = new int[9];
+            System.Array.Clear(enemy.Cooldowns, 0, enemy.Cooldowns.Length);
             world.PlanEnemies();
         }
 
@@ -73,11 +73,17 @@ namespace WelpTimeToDie.RectanglePrototype
                 Box(fighter.X + fighter.Facing * 0.65f, fighter.Y + 0.9f, 0.1f, 1.9f, Blue);
             if (fighter.Move == CombatMove.None || fighter.Stun > 0) return;
             var move = RectangleCombat.Spec(fighter, fighter.Move);
-            if (move.Damage <= 0 || move.Projectile || fighter.Elapsed > move.Startup) return;
+            if (move.Damage <= 0 || move.Projectile) return;
+            bool active = fighter.Elapsed >= move.Startup && fighter.Elapsed < move.Startup + move.Active;
+            float anticipation = fighter.Elapsed < move.Startup ? (float)fighter.Elapsed / move.Startup : 0;
+            body.transform.localScale = new Vector3(0.9f + anticipation * 0.16f, 1.8f - anticipation * 0.18f, 1);
+            float progress = (float)fighter.Elapsed / move.Duration;
+            Box(fighter.X - 0.55f + progress * 0.55f, fighter.Y + 2.3f, 1.1f * progress, 0.06f,
+                active ? Color.white : fighter.Elapsed < move.Startup ? new Color(1f, 0.7f, 0.2f) : new Color(0.4f, 0.5f, 0.6f));
             // Brief strike range only; wind-up information stays in the one-line HUD.
-            if (fighter.Elapsed == move.Startup)
+            if (active)
                 Box(fighter.X + fighter.Facing * (0.45f + move.Reach / 2), fighter.Y + 0.9f,
-                    move.Reach, 0.6f, new Color(1f, 0.8f, 0.25f, 0.7f));
+                    move.Reach, move.Launch > 0 ? 1.6f : 0.6f, new Color(1f, 0.8f, 0.25f, 0.7f));
         }
 
         private void Box(float x, float y, float width, float height, Color color)

@@ -80,12 +80,18 @@ namespace WelpTimeToDie.RectanglePrototype
             row.style.flexWrap = Wrap.Wrap;
             footer.Add(row);
             AddMove(row, CombatMove.Move, "Move", "Move in the direction you click, over 8 combat frames.");
-            AddMove(row, CombatMove.Punch, "Attack", "Punch toward your click. Hits after 4 frames; finishes after 9.");
+            AddMove(row, CombatMove.Punch, "Punch", "Punch toward your click. Hits after 4 frames; finishes after 9.");
+            AddMove(row, CombatMove.Uppercut, "Uppercut", "6-frame startup. Launches into 12 frames of hitstun; punishable on a miss.");
+            AddMove(row, CombatMove.Kick, "Kick", "7-frame startup. Longer reach and strong pushback; active for 3 frames.");
+            AddMove(row, CombatMove.DashKick, "Dash kick", "Rush forward for 8 frames, then strike. Long recovery; commit carefully.");
             AddMove(row, CombatMove.Block, "Block", "Face your click and reduce incoming frontal damage.");
             AddMove(row, CombatMove.Wait, "Wait", "Let 4 combat frames pass without moving.");
-            previewButton = AddButton(row, "Watch preview", WatchPreview);
+            var actions = new VisualElement();
+            actions.style.flexDirection = FlexDirection.Row;
+            footer.Add(actions);
+            previewButton = AddButton(actions, "Watch preview", WatchPreview);
             previewButton.tooltip = "Rehearse exactly the next Go action, then return to the unchanged live position.";
-            goButton = AddButton(row, "Go  >", Commit);
+            goButton = AddButton(actions, "Go  >", Commit);
             goButton.style.backgroundColor = new Color(0.12f, 0.40f, 0.46f);
             help = new Label();
             help.style.fontSize = 12;
@@ -95,7 +101,7 @@ namespace WelpTimeToDie.RectanglePrototype
             footer.Add(help);
 
             // Reserve space for the two HUD strips without shrinking the world into a UI box.
-            stage.ArenaCamera.rect = new Rect(0, 0.18f, 1, 0.74f);
+            stage.ArenaCamera.rect = new Rect(0, 0.27f, 1, 0.65f);
             Restart();
         }
 
@@ -224,7 +230,9 @@ namespace WelpTimeToDie.RectanglePrototype
             while ((playing || watching) && playbackTime >= 1d / 12)
             {
                 playbackTime -= 1d / 12;
+                var previous = watching && rehearsalFrame != null ? rehearsalFrame : world;
                 var next = activePlan.Frames[playbackIndex++];
+                bool impact = next.Player.Health < previous.Player.Health || next.Fighters[1].Health < previous.Fighters[1].Health;
                 if (watching) rehearsalFrame = next;
                 else world = next.Copy();
                 if (playbackIndex == activePlan.Frames.Count)
@@ -243,6 +251,7 @@ namespace WelpTimeToDie.RectanglePrototype
                     break;
                 }
                 else Render();
+                if (impact) { playbackTime = -0.065; break; }
             }
         }
 
@@ -252,7 +261,10 @@ namespace WelpTimeToDie.RectanglePrototype
             var enemy = shown.Fighters[1];
             string phase = watching ? "PREVIEW - nothing committed" : world.Lost ? "You died - Reset to retry" : world.Won ? "You win!" : playing ? "Playing..."
                 : !world.Player.IsReady ? "Move still running - Continue" : "Paused";
-            status.text = $"{phase}    |    You {shown.Player.Health} HP    Enemy {enemy.Health} HP";
+            string intent = !enemy.IsAlive ? "Defeated" : enemy.Stun > 0 ? $"Stunned {enemy.Stun}f" : enemy.Move == CombatMove.None ? "Ready"
+                : enemy.Elapsed < RectangleCombat.Spec(enemy, enemy.Move).Startup ? $"{RectangleCombat.Spec(enemy, enemy.Move).Name} in {RectangleCombat.Spec(enemy, enemy.Move).Startup - enemy.Elapsed}f"
+                : $"{RectangleCombat.Spec(enemy, enemy.Move).Name} ({enemy.Remaining}f left)";
+            status.text = $"{phase} | You {shown.Player.Health} HP | Enemy {enemy.Health} HP - {intent}";
             // Enemy intent is available on hover instead of taking another row of screen space.
             var enemyMove = RectangleCombat.Spec(enemy, enemy.Move);
             status.tooltip = enemy.IsAlive && enemy.Move != CombatMove.None
@@ -270,7 +282,7 @@ namespace WelpTimeToDie.RectanglePrototype
             previewButton.text = watching ? "Stop preview" : "Watch preview";
             previewButton.SetEnabled(!playing && !world.Finished);
             if (!watching) previewButton.SetEnabled(!playing && plan != null);
-            string moveName = selected == CombatMove.Punch ? "Attack" : selected.ToString();
+            string moveName = RectangleCombat.Spec(world.Player, selected).Name;
             help.text = watching ? (previewHold >= 0 ? activePlan.Summary : $"Previewing {activePlan.MoveName}... Your real position and health are safe.")
                 : world.Finished ? "Reset to try again."
                 : playing ? "Resolving your move..."

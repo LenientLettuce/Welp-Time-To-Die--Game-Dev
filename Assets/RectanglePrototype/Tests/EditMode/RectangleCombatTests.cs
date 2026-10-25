@@ -100,6 +100,56 @@ namespace WelpTimeToDie.RectanglePrototype.Tests
             Assert.That(live.Player.X, Is.EqualTo(8));
         }
 
+        [TestCase(CombatMove.Punch)]
+        [TestCase(CombatMove.Uppercut)]
+        [TestCase(CombatMove.Kick)]
+        [TestCase(CombatMove.DashKick)]
+        public void EveryAttackHitsOnceAndRehearsalMatchesPlayback(CombatMove move)
+        {
+            var live = RectangleCombat.CreateBasic(FighterClass.Barbarian);
+            var enemy = live.Fighters[1];
+            enemy.Move = CombatMove.None; enemy.Stun = 100; enemy.Health = enemy.MaxHealth = 30;
+            enemy.X = live.Player.X + 2;
+            var plan = RectanglePlan.Create(live, move, 1);
+            Assert.That(live.Start(0, move, 1, 0), Is.True);
+            foreach (var expected in plan.Frames)
+            {
+                live.Step(); live.PlanEnemies();
+                Assert.That(live.Player.X, Is.EqualTo(expected.Player.X));
+                Assert.That(live.Fighters[1].Health, Is.EqualTo(expected.Fighters[1].Health));
+                Assert.That(live.Fighters[1].Y, Is.EqualTo(expected.Fighters[1].Y));
+                Assert.That(live.Player.HitTargets, Is.EqualTo(expected.Player.HitTargets));
+            }
+            Assert.That(enemy.Health, Is.EqualTo(30 - RectangleCombat.Spec(live.Player, move).Damage));
+            Assert.That(live.Player.IsReady, Is.True);
+            if (move == CombatMove.Uppercut) Assert.That(enemy.Y, Is.GreaterThan(RectangleCombat.Ground));
+        }
+
+        [Test]
+        public void DashKickClosesDistanceWithoutPassingThroughTheTarget()
+        {
+            var world = RectangleCombat.CreateBasic(FighterClass.Barbarian);
+            var enemy = world.Fighters[1];
+            enemy.Move = CombatMove.None; enemy.Stun = 100;
+            world.Start(0, CombatMove.DashKick, 1, 0);
+            for (int i = 0; i < 8; i++) world.Step();
+            Assert.That(world.Player.X, Is.LessThan(enemy.X));
+            Assert.That(enemy.Health, Is.EqualTo(4));
+        }
+
+        [TestCase(CombatMove.Uppercut)]
+        [TestCase(CombatMove.Kick)]
+        [TestCase(CombatMove.DashKick)]
+        public void NewAttacksRespectFacingAndReportMisses(CombatMove move)
+        {
+            var world = RectangleCombat.CreateBasic(FighterClass.Barbarian);
+            world.Fighters[1].Move = CombatMove.None; world.Fighters[1].Stun = 100;
+            var plan = RectanglePlan.Create(world, move, -1);
+            Assert.That(plan.Summary, Does.Contain("misses"));
+            Assert.That(world.Player.Cooldowns[(int)move], Is.Zero);
+            Assert.That(plan.Frames[plan.Frames.Count - 1].Fighters[1].Health, Is.EqualTo(7));
+        }
+
         private static void Advance(RectangleCombat world, int count)
         {
             for (int i = 0; i < count; i++) { world.Step(); world.PlanEnemies(); }
