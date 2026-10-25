@@ -19,6 +19,7 @@ namespace WelpTimeToDie.Player
         public Rigidbody2D Body => body;
         public BoxCollider2D BodyCollider => bodyCollider;
         public ProceduralTerrainMap Terrain => terrain;
+        public TerrainFeatureState TerrainStateOverride { get; set; }
 
         public bool IsGrounded
         {
@@ -81,7 +82,7 @@ namespace WelpTimeToDie.Player
             if (terrain == null || terrain.HeightMap == null || Mathf.Abs(distance) < 0.0001f) return;
             Bounds bounds = bodyCollider.bounds;
             float desiredX = body.position.x + distance;
-            float surface = terrain.GetSurfaceHeight(desiredX, bounds.extents.x - 0.01f);
+            float surface = terrain.GetStepSurfaceHeight(desiredX, bounds.extents.x - 0.01f, bounds.min.y, maximumStepHeight, TerrainStateOverride);
             float rise = surface - bounds.min.y;
             if (rise > 0.03f && rise <= maximumStepHeight + 0.02f)
             {

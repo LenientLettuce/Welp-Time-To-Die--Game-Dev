@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.Tilemaps;
+using WelpTimeToDie.Levels;
 
 namespace WelpTimeToDie.Player
 {
@@ -13,6 +15,10 @@ namespace WelpTimeToDie.Player
         private Scene predictionScene;
         private PhysicsScene2D predictionPhysics;
         private PlayerMovementMotor predictionMotor;
+        private Tilemap predictedTiles;
+        private TilemapCollider2D predictedCollider;
+        private TerrainFeatureState predictedTerrainState;
+        private int cachedTerrainRevision = -1;
         private WelpTimeToDie.Levels.TerrainHeightMap cachedTerrain;
         private SpriteRenderer ghost;
         private LineRenderer path;
@@ -45,12 +51,12 @@ namespace WelpTimeToDie.Player
         {
             bool available = player.State.CanStart(selection.Move, player.Motor.IsGrounded);
             ghost.enabled = path.enabled = available;
-            if (!available) { cachedRevision = -1; return; }
+            if (!available) { player.Motor.Terrain?.Features?.ClearPreview(); cachedRevision = -1; return; }
             var map = player.Motor.Terrain;
             if (map == null || map.HeightMap == null) return;
             bool mapChanged = cachedTerrain != map.HeightMap;
             if (mapChanged) RebuildWorld();
-            if (cachedRevision != selection.Revision || cachedFrame != player.Clock.CurrentFrame || mapChanged ||
+            if (cachedRevision != selection.Revision || cachedFrame != player.Clock.CurrentFrame || mapChanged || cachedTerrainRevision != (map.Features?.Revision ?? 0) ||
                 cachedPosition != player.Motor.Body.position || cachedVelocity != player.Motor.Body.linearVelocity)
                 Recalculate();
         }
@@ -80,11 +86,11 @@ namespace WelpTimeToDie.Player
             ground.transform.localPosition = sourceTiles.transform.localPosition;
             ground.transform.localRotation = sourceTiles.transform.localRotation;
             ground.transform.localScale = sourceTiles.transform.localScale;
-            var predictedTiles = ground.GetComponent<UnityEngine.Tilemaps.Tilemap>();
-            var groundCollider = ground.AddComponent<UnityEngine.Tilemaps.TilemapCollider2D>();
+            predictedTiles = ground.GetComponent<Tilemap>();
+            predictedCollider = ground.AddComponent<TilemapCollider2D>();
             predictedTiles.tileAnchor = sourceTiles.Tilemap.tileAnchor;
             predictedTiles.SetTilesBlock(terrain.Layout.PlayableCells, sourceTiles.Tilemap.GetTilesBlock(terrain.Layout.PlayableCells));
-            groundCollider.ProcessTilemapChanges();
+            predictedCollider.ProcessTilemapChanges();
             foreach (var wall in terrain.GetComponentsInChildren<BoxCollider2D>())
                 AddStaticBox("Prediction boundary", wall.bounds.center, wall.bounds.size);
             var bodyObject = new GameObject("Prediction physics body");
@@ -114,6 +120,11 @@ namespace WelpTimeToDie.Player
             cachedFrame = player.Clock.CurrentFrame;
             cachedPosition = player.Motor.Body.position;
             cachedVelocity = player.Motor.Body.linearVelocity;
+            var features = player.Motor.Terrain.Features;
+            cachedTerrainRevision = features?.Revision ?? 0;
+            predictedTerrainState = features?.State.Copy();
+            predictionMotor.TerrainStateOverride = predictedTerrainState;
+            if (features != null) RefreshPredictionTerrain();
             predictionMotor.Body.simulated = false;
             predictionMotor.Teleport(player.Motor.Body.position);
             predictionMotor.Body.simulated = true;
@@ -130,10 +141,12 @@ namespace WelpTimeToDie.Player
                 predictionMotor.BeginFrame(state);
                 for (int step = 0; step < steps; step++)
                 {
+                    EvaluatePredictionTerrain();
                     predictionMotor.PrepareStep(state, seconds);
                     Physics2D.SyncTransforms();
                     predictionPhysics.Simulate(seconds);
                 }
+                EvaluatePredictionTerrain();
                 var completed = state.Move;
                 if (state.FinishFrame()) predictionMotor.FinishAction(completed);
                 points.Add(predictionMotor.Body.position);
@@ -143,6 +156,21 @@ namespace WelpTimeToDie.Player
             ghost.transform.position = PredictedPosition;
             path.positionCount = points.Count;
             path.SetPositions(points.ToArray());
+            if (features != null) features.Visuals.RenderPreview(predictedTerrainState);
+        }
+
+        private void EvaluatePredictionTerrain()
+        {
+            var features = player.Motor.Terrain.Features;
+            if (features != null && features.Evaluate(predictedTerrainState, predictionMotor.BodyCollider.bounds, predictionMotor.Body.linearVelocity.y))
+                RefreshPredictionTerrain();
+        }
+        private void RefreshPredictionTerrain()
+        {
+            var terrain = player.Motor.Terrain;
+            predictedTiles.SetTilesBlock(terrain.Layout.PlayableCells, terrain.Features.Visuals.BuildTiles(predictedTerrainState));
+            predictedCollider.ProcessTilemapChanges();
+            Physics2D.SyncTransforms();
         }
 
         private void ReleaseWorld()
@@ -156,6 +184,7 @@ namespace WelpTimeToDie.Player
         }
         private void OnDisable()
         {
+            if (player != null) player.Motor.Terrain?.Features?.ClearPreview();
             if (ghost != null) ghost.enabled = false;
             if (path != null) path.enabled = false;
             ReleaseWorld();

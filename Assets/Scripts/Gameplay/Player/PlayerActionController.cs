@@ -55,9 +55,14 @@ namespace WelpTimeToDie.Player
         }
 
         private void BeginFrame(long frame, float seconds) { State.BeginFrame(); motor.BeginFrame(State); }
-        private void PrepareStep(long frame, int step, float seconds) => motor.PrepareStep(State, seconds);
+        private void PrepareStep(long frame, int step, float seconds)
+        {
+            if (State.IsBusy) terrain?.Features?.AdvanceCommitted(motor.BodyCollider.bounds, motor.Body.linearVelocity.y);
+            motor.PrepareStep(State, seconds);
+        }
         private void FinishFrame(long frame)
         {
+            if (State.IsBusy) terrain?.Features?.AdvanceCommitted(motor.BodyCollider.bounds, motor.Body.linearVelocity.y);
             PlayerMove completed = State.Move;
             if (State.FinishFrame()) motor.FinishAction(completed);
         }
@@ -66,8 +71,7 @@ namespace WelpTimeToDie.Player
         {
             if (terrain != null && terrain.HeightMap != null)
             {
-                float x = terrain.Layout.WorldBounds.center.x;
-                spawnPosition = new Vector2(x, terrain.GetSurfaceHeight(x, motor.BodyCollider.bounds.extents.x) + motor.BodyCollider.bounds.extents.y + 0.02f);
+                spawnPosition = PlayerSpawnPlacement.Calculate(terrain, motor.BodyCollider);
             }
             ResetToSpawn();
         }

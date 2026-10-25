@@ -15,11 +15,11 @@ namespace WelpTimeToDie.Gameplay.Tests
         {
             var map = new TerrainHeightGenerator().Generate(new TerrainSettings(width, height), "terrain-test");
             Assert.That(map.Width, Is.EqualTo(width));
-            Assert.That(map.Height, Is.EqualTo(height));
+            Assert.That(map.Height, Is.EqualTo(height + 5));
             for (int x = 0; x < width; x++)
             {
                 int top = map.GetColumnHeight(x);
-                Assert.That(top, Is.InRange(1, height - 3));
+                Assert.That(top, Is.InRange(6, height + 2));
                 for (int y = 0; y < top; y++) Assert.That(map.IsSolid(x, y), Is.True);
                 Assert.That(map.IsSolid(x, top), Is.False);
                 if (x > 0) Assert.That(Mathf.Abs(top - map.GetColumnHeight(x - 1)), Is.LessThanOrEqualTo(1));

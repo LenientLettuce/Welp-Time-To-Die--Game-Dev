@@ -8,6 +8,7 @@ namespace WelpTimeToDie.Levels
     public sealed class TerrainTilemapRenderer : MonoBehaviour
     {
         [SerializeField] private TileBase groundTile;
+        public TileBase GroundTile => groundTile;
         public Tilemap Tilemap => GetComponent<Tilemap>();
 
         public void Render(TerrainHeightMap map, BoundsInt cells)

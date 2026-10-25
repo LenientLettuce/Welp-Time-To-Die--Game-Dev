@@ -14,6 +14,8 @@ namespace WelpTimeToDie.Levels
         [Tooltip("Map height, including air, in 16-pixel blocks. Supported range: 4–512.")]
         [SerializeField, Range(4, 512)] private int heightInBlocks = 32;
         [SerializeField, Min(1)] private int baseGroundHeight = 8;
+        [Tooltip("Extra solid rows beneath the original terrain profile.")]
+        [SerializeField, Min(0)] private int floorLiftInBlocks = 5;
         [SerializeField, Min(0)] private int heightVariation = 3;
         [SerializeField, Min(2)] private int hillWidthInBlocks = 10;
         [Tooltip("Generate a fresh seed on each Play. Turn off to use Seed Input.")]
@@ -23,6 +25,7 @@ namespace WelpTimeToDie.Levels
         public int WidthInBlocks => Mathf.Clamp(widthInBlocks, 4, 2048);
         public int HeightInBlocks => Mathf.Clamp(heightInBlocks, 4, 512);
         public int BaseGroundHeight => Mathf.Clamp(baseGroundHeight, 1, HeightInBlocks - 3);
+        public int FloorLiftInBlocks => Mathf.Clamp(floorLiftInBlocks, 0, 64);
         public int HeightVariation => Mathf.Clamp(heightVariation, 0, HeightInBlocks - 2);
         public int HillWidthInBlocks => Mathf.Max(2, hillWidthInBlocks);
         public bool RandomizeSeed => randomizeSeed;

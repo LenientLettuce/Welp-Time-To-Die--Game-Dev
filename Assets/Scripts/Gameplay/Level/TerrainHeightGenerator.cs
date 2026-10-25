@@ -27,7 +27,8 @@ namespace WelpTimeToDie.Levels
                 heights[x] = Mathf.Clamp(target, previous - 1, previous + 1);
                 previous = heights[x];
             }
-            return new TerrainHeightMap(heights, settings.HeightInBlocks, seed);
+            for (int x = 0; x < heights.Length; x++) heights[x] += settings.FloorLiftInBlocks;
+            return new TerrainHeightMap(heights, settings.HeightInBlocks + settings.FloorLiftInBlocks, seed);
         }
 
         private static int NextHeight(System.Random random, TerrainSettings settings) => Mathf.Clamp(
@@ -35,7 +36,7 @@ namespace WelpTimeToDie.Levels
             1, settings.HeightInBlocks - 3);
 
         // string.GetHashCode varies between runtimes; this hash keeps saved seeds reproducible.
-        private static int HashSeed(string seed)
+        internal static int HashSeed(string seed)
         {
             unchecked
             {
