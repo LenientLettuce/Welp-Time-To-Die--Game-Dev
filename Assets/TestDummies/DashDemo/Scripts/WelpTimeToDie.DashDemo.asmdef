@@ -1,5 +1,0 @@
-{
-    "name": "WelpTimeToDie.DashDemo",
-    "rootNamespace": "WelpTimeToDie.TestDummies",
-    "references": ["WelpTimeToDie.Combat", "Unity.InputSystem"]
-}
