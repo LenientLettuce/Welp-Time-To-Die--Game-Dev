@@ -35,6 +35,7 @@ namespace WelpTimeToDie.RectanglePrototype
         public const int FramesPerSecond = 24, PreviewFrames = 24;
         public const float Width = 30, Height = 12, Ground = 1.4f;
         public const float SpikeLeft = 17, SpikeRight = 20;
+        public const float BodySpacing = 1.1f;
         public readonly List<RectangleFighter> Fighters = new List<RectangleFighter>();
         public readonly List<RectangleProjectile> Projectiles = new List<RectangleProjectile>();
         public bool HazardsEnabled { get; set; } = true;
@@ -171,6 +172,8 @@ namespace WelpTimeToDie.RectanglePrototype
             for (int substep = 0; substep < 2; substep++)
             {
                 const float dt = 1f / (FramesPerSecond * 2);
+                var previousX = new float[Fighters.Count];
+                for (int i = 0; i < Fighters.Count; i++) previousX[i] = Fighters[i].X;
                 foreach (var fighter in Fighters)
                 {
                     if (!fighter.IsAlive) continue;
@@ -184,17 +187,12 @@ namespace WelpTimeToDie.RectanglePrototype
                             move = fighter.Facing * 10.5f;
                     }
                     float nextX = Clamp(fighter.X + (move + fighter.VelocityX) * dt, 0.6f, Width - 0.6f);
-                    if (fighter.Move == CombatMove.DashKick && move != 0)
-                        foreach (var other in Fighters)
-                            if (other.IsAlive && other.IsPlayer != fighter.IsPlayer && Math.Abs(other.Y - fighter.Y) < 1.6f
-                                && (other.X - fighter.X) * fighter.Facing > 0
-                                && (other.X - nextX) * fighter.Facing < 0.9f)
-                                nextX = (other.X - fighter.X) * fighter.Facing < 0.9f ? fighter.X : other.X - fighter.Facing * 0.9f;
                     fighter.X = nextX;
                     fighter.VelocityX *= 0.90f;
                     fighter.VelocityY -= 30 * dt; fighter.Y += fighter.VelocityY * dt;
                     if (fighter.Y < Ground) { fighter.Y = Ground; fighter.VelocityY = 0; }
                 }
+                SeparateBodies(previousX);
                 StepProjectiles(dt, hits);
             }
             // Collect before applying: strikes on the same frame trade fairly.
@@ -232,6 +230,28 @@ namespace WelpTimeToDie.RectanglePrototype
                 { fighter.Move = CombatMove.None; fighter.Elapsed = 0; boundary = true; }
             }
             return boundary || Finished;
+        }
+
+        private void SeparateBodies(float[] previousX)
+        {
+            for (int pass = 0; pass < Fighters.Count; pass++)
+                for (int a = 0; a < Fighters.Count; a++)
+                    for (int b = a + 1; b < Fighters.Count; b++)
+                    {
+                        var first = Fighters[a]; var second = Fighters[b];
+                        if (!first.IsAlive || !second.IsAlive || Math.Abs(first.Y - second.Y) >= 1.8f) continue;
+                        bool firstOnLeft = previousX[a] <= previousX[b];
+                        var left = firstOnLeft ? first : second;
+                        var right = firstOnLeft ? second : first;
+                        float overlap = BodySpacing - (right.X - left.X);
+                        if (overlap <= 0) continue;
+                        float leftShift = Math.Min(overlap / 2, left.X - 0.6f);
+                        float rightShift = Math.Min(overlap - leftShift, Width - 0.6f - right.X);
+                        leftShift = Math.Min(overlap - rightShift, left.X - 0.6f);
+                        left.X -= leftShift; right.X += rightShift;
+                        if (left.VelocityX > 0) left.VelocityX = 0;
+                        if (right.VelocityX < 0) right.VelocityX = 0;
+                    }
         }
 
         private bool Opponents(int a, int b) => a != b && Fighters[a].IsPlayer != Fighters[b].IsPlayer;

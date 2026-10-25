@@ -141,6 +141,7 @@ namespace WelpTimeToDie.RectanglePrototype
             watching = false;
             rehearsalFrame = null;
             activePlan = null;
+            previewHold = -1;
             playbackTime = 0;
             RefreshPrediction();
         }
@@ -185,6 +186,7 @@ namespace WelpTimeToDie.RectanglePrototype
             activePlan = plan;
             playbackOrigin = world;
             playing = true;
+            previewHold = -1;
             playbackIndex = 0;
             playbackTime = 0;
             Render();
@@ -253,6 +255,7 @@ namespace WelpTimeToDie.RectanglePrototype
                 else Render();
                 if (impact) { playbackTime = -0.065; break; }
             }
+            if (playing || watching) Render();
         }
 
         private void Render()
@@ -288,7 +291,10 @@ namespace WelpTimeToDie.RectanglePrototype
                 : playing ? "Resolving your move..."
                 : plan == null ? $"{moveName} is recharging. Choose another move."
                 : $"{moveName} {(direction < 0 ? "left" : "right")}. {plan.Summary}";
-            stage.Draw(shown, !playing && !watching && world.Player.IsReady ? direction : 0, watching, watching || playing ? playbackOrigin : null);
+            RectangleCombat nextVisual = (playing || watching) && previewHold < 0 && playbackIndex < activePlan.Frames.Count
+                ? activePlan.Frames[playbackIndex] : null;
+            stage.Draw(shown, !playing && !watching && world.Player.IsReady ? direction : 0, watching,
+                watching || playing ? playbackOrigin : null, nextVisual, Mathf.Clamp01((float)playbackTime * 12));
         }
 
         private void OnDisable()

@@ -81,7 +81,26 @@ longer punishable recovery. Kick and dash kick stay active for 3 and 4 frames;
 each swing damages each opponent at most once. All attacks respect facing,
 frontal guard, hitstun, cooldowns, and the same deterministic rehearsal rules.
 
-Enemy timing appears in the header. Amber action bars and a compressed stance
-show startup, white indicates active frames, and gray indicates recovery. Strike
-shapes distinguish launchers from horizontal hits. Damage adds a short playback
+Enemy timing appears in the header. Strike extension shows contact, and retraction shows recovery. Bodies retain
+their rectangular proportions throughout startup, contact, and recovery. Strike shapes distinguish
+launchers from horizontal hits. Damage adds a short playback
 impact pause to both Watch and Go without changing simulation time or prediction.
+
+## Presentation and spacing polish
+
+Watch and Go interpolate positions and attack poses between the same 24 Hz
+combat snapshots. Damage, hit windows, and decisions still happen on exact
+simulation frames. Existing attacks extend a colored strike shape only during the swing, return
+through recovery, and show small contact sparks instead of a filled yellow
+range box. The camera eases between decision framings. No controls or moves
+were added for this pass.
+
+Living fighters maintain a 1.1-unit body gap during movement, dash, and knockback.
+Separation preserves their order and arena bounds; airborne fighters can pass
+when their bodies are vertically clear. Collision runs in the shared simulation,
+so previews resolve spacing exactly as committed actions do.
+
+Body sprites stay upright at a fixed size with their feet on the simulated ground.
+Strike shapes retract completely into the body, leaving no idle hand/foot bumps.
+Uppercuts pivot from a fixed shoulder instead of moving the whole limb upward;
+the tip stays aligned with the swing and fades as it retracts.
