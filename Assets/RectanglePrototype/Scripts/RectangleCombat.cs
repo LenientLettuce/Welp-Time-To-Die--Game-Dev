@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 
+
 namespace WelpTimeToDie.RectanglePrototype
 {
     public struct MoveSpec
@@ -28,8 +29,6 @@ namespace WelpTimeToDie.RectanglePrototype
         public RectangleProjectile Copy() => (RectangleProjectile)MemberwiseClone();
     }
 
-    // Private fixed-frame simulation. No Unity clocks, physics, objects, or global state.
-    // Preview and playback both call Step: one frame is exactly 1/24 simulated second.
     public sealed class RectangleCombat
     {
         public const int FramesPerSecond = 24, PreviewFrames = 24;
@@ -124,9 +123,7 @@ namespace WelpTimeToDie.RectanglePrototype
             return true;
         }
 
-        // AI states: approach, wind-up/attack, recovery, stunned, dead.
-        // Planning while paused exposes already committed enemy intent to the player.
-        public void PlanEnemies()
+     public void PlanEnemies()
         {
             if (Finished) return;
             for (int i = 1; i < Fighters.Count; i++)
@@ -143,8 +140,7 @@ namespace WelpTimeToDie.RectanglePrototype
 
         private struct Hit { public int Attacker, Target; public MoveSpec Spec; public float Direction; }
 
-        // True means a living fighter reached an action/stun boundary, or combat ended.
-        public bool Step()
+       public bool Step()
         {
             if (Finished) return true;
             PlanEnemies();
@@ -168,8 +164,7 @@ namespace WelpTimeToDie.RectanglePrototype
                 fighter.Elapsed++;
                 if (fighter.Move == CombatMove.Jump && fighter.Elapsed == 1) fighter.VelocityY = 14;
             }
-            // Two motion substeps per combat frame; the player can act while airborne.
-            for (int substep = 0; substep < 2; substep++)
+          for (int substep = 0; substep < 2; substep++)
             {
                 const float dt = 1f / (FramesPerSecond * 2);
                 var previousX = new float[Fighters.Count];
@@ -195,8 +190,7 @@ namespace WelpTimeToDie.RectanglePrototype
                 SeparateBodies(previousX);
                 StepProjectiles(dt, hits);
             }
-            // Collect before applying: strikes on the same frame trade fairly.
-            for (int i = 0; i < Fighters.Count; i++)
+           for (int i = 0; i < Fighters.Count; i++)
             {
                 var attacker = Fighters[i];
                 if (!attacker.IsAlive || stunnedThisFrame.Contains(attacker) || attacker.Move == CombatMove.None) continue;

@@ -6,8 +6,7 @@ using UnityEngine.UIElements;
 
 namespace WelpTimeToDie.RectanglePrototype
 {
-    // Small overlay only. The arena and fighters are actual saved scene objects.
-    public sealed class RectangleArena : MonoBehaviour
+  public sealed class RectangleArena : MonoBehaviour
     {
         [SerializeField] private RectangleStage stage;
         private readonly Dictionary<CombatMove, Button> moves = new Dictionary<CombatMove, Button>();
@@ -100,8 +99,7 @@ namespace WelpTimeToDie.RectanglePrototype
             help.pickingMode = PickingMode.Ignore;
             footer.Add(help);
 
-            // Reserve space for the two HUD strips without shrinking the world into a UI box.
-            stage.ArenaCamera.rect = new Rect(0, 0.27f, 1, 0.65f);
+           stage.ArenaCamera.rect = new Rect(0, 0.27f, 1, 0.65f);
             Restart();
         }
 
@@ -174,8 +172,6 @@ namespace WelpTimeToDie.RectanglePrototype
 
         private void RefreshPrediction()
         {
-            // Keep the player's selection. Never silently substitute Wait for an attack
-            // on cooldown: explain that another move must be chosen instead.
             plan = RectanglePlan.Create(world, selected, direction);
             Render();
         }
@@ -218,7 +214,6 @@ namespace WelpTimeToDie.RectanglePrototype
                 if (mouse != null && mouse.leftButton.wasPressedThisFrame && world.Player.IsReady && !world.Finished)
                 {
                     Vector2 screen = mouse.position.ReadValue();
-                    // Ignore HUD clicks. Only aim when clicking inside the camera's arena viewport.
                     if (stage.ArenaCamera.pixelRect.Contains(screen))
                     {
                         Vector3 point = stage.ArenaCamera.ScreenToWorldPoint(new Vector3(screen.x, screen.y, 10));
@@ -268,7 +263,6 @@ namespace WelpTimeToDie.RectanglePrototype
                 : enemy.Elapsed < RectangleCombat.Spec(enemy, enemy.Move).Startup ? $"{RectangleCombat.Spec(enemy, enemy.Move).Name} in {RectangleCombat.Spec(enemy, enemy.Move).Startup - enemy.Elapsed}f"
                 : $"{RectangleCombat.Spec(enemy, enemy.Move).Name} ({enemy.Remaining}f left)";
             status.text = $"{phase} | You {shown.Player.Health} HP | Enemy {enemy.Health} HP - {intent}";
-            // Enemy intent is available on hover instead of taking another row of screen space.
             var enemyMove = RectangleCombat.Spec(enemy, enemy.Move);
             status.tooltip = enemy.IsAlive && enemy.Move != CombatMove.None
                 ? $"Enemy: {enemyMove.Name}. Hits in {Mathf.Max(0, enemyMove.Startup - enemy.Elapsed)} frames.\n{world.LastEvent}"

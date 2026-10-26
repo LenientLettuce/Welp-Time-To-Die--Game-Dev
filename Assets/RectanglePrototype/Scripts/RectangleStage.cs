@@ -3,8 +3,6 @@ using UnityEngine;
 
 namespace WelpTimeToDie.RectanglePrototype
 {
-    // The primary rectangles are saved SpriteRenderers, visible in Scene view without Play.
-    // Runtime overlays only decorate these objects; no editor-time object creation is needed.
     public sealed class RectangleStage : MonoBehaviour
     {
         [SerializeField] private Camera arenaCamera;
@@ -48,8 +46,6 @@ namespace WelpTimeToDie.RectanglePrototype
             DrawBody(enemyBody, world.Fighters[1], next?.Fighters[1], blend, Red);
             if (aimDirection != 0 && world.Player.IsAlive)
                 Box(world.Player.X + aimDirection * 0.9f, world.Player.Y + 0.9f, 0.35f, 0.08f, Blue);
-            // Preview replays one copied world, rather than stacking ghosts over live bodies.
-            // Keep the camera framed on the live world so starting a preview does not zoom out.
             if (preview)
             {
                 playerBody.color = new Color(playerBody.color.r, playerBody.color.g, playerBody.color.b, 0.65f);

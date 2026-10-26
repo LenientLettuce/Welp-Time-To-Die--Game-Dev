@@ -4,8 +4,6 @@ namespace WelpTimeToDie.RectanglePrototype
 {
     public enum FighterClass { Barbarian, Rogue, Wizard }
     public enum CombatMove { None, Move, Dash, Jump, Punch, Heavy, Block, Special, Wait, Uppercut, Kick, DashKick }
-
-    // Plain C# data. Prediction copies this state rather than touching the live world.
     public sealed class RectangleFighter
     {
         public string Name;

@@ -3,8 +3,6 @@ using System.Collections.Generic;
 
 namespace WelpTimeToDie.RectanglePrototype
 {
-    // A single immutable-by-convention rehearsal, shared by Watch and Go.
-    // No extra hypothetical player turns occur after the move being demonstrated.
     public sealed class RectanglePlan
     {
         public readonly List<RectangleCombat> Frames = new List<RectangleCombat>();
@@ -17,8 +15,6 @@ namespace WelpTimeToDie.RectanglePrototype
             var simulation = live.Copy();
             var plan = new RectanglePlan { MoveName = live.Player.IsReady ? RectangleCombat.Spec(live.Player, move).Name : "Finish move" };
             if (simulation.Player.IsReady) simulation.Start(0, move, direction, 0);
-            // Enemy AI makes its own decisions. Only the human's next opening needs a pause.
-            // The 24-frame cap is a safety checkpoint for unusually long stun sequences.
             for (int frame = 0; frame < RectangleCombat.PreviewFrames; frame++)
             {
                 simulation.Step();
