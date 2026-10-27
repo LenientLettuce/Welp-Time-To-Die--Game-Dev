@@ -1,0 +1,54 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:Style src="CombatHud.uss" />
+    <ui:VisualElement name="mapHudRoot" class="map-hud-root" picking-mode="Ignore">
+      <ui:VisualElement name="combatHud" class="hud" picking-mode="Ignore">
+        <ui:Label name="frameCount" class="frame-count" text="Frames elapsed: 0" picking-mode="Ignore" />
+        <ui:Label name="dashStrength" text="Dash strength: 0.5  [Up / Down]" picking-mode="Ignore" />
+        <ui:Label name="playbackStatus" class="status" text="12 frames/s  |  Space to pause" picking-mode="Ignore" />
+      </ui:VisualElement>
+      <ui:VisualElement name="mapControls" class="map-controls">
+        <ui:Label name="mapDimensions" class="map-title" text="128 × 32 blocks  |  16 × 16 px" />
+        <ui:Label name="currentSeed" class="seed-label" text="Current seed" />
+        <ui:TextField name="seedInput" label="Seed" />
+        <ui:VisualElement class="map-actions">
+          <ui:Button name="generateMap" text="Generate from seed" />
+          <ui:Button name="randomizeMap" text="Randomize" />
+        </ui:VisualElement>
+        <ui:Label class="camera-hint" text="Hold right mouse to browse · Scroll to zoom" />
+      </ui:VisualElement>
+      <ui:VisualElement name="playerActions" class="player-actions">
+        <ui:Label name="playerActionState" class="action-state" text="READY · choose your next move" />
+        <ui:VisualElement class="action-row">
+          <ui:Button name="actionMove" text="Move" />
+          <ui:Button name="actionDash" text="Dash" />
+          <ui:Button name="actionJump" text="Jump" tooltip="Launch upward. Aim left/right to control drift, and set strength to adjust height and speed." />
+          <ui:Button name="actionAttack" text="Attack" />
+          <ui:Button name="actionBlock" text="Block" />
+          <ui:Button name="actionWait" text="Wait" />
+        </ui:VisualElement>
+        <ui:Label name="aimDirection" class="action-hint" text="Click the map to aim" />
+        <ui:VisualElement class="action-row direction-row">
+          <ui:Button name="aimLeft" text="Left" />
+          <ui:Button name="aimUpLeft" text="Up-left" />
+          <ui:Button name="aimUp" text="Up" />
+          <ui:Button name="aimUpRight" text="Up-right" />
+          <ui:Button name="aimRight" text="Right" />
+          <ui:Button name="aimDown" text="Down" />
+        </ui:VisualElement>
+        <ui:VisualElement class="strength-row">
+          <ui:Label name="actionStrengthLabel" text="Strength: 50%" />
+          <ui:Button name="strengthLess" text="−" />
+          <ui:Slider name="actionStrength" low-value="0.1" high-value="1" value="0.5" tooltip="Scales Move distance, Dash distance, and Jump height/speed." />
+          <ui:Button name="strengthMore" text="+" />
+        </ui:VisualElement>
+        <ui:Label name="actionDetails" class="action-details" text="Select a move, direction and strength, then commit." />
+        <ui:VisualElement class="action-row playback-row">
+          <ui:Button name="commitAction" class="commit-action" text="Commit" />
+          <ui:Button name="pauseAction" text="Pause" />
+          <ui:Button name="stepFrame" text="Next frame" tooltip="Advance one frame of the selected/current action. When unavailable, advance an idle frame." />
+          <ui:Button name="resetPlayer" text="Reset player" />
+        </ui:VisualElement>
+      </ui:VisualElement>
+      <ui:Button name="recenterPlayer" class="recenter-button hidden" text="Recenter on player" />
+    </ui:VisualElement>
+</ui:UXML>
