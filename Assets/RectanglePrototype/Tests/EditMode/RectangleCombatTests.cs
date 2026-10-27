@@ -100,6 +100,104 @@ namespace WelpTimeToDie.RectanglePrototype.Tests
             Assert.That(live.Player.X, Is.EqualTo(8));
         }
 
+        [TestCase(CombatMove.Punch)]
+        [TestCase(CombatMove.Uppercut)]
+        [TestCase(CombatMove.Kick)]
+        [TestCase(CombatMove.DashKick)]
+        public void EveryAttackHitsOnceAndRehearsalMatchesPlayback(CombatMove move)
+        {
+            var live = RectangleCombat.CreateBasic(FighterClass.Barbarian);
+            var enemy = live.Fighters[1];
+            enemy.Move = CombatMove.None; enemy.Stun = 100; enemy.Health = enemy.MaxHealth = 30;
+            enemy.X = live.Player.X + 2;
+            var plan = RectanglePlan.Create(live, move, 1);
+            Assert.That(live.Start(0, move, 1, 0), Is.True);
+            foreach (var expected in plan.Frames)
+            {
+                live.Step(); live.PlanEnemies();
+                Assert.That(live.Player.X, Is.EqualTo(expected.Player.X));
+                Assert.That(live.Fighters[1].Health, Is.EqualTo(expected.Fighters[1].Health));
+                Assert.That(live.Fighters[1].Y, Is.EqualTo(expected.Fighters[1].Y));
+                Assert.That(live.Player.HitTargets, Is.EqualTo(expected.Player.HitTargets));
+            }
+            Assert.That(enemy.Health, Is.EqualTo(30 - RectangleCombat.Spec(live.Player, move).Damage));
+            Assert.That(live.Player.IsReady, Is.True);
+            if (move == CombatMove.Uppercut) Assert.That(enemy.Y, Is.GreaterThan(RectangleCombat.Ground));
+        }
+
+        [Test]
+        public void DashKickClosesDistanceWithoutPassingThroughTheTarget()
+        {
+            var world = RectangleCombat.CreateBasic(FighterClass.Barbarian);
+            var enemy = world.Fighters[1];
+            enemy.Move = CombatMove.None; enemy.Stun = 100;
+            world.Start(0, CombatMove.DashKick, 1, 0);
+            for (int i = 0; i < 8; i++) world.Step();
+            Assert.That(world.Player.X, Is.LessThan(enemy.X));
+            Assert.That(enemy.Health, Is.EqualTo(4));
+        }
+
+        [TestCase(CombatMove.Uppercut)]
+        [TestCase(CombatMove.Kick)]
+        [TestCase(CombatMove.DashKick)]
+        public void NewAttacksRespectFacingAndReportMisses(CombatMove move)
+        {
+            var world = RectangleCombat.CreateBasic(FighterClass.Barbarian);
+            world.Fighters[1].Move = CombatMove.None; world.Fighters[1].Stun = 100;
+            var plan = RectanglePlan.Create(world, move, -1);
+            Assert.That(plan.Summary, Does.Contain("misses"));
+            Assert.That(world.Player.Cooldowns[(int)move], Is.Zero);
+            Assert.That(plan.Frames[plan.Frames.Count - 1].Fighters[1].Health, Is.EqualTo(7));
+        }
+
+        [TestCase(CombatMove.Move)]
+        [TestCase(CombatMove.Dash)]
+        [TestCase(CombatMove.DashKick)]
+        public void ApproachingBodiesKeepTheirOrderAndSpacing(CombatMove move)
+        {
+            var world = RectangleCombat.CreateBasic(FighterClass.Barbarian);
+            world.Player.X = 8; world.Fighters[1].X = 9.2f;
+            world.Fighters[1].Move = CombatMove.None;
+            world.Start(1, CombatMove.Move, -1, 0);
+            world.Start(0, move, 1, 0);
+            for (int i = 0; i < 8; i++)
+            {
+                world.Step();
+                Assert.That(world.Fighters[1].X - world.Player.X,
+                    Is.GreaterThanOrEqualTo(RectangleCombat.BodySpacing - 0.0001f));
+            }
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void BodySeparationRespectsBothArenaWalls(bool rightWall)
+        {
+            var world = RectangleCombat.CreateBasic(FighterClass.Barbarian);
+            world.Player.X = rightWall ? 28.4f : 1.6f;
+            world.Fighters[1].X = rightWall ? 29.4f : 0.6f;
+            world.Fighters[1].Move = CombatMove.None; world.Fighters[1].Stun = 100;
+            world.Start(0, CombatMove.Move, rightWall ? 1 : -1, 0);
+            for (int i = 0; i < 8; i++)
+            {
+                world.Step();
+                Assert.That(System.Math.Abs(world.Player.X - world.Fighters[1].X),
+                    Is.GreaterThanOrEqualTo(RectangleCombat.BodySpacing - 0.0001f));
+                foreach (var f in world.Fighters) Assert.That(f.X, Is.InRange(0.6f, RectangleCombat.Width - 0.6f));
+            }
+        }
+
+        [Test]
+        public void AirborneFightersCanPassAboveEachOther()
+        {
+            var world = RectangleCombat.CreateBasic(FighterClass.Barbarian);
+            world.Player.X = 8; world.Player.Y = RectangleCombat.Ground + 4;
+            world.Fighters[1].X = 9.2f;
+            world.Fighters[1].Move = CombatMove.None; world.Fighters[1].Stun = 100;
+            world.Start(0, CombatMove.Dash, 1, 0);
+            for (int i = 0; i < 6; i++) world.Step();
+            Assert.That(world.Player.X, Is.GreaterThan(world.Fighters[1].X));
+        }
+
         private static void Advance(RectangleCombat world, int count)
         {
             for (int i = 0; i < count; i++) { world.Step(); world.PlanEnemies(); }

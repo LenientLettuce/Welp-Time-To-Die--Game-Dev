@@ -13,7 +13,7 @@ why it appeared only in the Game view during Play. Only the small HUD is UI now.
 ## Play
 
 - Blue is you. Red is the enemy. The bars above them show health.
-- Choose **Move**, **Attack**, **Block**, or **Wait**.
+- Choose **Move**, **Punch**, **Uppercut**, **Kick**, **Dash kick**, **Block**, or **Wait**.
 - Click left or right of your character to set direction. A small cyan mark shows
   the chosen direction. Then click **Go** (or press Enter).
 - Time freezes when YOUR move finishes and you can choose again. Enemy AI runs
@@ -28,11 +28,11 @@ why it appeared only in the Game view during Play. Only the small HUD is UI now.
   actions/stuns, but ordinary basic moves finish in one Go action.
 - **Reset** or **R** starts again after death or victory.
 
-The starting enemy winds up a slow strike. Try Attack first to counter it.
+The starting enemy winds up a slow strike. Try Punch first to counter it.
 Hover over move buttons for details. The top bar's tooltip contains enemy intent.
 
 The default encounter has ONE enemy and no hazards. Class menus, frame readouts,
-strength sliders, detailed prediction tables, trails, and advanced moves are removed
+strength sliders, detailed prediction tables, and trails are removed
 from the visible interface. The arena uses most of the Game view; controls wrap
 on narrower views. The camera automatically frames both fighters.
 
@@ -66,8 +66,41 @@ No references to the main characters, dash demo, or existing combat controller
 are needed. Open the prototype scene alone, not additively with other scenes.
 No project settings or build settings were changed.
 
-The scripts compile against Unity 6000.3.13f1. The model's 17 NUnit tests cover
+The scripts compile against Unity 6000.3.13f1. The model's NUnit tests cover
 basic encounter isolation as well as prediction, damage, counters, blocking,
 projectiles, cooldowns, jumps, hazards in the advanced model, and death. Rehearsal
 tests also check next-decision timing, frame-for-frame playback agreement, safe
 copying, rejection of recharging moves, and warnings when a block ends too early.
+
+## Attack choices and feedback
+
+Punch is the fast 4-frame interrupt. Uppercut starts in 6 frames and launches for
+an aerial follow-up. Kick starts in 7 frames with longer reach and pushback.
+Dash kick advances during its 8-frame startup, stops at an opponent, and has a
+longer punishable recovery. Kick and dash kick stay active for 3 and 4 frames;
+each swing damages each opponent at most once. All attacks respect facing,
+frontal guard, hitstun, cooldowns, and the same deterministic rehearsal rules.
+
+Enemy timing appears in the header. Strike extension shows contact, and retraction shows recovery. Bodies retain
+their rectangular proportions throughout startup, contact, and recovery. Strike shapes distinguish
+launchers from horizontal hits. Damage adds a short playback
+impact pause to both Watch and Go without changing simulation time or prediction.
+
+## Presentation and spacing polish
+
+Watch and Go interpolate positions and attack poses between the same 24 Hz
+combat snapshots. Damage, hit windows, and decisions still happen on exact
+simulation frames. Existing attacks extend a colored strike shape only during the swing, return
+through recovery, and show small contact sparks instead of a filled yellow
+range box. The camera eases between decision framings. No controls or moves
+were added for this pass.
+
+Living fighters maintain a 1.1-unit body gap during movement, dash, and knockback.
+Separation preserves their order and arena bounds; airborne fighters can pass
+when their bodies are vertically clear. Collision runs in the shared simulation,
+so previews resolve spacing exactly as committed actions do.
+
+Body sprites stay upright at a fixed size with their feet on the simulated ground.
+Strike shapes retract completely into the body, leaving no idle hand/foot bumps.
+Uppercuts pivot from a fixed shoulder instead of moving the whole limb upward;
+the tip stays aligned with the swing and fades as it retracts.

@@ -3,9 +3,7 @@ using System;
 namespace WelpTimeToDie.RectanglePrototype
 {
     public enum FighterClass { Barbarian, Rogue, Wizard }
-    public enum CombatMove { None, Move, Dash, Jump, Punch, Heavy, Block, Special, Wait }
-
-    // Plain C# data. Prediction copies this state rather than touching the live world.
+    public enum CombatMove { None, Move, Dash, Jump, Punch, Heavy, Block, Special, Wait, Uppercut, Kick, DashKick }
     public sealed class RectangleFighter
     {
         public string Name;
@@ -16,8 +14,9 @@ namespace WelpTimeToDie.RectanglePrototype
         public int MaxHealth, Health, Stun, HurtFlash, HazardCooldown;
         public CombatMove Move;
         public int Elapsed;
+        public int HitTargets;
         public float AimX = 1, AimY, Power = 1;
-        public int[] Cooldowns = new int[9];
+        public int[] Cooldowns = new int[Enum.GetValues(typeof(CombatMove)).Length];
         public bool IsAlive => Health > 0;
         public bool IsReady => IsAlive && Move == CombatMove.None && Stun == 0;
         public bool IsGrounded => Y <= RectangleCombat.Ground + 0.001f;
