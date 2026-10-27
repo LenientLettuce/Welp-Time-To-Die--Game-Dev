@@ -1,0 +1,97 @@
+.hud {
+    position: absolute;
+    top: 20px;
+    right: 24px;
+    padding: 14px 18px;
+    background-color: rgba(9, 15, 24, 0.9);
+    color: rgb(232, 242, 250);
+    font-size: 19px;
+    -unity-text-align: upper-right;
+}
+
+.frame-count {
+    font-size: 26px;
+    -unity-font-style: bold;
+    color: rgb(72, 217, 242);
+    margin-bottom: 8px;
+}
+
+.status {
+    margin-top: 6px;
+    font-size: 16px;
+    color: rgb(247, 201, 124);
+}
+
+.map-hud-root { flex-grow: 1; }
+.map-controls {
+    position: absolute;
+    left: 20px;
+    bottom: 20px;
+    width: 390px;
+    padding: 12px 16px;
+    background-color: rgba(9, 15, 24, 0.94);
+    color: rgb(232, 242, 250);
+    font-size: 14px;
+}
+.map-title { color: rgb(72, 217, 242); -unity-font-style: bold; margin-bottom: 5px; }
+.seed-label { font-size: 11px; margin-bottom: 6px; }
+.map-actions { flex-direction: row; margin-top: 6px; }
+.map-actions > Button { flex-grow: 1; height: 28px; }
+.map-controls Button {
+    background-color: rgb(29, 63, 73);
+    color: rgb(232, 242, 250);
+    border-width: 1px;
+    border-color: rgb(66, 106, 116);
+}
+.map-controls Button:hover { background-color: rgb(41, 85, 97); }
+.map-controls .unity-text-field__input {
+    background-color: rgb(15, 28, 37);
+    color: rgb(232, 242, 250);
+    border-width: 1px;
+    border-color: rgb(66, 106, 116);
+    padding: 4px 6px;
+}
+.map-controls .unity-text-field__label { min-width: 40px; }
+.camera-hint { margin-top: 8px; font-size: 13px; color: rgb(247, 201, 124); }
+.recenter-button {
+    position: absolute;
+    top: 200px;
+    right: 24px;
+    padding: 12px 22px;
+    background-color: rgb(24, 84, 104);
+    color: rgb(241, 251, 255);
+    font-size: 17px;
+    border-width: 1px;
+    border-color: rgb(72, 217, 242);
+}
+.recenter-button:hover { background-color: rgb(35, 108, 132); }
+.hidden { display: none; }
+.player-actions {
+    position: absolute;
+    right: 24px;
+    bottom: 20px;
+    width: 560px;
+    padding: 8px 12px;
+    background-color: rgba(9, 15, 24, 0.96);
+    color: rgb(232, 242, 250);
+    font-size: 14px;
+}
+.action-state { color: rgb(72, 217, 242); -unity-font-style: bold; margin-bottom: 4px; }
+.action-row { flex-direction: row; }
+.action-row > Button { flex-grow: 1; margin-right: 4px; height: 24px; padding: 2px 7px; }
+.player-actions Button {
+    background-color: rgb(29, 63, 73);
+    color: rgb(232, 242, 250);
+    border-width: 1px;
+    border-color: rgb(66, 106, 116);
+}
+.player-actions Button:hover { background-color: rgb(41, 85, 97); }
+.player-actions Button:disabled { opacity: 0.4; }
+.player-actions Button.selected-move { background-color: rgb(30, 112, 129); border-color: rgb(72, 217, 242); }
+.action-hint { margin-top: 4px; margin-bottom: 2px; font-size: 11px; }
+.strength-row { flex-direction: row; align-items: center; margin-top: 4px; }
+.strength-row > Label { width: 105px; }
+.strength-row > Slider { flex-grow: 1; margin-left: 8px; margin-right: 8px; }
+.strength-row > Button { width: 28px; height: 26px; }
+.action-details { white-space: normal; margin-top: 4px; margin-bottom: 4px; font-size: 11px; min-height: 32px; color: rgb(247, 201, 124); }
+.playback-row > Button.commit-action { background-color: rgb(24, 111, 91); }
