@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using WelpTimeToDie.RectanglePrototype.WelpTimeToDie.RectanglePrototype;
 
 namespace WelpTimeToDie.RectanglePrototype
 {
@@ -10,6 +11,8 @@ namespace WelpTimeToDie.RectanglePrototype
         [SerializeField] private Camera arenaCamera;
         [SerializeField] private SpriteRenderer playerBody;
         [SerializeField] private SpriteRenderer enemyBody;
+        [Tooltip("Rigged Golem.psb instance. When set, it replaces the enemy rectangle.")]
+        [SerializeField] private GolemPhysicsAnimator enemyGolem;
         private readonly List<SpriteRenderer> overlays = new List<SpriteRenderer>();
         private Vector3 initialPlayer, initialEnemy;
         private bool captured;
@@ -17,13 +20,17 @@ namespace WelpTimeToDie.RectanglePrototype
         public Camera ArenaCamera => arenaCamera;
         private static readonly Color Blue = new Color(0.25f, 0.8f, 1f);
         private static readonly Color Red = new Color(1f, 0.35f, 0.40f);
+        // Rectangles are positioned by their centre; the golem's pivot is at its feet.
+        private const float HalfHeight = 0.9f;
 
         public void SetStartingPositions(RectangleCombat world)
         {
             if (!captured)
             {
                 initialPlayer = playerBody.transform.position;
-                initialEnemy = enemyBody.transform.position;
+                initialEnemy = enemyGolem != null
+                    ? enemyGolem.transform.position + new Vector3(0, HalfHeight, 0)
+                    : enemyBody.transform.position;
                 captured = true;
             }
             SetPosition(world.Player, initialPlayer);
@@ -38,14 +45,19 @@ namespace WelpTimeToDie.RectanglePrototype
         private static void SetPosition(RectangleFighter fighter, Vector3 position)
         {
             fighter.X = Mathf.Clamp(position.x, 0.6f, RectangleCombat.Width - 0.6f);
-            fighter.Y = Mathf.Max(RectangleCombat.Ground, position.y - 0.9f);
+            fighter.Y = Mathf.Max(RectangleCombat.Ground, position.y - HalfHeight);
         }
 
         public void Draw(RectangleCombat world, float aimDirection = 0, bool preview = false, RectangleCombat framing = null)
         {
             used = 0;
             DrawBody(playerBody, world.Player, Blue);
-            DrawBody(enemyBody, world.Fighters[1], Red);
+            if (enemyGolem != null)
+            {
+                enemyGolem.Show(world.Fighters[1], world.Frame, preview);
+                DrawStatus(world.Fighters[1], Red, false);
+            }
+            else DrawBody(enemyBody, world.Fighters[1], Red);
             if (aimDirection != 0 && world.Player.IsAlive)
                 Box(world.Player.X + aimDirection * 0.9f, world.Player.Y + 0.9f, 0.35f, 0.08f, Blue);
             // Preview replays one copied world, rather than stacking ghosts over live bodies.
@@ -53,7 +65,8 @@ namespace WelpTimeToDie.RectanglePrototype
             if (preview)
             {
                 playerBody.color = new Color(playerBody.color.r, playerBody.color.g, playerBody.color.b, 0.65f);
-                enemyBody.color = new Color(enemyBody.color.r, enemyBody.color.g, enemyBody.color.b, 0.65f);
+                if (enemyGolem == null)
+                    enemyBody.color = new Color(enemyBody.color.r, enemyBody.color.g, enemyBody.color.b, 0.65f);
             }
             for (int i = used; i < overlays.Count; i++) overlays[i].enabled = false;
             FitCamera(framing ?? world);
@@ -61,14 +74,21 @@ namespace WelpTimeToDie.RectanglePrototype
 
         private void DrawBody(SpriteRenderer body, RectangleFighter fighter, Color color)
         {
-            body.transform.position = new Vector3(fighter.X, fighter.Y + (fighter.IsAlive ? 0.9f : 0.15f), 0);
+            body.transform.position = new Vector3(fighter.X, fighter.Y + (fighter.IsAlive ? HalfHeight : 0.15f), 0);
             body.transform.localScale = fighter.IsAlive ? new Vector3(0.9f, 1.8f, 1) : new Vector3(1.8f, 0.3f, 1);
             body.color = !fighter.IsAlive ? Color.gray : fighter.HurtFlash > 0 ? Color.white : color;
+            DrawStatus(fighter, color, true);
+        }
+
+        // Health bar, facing mark, block guard, and the brief strike-range flash.
+        private void DrawStatus(RectangleFighter fighter, Color color, bool facingMark)
+        {
             if (!fighter.IsAlive) return;
             Box(fighter.X, fighter.Y + 2.1f, 1.1f, 0.09f, new Color(0.2f, 0.25f, 0.3f));
             float width = 1.1f * fighter.Health / fighter.MaxHealth;
             Box(fighter.X - 0.55f + width / 2, fighter.Y + 2.1f, width, 0.09f, color);
-            Box(fighter.X + fighter.Facing * 0.33f, fighter.Y + 1.15f, 0.12f, 0.18f, Color.white);
+            if (facingMark)
+                Box(fighter.X + fighter.Facing * 0.33f, fighter.Y + 1.15f, 0.12f, 0.18f, Color.white);
             if (fighter.Move == CombatMove.Block && fighter.Stun == 0)
                 Box(fighter.X + fighter.Facing * 0.65f, fighter.Y + 0.9f, 0.1f, 1.9f, Blue);
             if (fighter.Move == CombatMove.None || fighter.Stun > 0) return;
