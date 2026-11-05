@@ -1,0 +1,5 @@
+{
+  "name": "WelpTimeToDie.Editor",
+  "references": ["WelpTimeToDie.Gameplay", "WelpTimeToDie.RectanglePrototype"],
+  "includePlatforms": ["Editor"]
+}

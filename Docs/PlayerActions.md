@@ -1,52 +1,58 @@
-# Click-based player actions
+# Terrain-aware arena combat
 
-Open Main and press Play. The player is **16 × 32 pixels**: one tile wide and two tiles tall. The blocks retain their 16 × 16 pixel grid.
+Main uses the arena's 24 Hz copied-state combat model, displayed at 12 frames per
+second. Primary moves, cooldowns, knockback, counters, frontal blocking, launching,
+and automatic enemy decisions retain the arena's rules. One golem starts near
+the blue rectangle player. Victory or defeat stops combat until Reset.
 
-## Planning and playback
-
-1. Click a move: **Move**, **Dash**, **Jump**, **Attack**, **Block**, or **Wait**.
-2. Click the world to aim, or use the direction buttons. The yellow arrow shows aim.
-3. Set strength using the slider or minus/plus buttons. It scales Move distance, Dash distance, and Jump height/speed. The current action snapshots direction and strength when committed.
-4. Inspect the translucent endpoint and movement path. Prediction uses a separate 2D physics world and does not advance the live combat clock.
-5. Click **Commit** to play the action at 12 combat frames per wall-clock second. The simulation still uses 24 frames per simulated second.
-6. Use **Pause / Play** or **Next frame** to inspect individual frames. When ready, Next frame starts an available selected action and advances one frame. When the selected action is unavailable, it advances an idle frame so gravity and cooldowns can progress.
-
-Time stops when the player can choose again, including in mid-air. Falling and cooldowns advance only with committed combat frames. Use another action or Wait to continue descending. Reset player returns to the terrain spawn and clears the action/cooldown state; it retains the elapsed combat clock, as before.
-
-Movement commands do not use WASD or other gameplay keys. Left click aims; hold right mouse to browse the camera; scroll to zoom; Recenter on player restores following. UI clicks do not aim at the world.
-
-## Frame data
-
-| Move | Duration | Strike/startup | Recharge from action start |
+| Move | Startup | Duration | Recharge |
 | --- | --- | --- | --- |
-| Move | 8f | Immediate | None |
-| Dash | 6f | Immediate | 12f |
-| Jump | 12f | Immediate | 16f |
-| Attack | 9f | Strike on frame 4 | 12f |
-| Block | 8f | Immediate | 4f |
-| Wait | 4f | Immediate | None |
+| Move | Immediate | 8f | None |
+| Punch | 4f | 9f | 12f |
+| Uppercut | 6f | 15f | 15f |
+| Kick | 7f | 16f | 16f |
+| Dash kick | 8f | 21f | 24f |
+| Block | Immediate | 8f | 4f |
+| Wait | Immediate | 4f | None |
+| Dash (advanced) | Immediate | 6f | 12f |
+| Jump (advanced) | Immediate | 12f | 16f |
 
-These preserve the earlier rectangle prototype's basic move timings. The terrain scene retains the previous dash tuning: maximum distance 10 blocks, or 5 at 50% strength. Aim also permits diagonal/air dashes. Jump always launches upward, with left/right drift from aim. It requires ground contact and cannot be started again in mid-air. Grounded movement can step up one-block terrain edges; larger height changes require a jump. Airborne motion uses gravity and collision rather than snapping to terrain height.
+Select a move and click left/right in the world to choose facing. Watch preview
+rehearses the next player decision interval without committing it. Go plays the
+same cached snapshots; copies protect the plan from later mutations. Unavailable
+moves stay selected and explain the cooldown/ground requirement. Next frame
+advances one action frame, or one idle combat frame when selection is unavailable.
+Pause preserves the current action and bone pose. R/Reset restores the encounter
+and the seed's original unbroken terrain. Enter commits outside text entry.
 
-Attack performs a single oriented overlap query on frame four, deals 2 damage through `ICombatDamageReceiver`, and deduplicates targets with multiple colliders. Its gold rectangle shows the actual active hitbox. Block shows a directional guard; `ResolveIncomingDamage` reduces frontal damage by 3 and leaves rear damage unchanged. The Main scene contains no enemy or damage target.
+The advanced panel exposes Dash/Jump and dash strength. Dash uses the arena's
+five-unit maximum distance scaled by strength. Jump requires ground contact and
+uses the arena's fixed launch speed and facing-based drift. Ground movement and
+dash kicks step up one block. Higher walls require jumping; knockback does not
+step up cliffs. Bodies stop at terrain, tunnel ceilings, each other, and map
+boundaries. Solid rock blocks melee. Vertically clear airborne bodies can pass.
 
-## Code responsibilities
+The integrated code is in `Assets/Scripts/Arena`; its existing namespace and
+assembly names (`WelpTimeToDie.RectanglePrototype`) remain stable:
 
-- `PlayerMoveCatalog`: move durations and recharge data.
-- `PlayerActionState`: copyable action, aim, strength, and cooldown state.
-- `PlayerMovementMotor`: collision, gravity, jump, dash, and one-block ground steps.
-- `PlayerActionController`: connects action state and movement to the combat frame clock.
-- `PlayerCombatController`: attack queries and directional guard rules.
-- `PlayerActionSelection`: uncommitted move/direction/strength.
-- `PlayerClickInput`: world-click aiming and playback pacing.
-- `PlayerActionPreview`: isolated physics rehearsal and endpoint/path rendering.
-- `PlayerActionVisuals`: aim arrow, active attack hitbox, and guard.
-- `PlayerActionHudPresenter`: action buttons, direction, strength, and playback controls.
+- RectangleCombat / RectangleFighter: combat, AI, cooldowns, copied state.
+- RectangleTerrain: swept block collision and copied tunnel/pit state.
+- RectanglePlan: next-decision snapshots shared by preview and Go.
+- RectangleArena: input, playback, pause/step, seed reset, and HUD binding.
+- RectangleStage: rectangle visuals, hit feedback, and golem presentation.
+- GolemPhysicsAnimator: Abbas's spring/torque solver, advanced only during
+  playback or explicit frame steps. Preview saves/restores the solver state.
 
-The old dash-only scripts remain available for their isolated tests and older prototypes. Main uses the new action controller/motor, with its keyboard input and ground-snapping adapter removed.
+The golem's imported Animator is disabled. Its visible body is calibrated to
+approximately 1.8 world units, with its lower edge at the logical feet.
+MainCharacter, Mimic, and Stick_Figure art remains under `Assets/Sprites`.
 
-## Verification
+`Assets/UI/Combat/ArenaHud.uxml` and `.uss` define the UI. MapHudPresenter binds
+seeds/recenter; MapCameraInput excludes HUD interactions from map navigation.
+HUD clicks do not change combat facing.
 
-`PlayerActionControllerTests` covers exact action boundaries, attack timing/deduplication, directional guard, mid-air decision freezes, landing, cooldowns, immutable planning snapshots, and single-frame playback. `AgentScripts/VerifyPlayerActions.cs` checks the integrated scene through its UI, compares jump/dash predictions against live outcomes, and tests actual mouse input for world aiming. `AgentScripts/ConfigurePlayerActions.cs` saves the player/controller wiring through the Editor.
-
-Interaction reference: [Your Only Move Is HUSTLE, by ivysly](https://ivysly.itch.io/your-only-move-is-hustle). This prototype uses the plan/inspect/commit pattern with its own terrain and combat clock.
+`Assets/Tests/Arena/EditMode` covers original combat rules, stepped terrain,
+tall walls, fast knockback, tunnel ceilings, solid-rock occlusion, pit-preview
+isolation, and seeded rehearsal/commit agreement. `AgentScripts/VerifyMergedMain.cs`
+exercises real UI submission, bone freeze/restoration, Go agreement, frame stepping,
+seed controls, golem alignment, and camera controls in the live Editor.

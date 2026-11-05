@@ -1,0 +1,405 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="55" result="Passed" total="55" passed="55" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-11-05 16:27:59Z" end-time="2026-11-05 16:28:00Z" duration="0.4752131">
+  <test-suite type="TestSuite" id="1076" name="Welp Time To Die" fullname="Welp Time To Die" runstate="Runnable" testcasecount="55" result="Passed" start-time="2026-11-05 16:27:59Z" end-time="2026-11-05 16:28:00Z" duration="0.475213" total="55" passed="55" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="PlayMode" />
+    </properties>
+    <test-suite type="Assembly" id="1024" name="WelpTimeToDie.Combat.Tests.dll" fullname="D:/Unity Projects/Welp Time To Die/Library/ScriptAssemblies/WelpTimeToDie.Combat.Tests.dll" runstate="Runnable" testcasecount="18" result="Passed" start-time="2026-11-05 16:27:59Z" end-time="2026-11-05 16:28:00Z" duration="0.269185" total="18" passed="18" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="22556" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="PlayMode" />
+        <property name="EditorOnly" value="False" />
+      </properties>
+      <test-suite type="TestSuite" id="1025" name="WelpTimeToDie" fullname="WelpTimeToDie" runstate="Runnable" testcasecount="18" result="Passed" start-time="2026-11-05 16:27:59Z" end-time="2026-11-05 16:28:00Z" duration="0.266957" total="18" passed="18" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="1026" name="Combat" fullname="WelpTimeToDie.Combat" runstate="Runnable" testcasecount="18" result="Passed" start-time="2026-11-05 16:27:59Z" end-time="2026-11-05 16:28:00Z" duration="0.264922" total="18" passed="18" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestSuite" id="1027" name="Tests" fullname="WelpTimeToDie.Combat.Tests" runstate="Runnable" testcasecount="18" result="Passed" start-time="2026-11-05 16:27:59Z" end-time="2026-11-05 16:28:00Z" duration="0.236116" total="18" passed="18" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-suite type="TestFixture" id="1004" name="CombatPhysicsControllerTests" fullname="WelpTimeToDie.Combat.Tests.CombatPhysicsControllerTests" classname="WelpTimeToDie.Combat.Tests.CombatPhysicsControllerTests" runstate="Runnable" testcasecount="18" result="Passed" start-time="2026-11-05 16:27:59Z" end-time="2026-11-05 16:28:00Z" duration="0.231453" total="18" passed="18" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1011" name="DecisionPredicateRunsAfterEveryCompletedFrameAndStopsEarly" fullname="WelpTimeToDie.Combat.Tests.CombatPhysicsControllerTests.DecisionPredicateRunsAfterEveryCompletedFrameAndStopsEarly" methodname="DecisionPredicateRunsAfterEveryCompletedFrameAndStopsEarly" classname="WelpTimeToDie.Combat.Tests.CombatPhysicsControllerTests" runstate="Runnable" seed="1884922477" result="Passed" start-time="2026-11-05 16:27:59Z" end-time="2026-11-05 16:28:00Z" duration="0.016466" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1018" name="DisablingAndReenablingRetainsTheCombatClock" fullname="WelpTimeToDie.Combat.Tests.CombatPhysicsControllerTests.DisablingAndReenablingRetainsTheCombatClock" methodname="DisablingAndReenablingRetainsTheCombatClock" classname="WelpTimeToDie.Combat.Tests.CombatPhysicsControllerTests" runstate="Runnable" seed="649758220" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.000716" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1016" name="DisablingDuringAStepCompletesTheFrameThenRestoresSimulationMode" fullname="WelpTimeToDie.Combat.Tests.CombatPhysicsControllerTests.DisablingDuringAStepCompletesTheFrameThenRestoresSimulationMode" methodname="DisablingDuringAStepCompletesTheFrameThenRestoresSimulationMode" classname="WelpTimeToDie.Combat.Tests.CombatPhysicsControllerTests" runstate="Runnable" seed="1592834554" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.006517" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1017" name="DuplicateControllerCannotStealOrReleaseOwnership" fullname="WelpTimeToDie.Combat.Tests.CombatPhysicsControllerTests.DuplicateControllerCannotStealOrReleaseOwnership" methodname="DuplicateControllerCannotStealOrReleaseOwnership" classname="WelpTimeToDie.Combat.Tests.CombatPhysicsControllerTests" runstate="Runnable" seed="272587246" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.003602" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <output><![CDATA[Only one CombatPhysicsController may control the default 2D physics world.
+]]></output>
+              </test-case>
+              <test-case id="1020" name="ExceptionsAfterPhysicsRetainTheCompletedFrameNumber" fullname="WelpTimeToDie.Combat.Tests.CombatPhysicsControllerTests.ExceptionsAfterPhysicsRetainTheCompletedFrameNumber" methodname="ExceptionsAfterPhysicsRetainTheCompletedFrameNumber" classname="WelpTimeToDie.Combat.Tests.CombatPhysicsControllerTests" runstate="Runnable" seed="1108980224" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.000853" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1019" name="ExceptionsDuringAPartialFrameFaultTheControllerAndReleaseAdvanceGuard" fullname="WelpTimeToDie.Combat.Tests.CombatPhysicsControllerTests.ExceptionsDuringAPartialFrameFaultTheControllerAndReleaseAdvanceGuard" methodname="ExceptionsDuringAPartialFrameFaultTheControllerAndReleaseAdvanceGuard" classname="WelpTimeToDie.Combat.Tests.CombatPhysicsControllerTests" runstate="Runnable" seed="765122332" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.000880" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-suite type="ParameterizedMethod" id="1010" name="ExplicitAdvancementIgnoresUnityTimeScale" fullname="WelpTimeToDie.Combat.Tests.CombatPhysicsControllerTests.ExplicitAdvancementIgnoresUnityTimeScale" classname="WelpTimeToDie.Combat.Tests.CombatPhysicsControllerTests" runstate="Runnable" testcasecount="3" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.004362" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="1007" name="ExplicitAdvancementIgnoresUnityTimeScale(0.0f)" fullname="WelpTimeToDie.Combat.Tests.CombatPhysicsControllerTests.ExplicitAdvancementIgnoresUnityTimeScale(0.0f)" methodname="ExplicitAdvancementIgnoresUnityTimeScale" classname="WelpTimeToDie.Combat.Tests.CombatPhysicsControllerTests" runstate="Runnable" seed="1614256686" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.000512" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1008" name="ExplicitAdvancementIgnoresUnityTimeScale(0.1f)" fullname="WelpTimeToDie.Combat.Tests.CombatPhysicsControllerTests.ExplicitAdvancementIgnoresUnityTimeScale(0.1f)" methodname="ExplicitAdvancementIgnoresUnityTimeScale" classname="WelpTimeToDie.Combat.Tests.CombatPhysicsControllerTests" runstate="Runnable" seed="1324468520" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.000128" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1009" name="ExplicitAdvancementIgnoresUnityTimeScale(3.0f)" fullname="WelpTimeToDie.Combat.Tests.CombatPhysicsControllerTests.ExplicitAdvancementIgnoresUnityTimeScale(3.0f)" methodname="ExplicitAdvancementIgnoresUnityTimeScale" classname="WelpTimeToDie.Combat.Tests.CombatPhysicsControllerTests" runstate="Runnable" seed="1867013557" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.000119" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+              </test-suite>
+              <test-case id="1021" name="ExternalAutomaticSimulationIsRejectedBeforePhysicsMoves" fullname="WelpTimeToDie.Combat.Tests.CombatPhysicsControllerTests.ExternalAutomaticSimulationIsRejectedBeforePhysicsMoves" methodname="ExternalAutomaticSimulationIsRejectedBeforePhysicsMoves" classname="WelpTimeToDie.Combat.Tests.CombatPhysicsControllerTests" runstate="Runnable" seed="85762650" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.000390" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1012" name="HooksSurroundPhysicsAndAllStepsAddUpToOneCombatFrame" fullname="WelpTimeToDie.Combat.Tests.CombatPhysicsControllerTests.HooksSurroundPhysicsAndAllStepsAddUpToOneCombatFrame" methodname="HooksSurroundPhysicsAndAllStepsAddUpToOneCombatFrame" classname="WelpTimeToDie.Combat.Tests.CombatPhysicsControllerTests" runstate="Runnable" seed="977875169" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.001141" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1022" name="PhysicsCallbacksCanRequestAStopAndCannotRecursivelyAdvance" fullname="WelpTimeToDie.Combat.Tests.CombatPhysicsControllerTests.PhysicsCallbacksCanRequestAStopAndCannotRecursivelyAdvance" methodname="PhysicsCallbacksCanRequestAStopAndCannotRecursivelyAdvance" classname="WelpTimeToDie.Combat.Tests.CombatPhysicsControllerTests" runstate="Runnable" seed="2058652990" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.001727" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1014" name="RecursiveAdvanceIsRejectedWithoutAdvancingExtraFrames" fullname="WelpTimeToDie.Combat.Tests.CombatPhysicsControllerTests.RecursiveAdvanceIsRejectedWithoutAdvancingExtraFrames" methodname="RecursiveAdvanceIsRejectedWithoutAdvancingExtraFrames" classname="WelpTimeToDie.Combat.Tests.CombatPhysicsControllerTests" runstate="Runnable" seed="324583629" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.000535" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1006" name="RenderingAndFixedUpdatesDoNotAdvancePausedPhysics" fullname="WelpTimeToDie.Combat.Tests.CombatPhysicsControllerTests.RenderingAndFixedUpdatesDoNotAdvancePausedPhysics" methodname="RenderingAndFixedUpdatesDoNotAdvancePausedPhysics" classname="WelpTimeToDie.Combat.Tests.CombatPhysicsControllerTests" runstate="Runnable" seed="1170263230" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.174893" asserts="0">
+                <properties>
+                  <property name="_JOINTYPE" value="UnityCombinatorial" />
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1015" name="StopRequestsFinishTheFrameAndDoNotLeakIntoTheNextAdvance" fullname="WelpTimeToDie.Combat.Tests.CombatPhysicsControllerTests.StopRequestsFinishTheFrameAndDoNotLeakIntoTheNextAdvance" methodname="StopRequestsFinishTheFrameAndDoNotLeakIntoTheNextAdvance" classname="WelpTimeToDie.Combat.Tests.CombatPhysicsControllerTests" runstate="Runnable" seed="883377260" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.000543" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1023" name="TimeConversionsHandleRoundingAndInvalidDurations" fullname="WelpTimeToDie.Combat.Tests.CombatPhysicsControllerTests.TimeConversionsHandleRoundingAndInvalidDurations" methodname="TimeConversionsHandleRoundingAndInvalidDurations" classname="WelpTimeToDie.Combat.Tests.CombatPhysicsControllerTests" runstate="Runnable" seed="1871527119" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.001215" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1005" name="TwentyFourFramesAdvanceOneSecondOfRealPhysics" fullname="WelpTimeToDie.Combat.Tests.CombatPhysicsControllerTests.TwentyFourFramesAdvanceOneSecondOfRealPhysics" methodname="TwentyFourFramesAdvanceOneSecondOfRealPhysics" classname="WelpTimeToDie.Combat.Tests.CombatPhysicsControllerTests" runstate="Runnable" seed="1646201766" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.000424" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1013" name="ZeroAndInvalidRequestsDoNotMutateTheWorld" fullname="WelpTimeToDie.Combat.Tests.CombatPhysicsControllerTests.ZeroAndInvalidRequestsDoNotMutateTheWorld" methodname="ZeroAndInvalidRequestsDoNotMutateTheWorld" classname="WelpTimeToDie.Combat.Tests.CombatPhysicsControllerTests" runstate="Runnable" seed="173254872" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.000360" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+    <test-suite type="Assembly" id="1072" name="WelpTimeToDie.Gameplay.Tests.dll" fullname="D:/Unity Projects/Welp Time To Die/Library/ScriptAssemblies/WelpTimeToDie.Gameplay.Tests.dll" runstate="Runnable" testcasecount="37" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.195277" total="37" passed="37" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="22556" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="PlayMode" />
+        <property name="EditorOnly" value="False" />
+      </properties>
+      <test-suite type="TestSuite" id="1073" name="WelpTimeToDie" fullname="WelpTimeToDie" runstate="Runnable" testcasecount="37" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.193231" total="37" passed="37" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="1074" name="Gameplay" fullname="WelpTimeToDie.Gameplay" runstate="Runnable" testcasecount="37" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.191097" total="37" passed="37" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestSuite" id="1075" name="Tests" fullname="WelpTimeToDie.Gameplay.Tests" runstate="Runnable" testcasecount="37" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.188502" total="37" passed="37" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-suite type="TestFixture" id="1028" name="PlayerActionControllerTests" fullname="WelpTimeToDie.Gameplay.Tests.PlayerActionControllerTests" classname="WelpTimeToDie.Gameplay.Tests.PlayerActionControllerTests" runstate="Runnable" testcasecount="9" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.025711" total="9" passed="9" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-suite type="ParameterizedMethod" id="1033" name="ActionsFinishOnTheirExactFrameAndRejectReplacement" fullname="WelpTimeToDie.Gameplay.Tests.PlayerActionControllerTests.ActionsFinishOnTheirExactFrameAndRejectReplacement" classname="WelpTimeToDie.Gameplay.Tests.PlayerActionControllerTests" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.008610" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="1029" name="ActionsFinishOnTheirExactFrameAndRejectReplacement(Dash,6)" fullname="WelpTimeToDie.Gameplay.Tests.PlayerActionControllerTests.ActionsFinishOnTheirExactFrameAndRejectReplacement(Dash,6)" methodname="ActionsFinishOnTheirExactFrameAndRejectReplacement" classname="WelpTimeToDie.Gameplay.Tests.PlayerActionControllerTests" runstate="Runnable" seed="1180052001" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.005647" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1030" name="ActionsFinishOnTheirExactFrameAndRejectReplacement(Attack,9)" fullname="WelpTimeToDie.Gameplay.Tests.PlayerActionControllerTests.ActionsFinishOnTheirExactFrameAndRejectReplacement(Attack,9)" methodname="ActionsFinishOnTheirExactFrameAndRejectReplacement" classname="WelpTimeToDie.Gameplay.Tests.PlayerActionControllerTests" runstate="Runnable" seed="797004930" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.000361" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1031" name="ActionsFinishOnTheirExactFrameAndRejectReplacement(Block,8)" fullname="WelpTimeToDie.Gameplay.Tests.PlayerActionControllerTests.ActionsFinishOnTheirExactFrameAndRejectReplacement(Block,8)" methodname="ActionsFinishOnTheirExactFrameAndRejectReplacement" classname="WelpTimeToDie.Gameplay.Tests.PlayerActionControllerTests" runstate="Runnable" seed="2050812404" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.000289" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1032" name="ActionsFinishOnTheirExactFrameAndRejectReplacement(Jump,12)" fullname="WelpTimeToDie.Gameplay.Tests.PlayerActionControllerTests.ActionsFinishOnTheirExactFrameAndRejectReplacement(Jump,12)" methodname="ActionsFinishOnTheirExactFrameAndRejectReplacement" classname="WelpTimeToDie.Gameplay.Tests.PlayerActionControllerTests" runstate="Runnable" seed="451950477" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.000266" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+              </test-suite>
+              <test-case id="1034" name="AirbornePlayerFreezesBetweenDecisionsAndLandsWhenFramesAdvance" fullname="WelpTimeToDie.Gameplay.Tests.PlayerActionControllerTests.AirbornePlayerFreezesBetweenDecisionsAndLandsWhenFramesAdvance" methodname="AirbornePlayerFreezesBetweenDecisionsAndLandsWhenFramesAdvance" classname="WelpTimeToDie.Gameplay.Tests.PlayerActionControllerTests" runstate="Runnable" seed="695696392" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.009492" asserts="0">
+                <properties>
+                  <property name="_JOINTYPE" value="UnityCombinatorial" />
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1036" name="AttackHitsOnceOnFrameFourAndCanRechargeThroughWait" fullname="WelpTimeToDie.Gameplay.Tests.PlayerActionControllerTests.AttackHitsOnceOnFrameFourAndCanRechargeThroughWait" methodname="AttackHitsOnceOnFrameFourAndCanRechargeThroughWait" classname="WelpTimeToDie.Gameplay.Tests.PlayerActionControllerTests" runstate="Runnable" seed="197072777" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.003023" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1037" name="BlockProtectsOnlyTheChosenDirectionDuringItsEightFrames" fullname="WelpTimeToDie.Gameplay.Tests.PlayerActionControllerTests.BlockProtectsOnlyTheChosenDirectionDuringItsEightFrames" methodname="BlockProtectsOnlyTheChosenDirectionDuringItsEightFrames" classname="WelpTimeToDie.Gameplay.Tests.PlayerActionControllerTests" runstate="Runnable" seed="960271451" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.000707" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1035" name="NextFrameAdvancesExactlyOneFrameAndDiscardsPlaybackWallTime" fullname="WelpTimeToDie.Gameplay.Tests.PlayerActionControllerTests.NextFrameAdvancesExactlyOneFrameAndDiscardsPlaybackWallTime" methodname="NextFrameAdvancesExactlyOneFrameAndDiscardsPlaybackWallTime" classname="WelpTimeToDie.Gameplay.Tests.PlayerActionControllerTests" runstate="Runnable" seed="1272431163" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.000847" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1038" name="PlanningSnapshotsDoNotChangeLiveActionsOrCooldowns" fullname="WelpTimeToDie.Gameplay.Tests.PlayerActionControllerTests.PlanningSnapshotsDoNotChangeLiveActionsOrCooldowns" methodname="PlanningSnapshotsDoNotChangeLiveActionsOrCooldowns" classname="WelpTimeToDie.Gameplay.Tests.PlayerActionControllerTests" runstate="Runnable" seed="978629159" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.000578" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+            </test-suite>
+            <test-suite type="TestFixture" id="1039" name="PlayerDashControllerTests" fullname="WelpTimeToDie.Gameplay.Tests.PlayerDashControllerTests" classname="WelpTimeToDie.Gameplay.Tests.PlayerDashControllerTests" runstate="Runnable" testcasecount="16" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.017117" total="16" passed="16" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1047" name="ActiveDashRetainsItsSettingsAndRejectsAnotherMove" fullname="WelpTimeToDie.Gameplay.Tests.PlayerDashControllerTests.ActiveDashRetainsItsSettingsAndRejectsAnotherMove" methodname="ActiveDashRetainsItsSettingsAndRejectsAnotherMove" classname="WelpTimeToDie.Gameplay.Tests.PlayerDashControllerTests" runstate="Runnable" seed="445472288" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.001979" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-suite type="ParameterizedMethod" id="1046" name="DashTravelsScaledMapDistanceInExactlySixFrames" fullname="WelpTimeToDie.Gameplay.Tests.PlayerDashControllerTests.DashTravelsScaledMapDistanceInExactlySixFrames" classname="WelpTimeToDie.Gameplay.Tests.PlayerDashControllerTests" runstate="Runnable" testcasecount="6" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.003946" total="6" passed="6" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="1040" name="DashTravelsScaledMapDistanceInExactlySixFrames(0.1f,False,-1.0f)" fullname="WelpTimeToDie.Gameplay.Tests.PlayerDashControllerTests.DashTravelsScaledMapDistanceInExactlySixFrames(0.1f,False,-1.0f)" methodname="DashTravelsScaledMapDistanceInExactlySixFrames" classname="WelpTimeToDie.Gameplay.Tests.PlayerDashControllerTests" runstate="Runnable" seed="298503333" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.000811" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1041" name="DashTravelsScaledMapDistanceInExactlySixFrames(0.1f,True,1.0f)" fullname="WelpTimeToDie.Gameplay.Tests.PlayerDashControllerTests.DashTravelsScaledMapDistanceInExactlySixFrames(0.1f,True,1.0f)" methodname="DashTravelsScaledMapDistanceInExactlySixFrames" classname="WelpTimeToDie.Gameplay.Tests.PlayerDashControllerTests" runstate="Runnable" seed="1976601292" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.000213" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1042" name="DashTravelsScaledMapDistanceInExactlySixFrames(0.5f,False,-5.0f)" fullname="WelpTimeToDie.Gameplay.Tests.PlayerDashControllerTests.DashTravelsScaledMapDistanceInExactlySixFrames(0.5f,False,-5.0f)" methodname="DashTravelsScaledMapDistanceInExactlySixFrames" classname="WelpTimeToDie.Gameplay.Tests.PlayerDashControllerTests" runstate="Runnable" seed="621466282" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.000196" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1043" name="DashTravelsScaledMapDistanceInExactlySixFrames(0.5f,True,5.0f)" fullname="WelpTimeToDie.Gameplay.Tests.PlayerDashControllerTests.DashTravelsScaledMapDistanceInExactlySixFrames(0.5f,True,5.0f)" methodname="DashTravelsScaledMapDistanceInExactlySixFrames" classname="WelpTimeToDie.Gameplay.Tests.PlayerDashControllerTests" runstate="Runnable" seed="1353569068" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.000201" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1044" name="DashTravelsScaledMapDistanceInExactlySixFrames(1.0f,False,-10.0f)" fullname="WelpTimeToDie.Gameplay.Tests.PlayerDashControllerTests.DashTravelsScaledMapDistanceInExactlySixFrames(1.0f,False,-10.0f)" methodname="DashTravelsScaledMapDistanceInExactlySixFrames" classname="WelpTimeToDie.Gameplay.Tests.PlayerDashControllerTests" runstate="Runnable" seed="495146376" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.000194" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1045" name="DashTravelsScaledMapDistanceInExactlySixFrames(1.0f,True,10.0f)" fullname="WelpTimeToDie.Gameplay.Tests.PlayerDashControllerTests.DashTravelsScaledMapDistanceInExactlySixFrames(1.0f,True,10.0f)" methodname="DashTravelsScaledMapDistanceInExactlySixFrames" classname="WelpTimeToDie.Gameplay.Tests.PlayerDashControllerTests" runstate="Runnable" seed="1337913714" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.000191" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+              </test-suite>
+              <test-case id="1049" name="DisablingCancelsAndReenablingDoesNotDuplicateSubscriptions" fullname="WelpTimeToDie.Gameplay.Tests.PlayerDashControllerTests.DisablingCancelsAndReenablingDoesNotDuplicateSubscriptions" methodname="DisablingCancelsAndReenablingDoesNotDuplicateSubscriptions" classname="WelpTimeToDie.Gameplay.Tests.PlayerDashControllerTests" runstate="Runnable" seed="1808662965" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.000374" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1055" name="GridCellCentersRoundTripForTranslatedAndScaledLevels" fullname="WelpTimeToDie.Gameplay.Tests.PlayerDashControllerTests.GridCellCentersRoundTripForTranslatedAndScaledLevels" methodname="GridCellCentersRoundTripForTranslatedAndScaledLevels" classname="WelpTimeToDie.Gameplay.Tests.PlayerDashControllerTests" runstate="Runnable" seed="1494112995" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.002626" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1051" name="HalfSpeedPlaybackTakesHalfASecondForTheSixFrameDash" fullname="WelpTimeToDie.Gameplay.Tests.PlayerDashControllerTests.HalfSpeedPlaybackTakesHalfASecondForTheSixFrameDash" methodname="HalfSpeedPlaybackTakesHalfASecondForTheSixFrameDash" classname="WelpTimeToDie.Gameplay.Tests.PlayerDashControllerTests" runstate="Runnable" seed="1338903058" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.000605" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1053" name="KeyboardStrengthStepsAreBoundedAndDoNotAlterAnActiveDash" fullname="WelpTimeToDie.Gameplay.Tests.PlayerDashControllerTests.KeyboardStrengthStepsAreBoundedAndDoNotAlterAnActiveDash" methodname="KeyboardStrengthStepsAreBoundedAndDoNotAlterAnActiveDash" classname="WelpTimeToDie.Gameplay.Tests.PlayerDashControllerTests" runstate="Runnable" seed="1986772553" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.000527" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1054" name="LevelBoundsSupplyDashDistanceAndRespectGridScale" fullname="WelpTimeToDie.Gameplay.Tests.PlayerDashControllerTests.LevelBoundsSupplyDashDistanceAndRespectGridScale" methodname="LevelBoundsSupplyDashDistanceAndRespectGridScale" classname="WelpTimeToDie.Gameplay.Tests.PlayerDashControllerTests" runstate="Runnable" seed="1707862436" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.000596" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1052" name="PausePreservesAPartialFrameAndNeverAccumulatesPausedWallTime" fullname="WelpTimeToDie.Gameplay.Tests.PlayerDashControllerTests.PausePreservesAPartialFrameAndNeverAccumulatesPausedWallTime" methodname="PausePreservesAPartialFrameAndNeverAccumulatesPausedWallTime" classname="WelpTimeToDie.Gameplay.Tests.PlayerDashControllerTests" runstate="Runnable" seed="400647054" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.000408" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1056" name="PlaybackCommandsRespectPauseAndResetDiscardsPartialFrame" fullname="WelpTimeToDie.Gameplay.Tests.PlayerDashControllerTests.PlaybackCommandsRespectPauseAndResetDiscardsPartialFrame" methodname="PlaybackCommandsRespectPauseAndResetDiscardsPartialFrame" classname="WelpTimeToDie.Gameplay.Tests.PlayerDashControllerTests" runstate="Runnable" seed="1729382726" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.000929" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1048" name="ResetCancelsTheDashAndReturnsToTheStartingPosition" fullname="WelpTimeToDie.Gameplay.Tests.PlayerDashControllerTests.ResetCancelsTheDashAndReturnsToTheStartingPosition" methodname="ResetCancelsTheDashAndReturnsToTheStartingPosition" classname="WelpTimeToDie.Gameplay.Tests.PlayerDashControllerTests" runstate="Runnable" seed="632144873" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.001492" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1050" name="StrengthIsClampedAndInvalidSettingsAreRejected" fullname="WelpTimeToDie.Gameplay.Tests.PlayerDashControllerTests.StrengthIsClampedAndInvalidSettingsAreRejected" methodname="StrengthIsClampedAndInvalidSettingsAreRejected" classname="WelpTimeToDie.Gameplay.Tests.PlayerDashControllerTests" runstate="Runnable" seed="726993241" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.000511" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+            </test-suite>
+            <test-suite type="TestFixture" id="1057" name="ProceduralMapTests" fullname="WelpTimeToDie.Gameplay.Tests.ProceduralMapTests" classname="WelpTimeToDie.Gameplay.Tests.ProceduralMapTests" runstate="Runnable" testcasecount="7" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.011491" total="7" passed="7" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1065" name="CameraBrowseRecenterAndZoomLimitsWorkIndependentlyOfCombatTime" fullname="WelpTimeToDie.Gameplay.Tests.ProceduralMapTests.CameraBrowseRecenterAndZoomLimitsWorkIndependentlyOfCombatTime" methodname="CameraBrowseRecenterAndZoomLimitsWorkIndependentlyOfCombatTime" classname="WelpTimeToDie.Gameplay.Tests.ProceduralMapTests" runstate="Runnable" seed="1118133164" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.002118" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1064" name="CameraClampKeepsViewInsideMapAndCentersViewsLargerThanMap" fullname="WelpTimeToDie.Gameplay.Tests.ProceduralMapTests.CameraClampKeepsViewInsideMapAndCentersViewsLargerThanMap" methodname="CameraClampKeepsViewInsideMapAndCentersViewsLargerThanMap" classname="WelpTimeToDie.Gameplay.Tests.ProceduralMapTests" runstate="Runnable" seed="302146950" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.000194" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-suite type="ParameterizedMethod" id="1062" name="GeneratedMapHasRequestedDimensionsSolidColumnsAndGentleSteps" fullname="WelpTimeToDie.Gameplay.Tests.ProceduralMapTests.GeneratedMapHasRequestedDimensionsSolidColumnsAndGentleSteps" classname="WelpTimeToDie.Gameplay.Tests.ProceduralMapTests" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.006398" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="1058" name="GeneratedMapHasRequestedDimensionsSolidColumnsAndGentleSteps(128,32)" fullname="WelpTimeToDie.Gameplay.Tests.ProceduralMapTests.GeneratedMapHasRequestedDimensionsSolidColumnsAndGentleSteps(128,32)" methodname="GeneratedMapHasRequestedDimensionsSolidColumnsAndGentleSteps" classname="WelpTimeToDie.Gameplay.Tests.ProceduralMapTests" runstate="Runnable" seed="369517756" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.002245" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1059" name="GeneratedMapHasRequestedDimensionsSolidColumnsAndGentleSteps(64,16)" fullname="WelpTimeToDie.Gameplay.Tests.ProceduralMapTests.GeneratedMapHasRequestedDimensionsSolidColumnsAndGentleSteps(64,16)" methodname="GeneratedMapHasRequestedDimensionsSolidColumnsAndGentleSteps" classname="WelpTimeToDie.Gameplay.Tests.ProceduralMapTests" runstate="Runnable" seed="1847575307" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.000469" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1060" name="GeneratedMapHasRequestedDimensionsSolidColumnsAndGentleSteps(4,4)" fullname="WelpTimeToDie.Gameplay.Tests.ProceduralMapTests.GeneratedMapHasRequestedDimensionsSolidColumnsAndGentleSteps(4,4)" methodname="GeneratedMapHasRequestedDimensionsSolidColumnsAndGentleSteps" classname="WelpTimeToDie.Gameplay.Tests.ProceduralMapTests" runstate="Runnable" seed="533928965" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.000051" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1061" name="GeneratedMapHasRequestedDimensionsSolidColumnsAndGentleSteps(257,48)" fullname="WelpTimeToDie.Gameplay.Tests.ProceduralMapTests.GeneratedMapHasRequestedDimensionsSolidColumnsAndGentleSteps(257,48)" methodname="GeneratedMapHasRequestedDimensionsSolidColumnsAndGentleSteps" classname="WelpTimeToDie.Gameplay.Tests.ProceduralMapTests" runstate="Runnable" seed="420436405" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.001680" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+              </test-suite>
+              <test-case id="1063" name="SeedsAreRepeatableAndDifferentSeedsProduceDifferentTerrain" fullname="WelpTimeToDie.Gameplay.Tests.ProceduralMapTests.SeedsAreRepeatableAndDifferentSeedsProduceDifferentTerrain" methodname="SeedsAreRepeatableAndDifferentSeedsProduceDifferentTerrain" classname="WelpTimeToDie.Gameplay.Tests.ProceduralMapTests" runstate="Runnable" seed="1885943892" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.000418" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+            </test-suite>
+            <test-suite type="TestFixture" id="1066" name="TerrainFeatureTests" fullname="WelpTimeToDie.Gameplay.Tests.TerrainFeatureTests" classname="WelpTimeToDie.Gameplay.Tests.TerrainFeatureTests" runstate="Runnable" testcasecount="5" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.131265" total="5" passed="5" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1068" name="CollapsingFloorRequiresFeetContactAndPreviewDoesNotCommit" fullname="WelpTimeToDie.Gameplay.Tests.TerrainFeatureTests.CollapsingFloorRequiresFeetContactAndPreviewDoesNotCommit" methodname="CollapsingFloorRequiresFeetContactAndPreviewDoesNotCommit" classname="WelpTimeToDie.Gameplay.Tests.TerrainFeatureTests" runstate="Runnable" seed="736270109" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.003691" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1070" name="ConcealedSurfaceDiscoveryRevealsDeepPortalWithoutCommittingPreview" fullname="WelpTimeToDie.Gameplay.Tests.TerrainFeatureTests.ConcealedSurfaceDiscoveryRevealsDeepPortalWithoutCommittingPreview" methodname="ConcealedSurfaceDiscoveryRevealsDeepPortalWithoutCommittingPreview" classname="WelpTimeToDie.Gameplay.Tests.TerrainFeatureTests" runstate="Runnable" seed="1632890262" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.000354" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1071" name="ExtraFoundationPreservesWorldSurfaceHeightAndLeavesRoomForDeepPits" fullname="WelpTimeToDie.Gameplay.Tests.TerrainFeatureTests.ExtraFoundationPreservesWorldSurfaceHeightAndLeavesRoomForDeepPits" methodname="ExtraFoundationPreservesWorldSurfaceHeightAndLeavesRoomForDeepPits" classname="WelpTimeToDie.Gameplay.Tests.TerrainFeatureTests" runstate="Runnable" seed="609321291" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.000834" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1069" name="FeatureSeedsRepeatAndAllGeometryIsInsideSolidTerrainWithoutOverlap" fullname="WelpTimeToDie.Gameplay.Tests.TerrainFeatureTests.FeatureSeedsRepeatAndAllGeometryIsInsideSolidTerrainWithoutOverlap" methodname="FeatureSeedsRepeatAndAllGeometryIsInsideSolidTerrainWithoutOverlap" classname="WelpTimeToDie.Gameplay.Tests.TerrainFeatureTests" runstate="Runnable" seed="1263041056" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.123137" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1067" name="PreviewRevealsAreIsolatedAndUseEuclideanEntranceDistance" fullname="WelpTimeToDie.Gameplay.Tests.TerrainFeatureTests.PreviewRevealsAreIsolatedAndUseEuclideanEntranceDistance" methodname="PreviewRevealsAreIsolatedAndUseEuclideanEntranceDistance" classname="WelpTimeToDie.Gameplay.Tests.TerrainFeatureTests" runstate="Runnable" seed="300980038" result="Passed" start-time="2026-11-05 16:28:00Z" end-time="2026-11-05 16:28:00Z" duration="0.000733" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <output><![CDATA[Saving results to: C:/Users/Mustafa/AppData/LocalLow/DefaultCompany/Welp Time To Die\TestResults.xml
+]]></output>
+              </test-case>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

@@ -1,0 +1,16 @@
+.arena-root { flex-grow: 1; color: rgb(236, 242, 250); font-size: 14px; }
+.arena-header { position: absolute; left: 0; right: 0; top: 0; flex-direction: row; align-items: center; padding: 5px 12px; background-color: rgb(14, 18, 26); }
+.arena-status { flex-grow: 1; white-space: normal; }
+.arena-footer { position: absolute; left: 0; right: 0; bottom: 0; padding: 8px 10px; background-color: rgb(14, 18, 26); }
+.arena-row { flex-direction: row; flex-wrap: wrap; align-items: center; }
+.arena-root Button { height: 32px; min-width: 72px; flex-grow: 1; margin: 0 5px 3px 0; padding: 0 9px; background-color: rgb(36, 46, 61); color: rgb(245, 248, 255); border-width: 1px; border-color: rgb(71, 89, 112); -unity-text-align: middle-center; }
+.arena-root Button:hover { background-color: rgb(49, 66, 84); }
+.arena-root Button.selected { background-color: rgb(31, 92, 122); }
+.arena-root Button:disabled { opacity: 0.4; }
+.arena-header Button { flex-grow: 0; width: 72px; }
+.arena-root Button.go-action { background-color: rgb(31, 102, 117); }
+.arena-help { margin-top: 5px; white-space: normal; font-size: 12px; }
+.advanced-scroll { max-height: 180px; }
+.seed-label { white-space: normal; font-size: 11px; }
+.arena-root TextField .unity-base-text-field__input { background-color: rgb(22, 30, 42); color: rgb(240, 245, 252); border-color: rgb(71, 89, 112); }
+.hidden { display: none; }

@@ -54,5 +54,11 @@ namespace WelpTimeToDie.Levels
             Physics2D.SyncTransforms();
         }
         public void ClearPreview() { if (visuals != null) visuals.ClearPreview(); }
+        public void RestoreCommitted(TerrainFeatureState state)
+        {
+            State = state.Copy();
+            visuals.RenderCommitted(State);
+            Physics2D.SyncTransforms();
+        }
     }
 }

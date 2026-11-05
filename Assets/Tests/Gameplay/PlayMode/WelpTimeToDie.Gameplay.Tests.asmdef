@@ -1,6 +1,6 @@
 {
   "name": "WelpTimeToDie.Gameplay.Tests",
   "rootNamespace": "WelpTimeToDie.Gameplay.Tests",
-  "references": ["WelpTimeToDie.Combat", "WelpTimeToDie.Gameplay"],
+  "references": ["WelpTimeToDie.Gameplay"],
   "optionalUnityReferences": ["TestAssemblies"]
 }

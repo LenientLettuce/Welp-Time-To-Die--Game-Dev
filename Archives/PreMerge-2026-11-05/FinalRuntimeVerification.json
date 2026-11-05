@@ -1,0 +1,36 @@
+{
+  "success": true,
+  "command": "command run_script",
+  "data": {
+    "command": "run_script",
+    "parameters": {
+      "file": "AgentScripts/VerifyMergedMain.cs",
+      "entry": "VerifyMergedMain.Main",
+      "timeout_ms": "25000"
+    },
+    "result": {
+      "diagnostics": [],
+      "compileMs": 102,
+      "executeMs": 7271,
+      "assemblyName": "PipelineRunScript_VerifyMergedMain_da14614a0d9a4635b1575f8e3e1082ea",
+      "success": true,
+      "result": {
+        "ticking": true,
+        "oneGolem": true,
+        "rigFreezes": true,
+        "previewRestoresCombatAndBones": true,
+        "goMatchesPreview": true,
+        "jumpAndFrameStep": true,
+        "seedRepeatable": true,
+        "cameraBrowseZoomRecenter": true
+      }
+    },
+    "target": {
+      "host": "127.0.0.1",
+      "port": 7800,
+      "projectPath": "D:\\Unity Projects\\Welp Time To Die"
+    }
+  },
+  "errors": [],
+  "warnings": []
+}

@@ -83,6 +83,7 @@ mono_crash.*
 *.aab
 *.unitypackage
 *.unitypackage.meta
+!/Archives/PreMerge-2026-11-05/OriginalScenesAndSystems.unitypackage
 *.app
 
 # Crashlytics generated file

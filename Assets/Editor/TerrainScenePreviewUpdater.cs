@@ -2,7 +2,7 @@ using UnityEditor;
 using UnityEngine;
 using System.Collections.Generic;
 using WelpTimeToDie.Levels;
-using WelpTimeToDie.Player;
+using WelpTimeToDie.RectanglePrototype;
 
 namespace WelpTimeToDie.Editor
 {
@@ -33,15 +33,8 @@ namespace WelpTimeToDie.Editor
 
         private static void PlacePlayers(ProceduralTerrainMap map)
         {
-            foreach (var player in Object.FindObjectsByType<PlayerActionController>(FindObjectsSortMode.None))
-            {
-                var motor = player.GetComponent<PlayerMovementMotor>();
-                if (motor == null || motor.Terrain != map) continue;
-                var collider = player.GetComponent<BoxCollider2D>();
-                Vector2 spawn = PlayerSpawnPlacement.Calculate(map, collider);
-                player.transform.position = new Vector3(spawn.x, spawn.y, player.transform.position.z);
-                EditorUtility.SetDirty(player.transform);
-            }
+            foreach (var stage in Object.FindObjectsByType<RectangleStage>(FindObjectsSortMode.None))
+                if (stage.gameObject.scene == map.gameObject.scene) stage.PlaceOnTerrain(map);
             foreach (var camera in Object.FindObjectsByType<WelpTimeToDie.Cameras.MapCameraController>(FindObjectsSortMode.None))
                 if (camera.gameObject.scene == map.gameObject.scene) camera.RecenterOnPlayer();
             Physics2D.SyncTransforms();

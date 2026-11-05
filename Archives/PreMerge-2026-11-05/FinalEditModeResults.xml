@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="37" result="Passed" total="37" passed="37" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-11-05 16:40:34Z" end-time="2026-11-05 16:40:35Z" duration="0.5969015">
+  <test-suite type="TestSuite" id="1056" name="Welp Time To Die" fullname="Welp Time To Die" runstate="Runnable" testcasecount="37" result="Passed" start-time="2026-11-05 16:40:34Z" end-time="2026-11-05 16:40:35Z" duration="0.596902" total="37" passed="37" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="EditMode" />
+    </properties>
+    <test-suite type="Assembly" id="1052" name="WelpTimeToDie.RectanglePrototype.Tests.dll" fullname="D:/Unity Projects/Welp Time To Die/Library/ScriptAssemblies/WelpTimeToDie.RectanglePrototype.Tests.dll" runstate="Runnable" testcasecount="37" result="Passed" start-time="2026-11-05 16:40:34Z" end-time="2026-11-05 16:40:35Z" duration="0.588903" total="37" passed="37" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="22556" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="EditMode" />
+        <property name="EditorOnly" value="True" />
+      </properties>
+      <test-suite type="TestSuite" id="1053" name="WelpTimeToDie" fullname="WelpTimeToDie" runstate="Runnable" testcasecount="37" result="Passed" start-time="2026-11-05 16:40:34Z" end-time="2026-11-05 16:40:35Z" duration="0.489819" total="37" passed="37" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="1054" name="RectanglePrototype" fullname="WelpTimeToDie.RectanglePrototype" runstate="Runnable" testcasecount="37" result="Passed" start-time="2026-11-05 16:40:34Z" end-time="2026-11-05 16:40:35Z" duration="0.489013" total="37" passed="37" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestSuite" id="1055" name="Tests" fullname="WelpTimeToDie.RectanglePrototype.Tests" runstate="Runnable" testcasecount="37" result="Passed" start-time="2026-11-05 16:40:34Z" end-time="2026-11-05 16:40:35Z" duration="0.381005" total="37" passed="37" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-suite type="TestFixture" id="1009" name="ArenaTerrainTests" fullname="WelpTimeToDie.RectanglePrototype.Tests.ArenaTerrainTests" classname="WelpTimeToDie.RectanglePrototype.Tests.ArenaTerrainTests" runstate="Runnable" testcasecount="6" result="Passed" start-time="2026-11-05 16:40:34Z" end-time="2026-11-05 16:40:34Z" duration="0.159818" total="6" passed="6" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1012" name="FallingLandsAndJumpHitsTunnelCeiling" fullname="WelpTimeToDie.RectanglePrototype.Tests.ArenaTerrainTests.FallingLandsAndJumpHitsTunnelCeiling" methodname="FallingLandsAndJumpHitsTunnelCeiling" classname="WelpTimeToDie.RectanglePrototype.Tests.ArenaTerrainTests" runstate="Runnable" seed="66871572" result="Passed" start-time="2026-11-05 16:40:34Z" end-time="2026-11-05 16:40:34Z" duration="0.013365" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1011" name="FastKnockbackStopsAtWallsAndMapEdges" fullname="WelpTimeToDie.RectanglePrototype.Tests.ArenaTerrainTests.FastKnockbackStopsAtWallsAndMapEdges" methodname="FastKnockbackStopsAtWallsAndMapEdges" classname="WelpTimeToDie.RectanglePrototype.Tests.ArenaTerrainTests" runstate="Runnable" seed="2115253959" result="Passed" start-time="2026-11-05 16:40:34Z" end-time="2026-11-05 16:40:34Z" duration="0.002433" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1010" name="MovementStepsUpOneBlockButCannotPassTallWalls" fullname="WelpTimeToDie.RectanglePrototype.Tests.ArenaTerrainTests.MovementStepsUpOneBlockButCannotPassTallWalls" methodname="MovementStepsUpOneBlockButCannotPassTallWalls" classname="WelpTimeToDie.RectanglePrototype.Tests.ArenaTerrainTests" runstate="Runnable" seed="865977192" result="Passed" start-time="2026-11-05 16:40:34Z" end-time="2026-11-05 16:40:34Z" duration="0.000360" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1013" name="PitPreviewCannotChangeLiveTerrainAndReplaysExactly" fullname="WelpTimeToDie.RectanglePrototype.Tests.ArenaTerrainTests.PitPreviewCannotChangeLiveTerrainAndReplaysExactly" methodname="PitPreviewCannotChangeLiveTerrainAndReplaysExactly" classname="WelpTimeToDie.RectanglePrototype.Tests.ArenaTerrainTests" runstate="Runnable" seed="569094473" result="Passed" start-time="2026-11-05 16:40:34Z" end-time="2026-11-05 16:40:34Z" duration="0.006970" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1015" name="SeededRehearsalMatchesEveryCommittedFighterAndTerrainFrame" fullname="WelpTimeToDie.RectanglePrototype.Tests.ArenaTerrainTests.SeededRehearsalMatchesEveryCommittedFighterAndTerrainFrame" methodname="SeededRehearsalMatchesEveryCommittedFighterAndTerrainFrame" classname="WelpTimeToDie.RectanglePrototype.Tests.ArenaTerrainTests" runstate="Runnable" seed="2075807466" result="Passed" start-time="2026-11-05 16:40:34Z" end-time="2026-11-05 16:40:34Z" duration="0.019129" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1014" name="TerrainBlocksMeleeThroughSolidRock" fullname="WelpTimeToDie.RectanglePrototype.Tests.ArenaTerrainTests.TerrainBlocksMeleeThroughSolidRock" methodname="TerrainBlocksMeleeThroughSolidRock" classname="WelpTimeToDie.RectanglePrototype.Tests.ArenaTerrainTests" runstate="Runnable" seed="1132402772" result="Passed" start-time="2026-11-05 16:40:34Z" end-time="2026-11-05 16:40:34Z" duration="0.000443" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+            </test-suite>
+            <test-suite type="TestFixture" id="1016" name="RectangleCombatTests" fullname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests" classname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests" runstate="Runnable" testcasecount="31" result="Passed" start-time="2026-11-05 16:40:34Z" end-time="2026-11-05 16:40:35Z" duration="0.219391" total="31" passed="31" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1041" name="AirborneFightersCanPassAboveEachOther" fullname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests.AirborneFightersCanPassAboveEachOther" methodname="AirborneFightersCanPassAboveEachOther" classname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests" runstate="Runnable" seed="1638454069" result="Passed" start-time="2026-11-05 16:40:34Z" end-time="2026-11-05 16:40:34Z" duration="0.000338" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-suite type="ParameterizedMethod" id="1037" name="ApproachingBodiesKeepTheirOrderAndSpacing" fullname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests.ApproachingBodiesKeepTheirOrderAndSpacing" classname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests" runstate="Runnable" testcasecount="3" result="Passed" start-time="2026-11-05 16:40:34Z" end-time="2026-11-05 16:40:34Z" duration="0.001236" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="1034" name="ApproachingBodiesKeepTheirOrderAndSpacing(Move)" fullname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests.ApproachingBodiesKeepTheirOrderAndSpacing(Move)" methodname="ApproachingBodiesKeepTheirOrderAndSpacing" classname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests" runstate="Runnable" seed="191375176" result="Passed" start-time="2026-11-05 16:40:34Z" end-time="2026-11-05 16:40:34Z" duration="0.000445" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1035" name="ApproachingBodiesKeepTheirOrderAndSpacing(Dash)" fullname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests.ApproachingBodiesKeepTheirOrderAndSpacing(Dash)" methodname="ApproachingBodiesKeepTheirOrderAndSpacing" classname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests" runstate="Runnable" seed="1852686669" result="Passed" start-time="2026-11-05 16:40:34Z" end-time="2026-11-05 16:40:34Z" duration="0.000096" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1036" name="ApproachingBodiesKeepTheirOrderAndSpacing(DashKick)" fullname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests.ApproachingBodiesKeepTheirOrderAndSpacing(DashKick)" methodname="ApproachingBodiesKeepTheirOrderAndSpacing" classname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests" runstate="Runnable" seed="1936702099" result="Passed" start-time="2026-11-05 16:40:34Z" end-time="2026-11-05 16:40:34Z" duration="0.000090" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+              </test-suite>
+              <test-case id="1022" name="BasicEncounterHasOneEnemyAndNoHazardDamage" fullname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests.BasicEncounterHasOneEnemyAndNoHazardDamage" methodname="BasicEncounterHasOneEnemyAndNoHazardDamage" classname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests" runstate="Runnable" seed="1945010909" result="Passed" start-time="2026-11-05 16:40:34Z" end-time="2026-11-05 16:40:34Z" duration="0.000383" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1023" name="BasicForecastKeepsHazardsDisabledAndOnlyOneEnemy" fullname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests.BasicForecastKeepsHazardsDisabledAndOnlyOneEnemy" methodname="BasicForecastKeepsHazardsDisabledAndOnlyOneEnemy" classname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests" runstate="Runnable" seed="432564645" result="Passed" start-time="2026-11-05 16:40:34Z" end-time="2026-11-05 16:40:34Z" duration="0.000283" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-suite type="ParameterizedMethod" id="1040" name="BodySeparationRespectsBothArenaWalls" fullname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests.BodySeparationRespectsBothArenaWalls" classname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests" runstate="Runnable" testcasecount="2" result="Passed" start-time="2026-11-05 16:40:34Z" end-time="2026-11-05 16:40:35Z" duration="0.101413" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="1038" name="BodySeparationRespectsBothArenaWalls(False)" fullname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests.BodySeparationRespectsBothArenaWalls(False)" methodname="BodySeparationRespectsBothArenaWalls" classname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests" runstate="Runnable" seed="2118904953" result="Passed" start-time="2026-11-05 16:40:35Z" end-time="2026-11-05 16:40:35Z" duration="0.000991" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1039" name="BodySeparationRespectsBothArenaWalls(True)" fullname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests.BodySeparationRespectsBothArenaWalls(True)" methodname="BodySeparationRespectsBothArenaWalls" classname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests" runstate="Runnable" seed="264819398" result="Passed" start-time="2026-11-05 16:40:35Z" end-time="2026-11-05 16:40:35Z" duration="0.000102" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+              </test-suite>
+              <test-case id="1029" name="DashKickClosesDistanceWithoutPassingThroughTheTarget" fullname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests.DashKickClosesDistanceWithoutPassingThroughTheTarget" methodname="DashKickClosesDistanceWithoutPassingThroughTheTarget" classname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests" runstate="Runnable" seed="26022891" result="Passed" start-time="2026-11-05 16:40:35Z" end-time="2026-11-05 16:40:35Z" duration="0.000260" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-suite type="ParameterizedMethod" id="1028" name="EveryAttackHitsOnceAndRehearsalMatchesPlayback" fullname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests.EveryAttackHitsOnceAndRehearsalMatchesPlayback" classname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-11-05 16:40:35Z" end-time="2026-11-05 16:40:35Z" duration="0.002108" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="1024" name="EveryAttackHitsOnceAndRehearsalMatchesPlayback(Punch)" fullname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests.EveryAttackHitsOnceAndRehearsalMatchesPlayback(Punch)" methodname="EveryAttackHitsOnceAndRehearsalMatchesPlayback" classname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests" runstate="Runnable" seed="1424027924" result="Passed" start-time="2026-11-05 16:40:35Z" end-time="2026-11-05 16:40:35Z" duration="0.000651" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1025" name="EveryAttackHitsOnceAndRehearsalMatchesPlayback(Uppercut)" fullname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests.EveryAttackHitsOnceAndRehearsalMatchesPlayback(Uppercut)" methodname="EveryAttackHitsOnceAndRehearsalMatchesPlayback" classname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests" runstate="Runnable" seed="99001063" result="Passed" start-time="2026-11-05 16:40:35Z" end-time="2026-11-05 16:40:35Z" duration="0.000209" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1026" name="EveryAttackHitsOnceAndRehearsalMatchesPlayback(Kick)" fullname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests.EveryAttackHitsOnceAndRehearsalMatchesPlayback(Kick)" methodname="EveryAttackHitsOnceAndRehearsalMatchesPlayback" classname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests" runstate="Runnable" seed="226737044" result="Passed" start-time="2026-11-05 16:40:35Z" end-time="2026-11-05 16:40:35Z" duration="0.000200" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1027" name="EveryAttackHitsOnceAndRehearsalMatchesPlayback(DashKick)" fullname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests.EveryAttackHitsOnceAndRehearsalMatchesPlayback(DashKick)" methodname="EveryAttackHitsOnceAndRehearsalMatchesPlayback" classname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests" runstate="Runnable" seed="1334790365" result="Passed" start-time="2026-11-05 16:40:35Z" end-time="2026-11-05 16:40:35Z" duration="0.000229" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+              </test-suite>
+              <test-case id="1021" name="FatalRehearsalStopsImmediatelyWithoutKillingTheRealPlayer" fullname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests.FatalRehearsalStopsImmediatelyWithoutKillingTheRealPlayer" methodname="FatalRehearsalStopsImmediatelyWithoutKillingTheRealPlayer" classname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests" runstate="Runnable" seed="1294444111" result="Passed" start-time="2026-11-05 16:40:35Z" end-time="2026-11-05 16:40:35Z" duration="0.001252" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1043" name="ForecastAndPlaybackMatchFrameForFrameIncludingAiAndHazards" fullname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests.ForecastAndPlaybackMatchFrameForFrameIncludingAiAndHazards" methodname="ForecastAndPlaybackMatchFrameForFrameIncludingAiAndHazards" classname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests" runstate="Runnable" seed="256531993" result="Passed" start-time="2026-11-05 16:40:35Z" end-time="2026-11-05 16:40:35Z" duration="0.005021" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1042" name="ForecastDoesNotChangeLiveHealthClockCooldownsOrProjectiles" fullname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests.ForecastDoesNotChangeLiveHealthClockCooldownsOrProjectiles" methodname="ForecastDoesNotChangeLiveHealthClockCooldownsOrProjectiles" classname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests" runstate="Runnable" seed="268581003" result="Passed" start-time="2026-11-05 16:40:35Z" end-time="2026-11-05 16:40:35Z" duration="0.001028" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1044" name="FourFramePunchCancelsNineFrameHeavyAndStunsForFourFrames" fullname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests.FourFramePunchCancelsNineFrameHeavyAndStunsForFourFrames" methodname="FourFramePunchCancelsNineFrameHeavyAndStunsForFourFrames" classname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests" runstate="Runnable" seed="137308782" result="Passed" start-time="2026-11-05 16:40:35Z" end-time="2026-11-05 16:40:35Z" duration="0.000333" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1046" name="FrontalBlockReducesHeavyDamageWithoutHitstun" fullname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests.FrontalBlockReducesHeavyDamageWithoutHitstun" methodname="FrontalBlockReducesHeavyDamageWithoutHitstun" classname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests" runstate="Runnable" seed="1281980649" result="Passed" start-time="2026-11-05 16:40:35Z" end-time="2026-11-05 16:40:35Z" duration="0.000242" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1050" name="JumpCanFinishWhileAirborneButCannotBeStartedAgainInAir" fullname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests.JumpCanFinishWhileAirborneButCannotBeStartedAgainInAir" methodname="JumpCanFinishWhileAirborneButCannotBeStartedAgainInAir" classname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests" runstate="Runnable" seed="1141335993" result="Passed" start-time="2026-11-05 16:40:35Z" end-time="2026-11-05 16:40:35Z" duration="0.000229" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-suite type="ParameterizedMethod" id="1033" name="NewAttacksRespectFacingAndReportMisses" fullname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests.NewAttacksRespectFacingAndReportMisses" classname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests" runstate="Runnable" testcasecount="3" result="Passed" start-time="2026-11-05 16:40:35Z" end-time="2026-11-05 16:40:35Z" duration="0.097950" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="1030" name="NewAttacksRespectFacingAndReportMisses(Uppercut)" fullname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests.NewAttacksRespectFacingAndReportMisses(Uppercut)" methodname="NewAttacksRespectFacingAndReportMisses" classname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests" runstate="Runnable" seed="1770007446" result="Passed" start-time="2026-11-05 16:40:35Z" end-time="2026-11-05 16:40:35Z" duration="0.000656" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1031" name="NewAttacksRespectFacingAndReportMisses(Kick)" fullname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests.NewAttacksRespectFacingAndReportMisses(Kick)" methodname="NewAttacksRespectFacingAndReportMisses" classname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests" runstate="Runnable" seed="385495769" result="Passed" start-time="2026-11-05 16:40:35Z" end-time="2026-11-05 16:40:35Z" duration="0.000126" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1032" name="NewAttacksRespectFacingAndReportMisses(DashKick)" fullname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests.NewAttacksRespectFacingAndReportMisses(DashKick)" methodname="NewAttacksRespectFacingAndReportMisses" classname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests" runstate="Runnable" seed="1484306152" result="Passed" start-time="2026-11-05 16:40:35Z" end-time="2026-11-05 16:40:35Z" duration="0.000116" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+              </test-suite>
+              <test-case id="1020" name="PreviewWarnsWhenBlockFinishesBeforeAnIncomingAttack" fullname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests.PreviewWarnsWhenBlockFinishesBeforeAnIncomingAttack" methodname="PreviewWarnsWhenBlockFinishesBeforeAnIncomingAttack" classname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests" runstate="Runnable" seed="738888485" result="Passed" start-time="2026-11-05 16:40:35Z" end-time="2026-11-05 16:40:35Z" duration="0.000222" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1048" name="ProjectileHasChargeTimeAndTravelTimeAndCopyOwnsItsShots" fullname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests.ProjectileHasChargeTimeAndTravelTimeAndCopyOwnsItsShots" methodname="ProjectileHasChargeTimeAndTravelTimeAndCopyOwnsItsShots" classname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests" runstate="Runnable" seed="1643021747" result="Passed" start-time="2026-11-05 16:40:35Z" end-time="2026-11-05 16:40:35Z" duration="0.001229" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1019" name="RechargingSelectionIsRejectedInsteadOfSilentlyBecomingWait" fullname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests.RechargingSelectionIsRejectedInsteadOfSilentlyBecomingWait" methodname="RechargingSelectionIsRejectedInsteadOfSilentlyBecomingWait" classname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests" runstate="Runnable" seed="1810820440" result="Passed" start-time="2026-11-05 16:40:35Z" end-time="2026-11-05 16:40:35Z" duration="0.000338" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1017" name="RehearsalEndsAtThePlayersNextDecisionInsteadOfTwentyFourFramesLater" fullname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests.RehearsalEndsAtThePlayersNextDecisionInsteadOfTwentyFourFramesLater" methodname="RehearsalEndsAtThePlayersNextDecisionInsteadOfTwentyFourFramesLater" classname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests" runstate="Runnable" seed="1556062680" result="Passed" start-time="2026-11-05 16:40:35Z" end-time="2026-11-05 16:40:35Z" duration="0.000292" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1018" name="RehearsalMatchesActualResolutionEveryFrameAndCopiesCannotMutateThePlan" fullname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests.RehearsalMatchesActualResolutionEveryFrameAndCopiesCannotMutateThePlan" methodname="RehearsalMatchesActualResolutionEveryFrameAndCopiesCannotMutateThePlan" classname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests" runstate="Runnable" seed="1565672520" result="Passed" start-time="2026-11-05 16:40:35Z" end-time="2026-11-05 16:40:35Z" duration="0.000485" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1051" name="SameFrameHitsTradeAndDeadPlayerCannotActOrAdvanceWorld" fullname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests.SameFrameHitsTradeAndDeadPlayerCannotActOrAdvanceWorld" methodname="SameFrameHitsTradeAndDeadPlayerCannotActOrAdvanceWorld" classname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests" runstate="Runnable" seed="333307760" result="Passed" start-time="2026-11-05 16:40:35Z" end-time="2026-11-05 16:40:35Z" duration="0.000285" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1045" name="SixFrameDashHasExactDistanceAndRecharge" fullname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests.SixFrameDashHasExactDistanceAndRecharge" methodname="SixFrameDashHasExactDistanceAndRecharge" classname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests" runstate="Runnable" seed="1524846422" result="Passed" start-time="2026-11-05 16:40:35Z" end-time="2026-11-05 16:40:35Z" duration="0.000277" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1049" name="SpikesDamageBothTeamsOnlyWhenActiveAndNearTheGround" fullname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests.SpikesDamageBothTeamsOnlyWhenActiveAndNearTheGround" methodname="SpikesDamageBothTeamsOnlyWhenActiveAndNearTheGround" classname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests" runstate="Runnable" seed="106735670" result="Passed" start-time="2026-11-05 16:40:35Z" end-time="2026-11-05 16:40:35Z" duration="0.000226" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1047" name="UnstoppableWindupTakesDamageButCannotBeCancelled" fullname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests.UnstoppableWindupTakesDamageButCannotBeCancelled" methodname="UnstoppableWindupTakesDamageButCannotBeCancelled" classname="WelpTimeToDie.RectanglePrototype.Tests.RectangleCombatTests" runstate="Runnable" seed="1258051090" result="Passed" start-time="2026-11-05 16:40:35Z" end-time="2026-11-05 16:40:35Z" duration="0.000214" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <output><![CDATA[Saving results to: C:/Users/Mustafa/AppData/LocalLow/DefaultCompany/Welp Time To Die\TestResults.xml
+]]></output>
+              </test-case>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>
