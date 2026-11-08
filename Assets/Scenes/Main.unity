@@ -846,6 +846,191 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: WelpTimeToDie.Gameplay::WelpTimeToDie.Cameras.MapCameraInput
   hud: {fileID: 1687914098}
+--- !u!1001 &549499230
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 1687914101}
+    m_Modifications:
+    - target: {fileID: -8653719598885068355, guid: f98232bf662364f439ad5b789b9783ce, type: 3}
+      propertyPath: m_Name
+      value: Stick_Figure
+      objectReference: {fileID: 0}
+    - target: {fileID: -7552582706839291426, guid: f98232bf662364f439ad5b789b9783ce, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 7
+      objectReference: {fileID: 0}
+    - target: {fileID: -7552582706839291426, guid: f98232bf662364f439ad5b789b9783ce, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 7
+      objectReference: {fileID: 0}
+    - target: {fileID: -7552582706839291426, guid: f98232bf662364f439ad5b789b9783ce, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -7552582706839291426, guid: f98232bf662364f439ad5b789b9783ce, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -1.5
+      objectReference: {fileID: 0}
+    - target: {fileID: -7552582706839291426, guid: f98232bf662364f439ad5b789b9783ce, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 2.93
+      objectReference: {fileID: 0}
+    - target: {fileID: -7552582706839291426, guid: f98232bf662364f439ad5b789b9783ce, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -7552582706839291426, guid: f98232bf662364f439ad5b789b9783ce, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -7552582706839291426, guid: f98232bf662364f439ad5b789b9783ce, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: -7552582706839291426, guid: f98232bf662364f439ad5b789b9783ce, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: -7552582706839291426, guid: f98232bf662364f439ad5b789b9783ce, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: -7552582706839291426, guid: f98232bf662364f439ad5b789b9783ce, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -7552582706839291426, guid: f98232bf662364f439ad5b789b9783ce, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -7552582706839291426, guid: f98232bf662364f439ad5b789b9783ce, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -7552582706839291426, guid: f98232bf662364f439ad5b789b9783ce, type: 3}
+      propertyPath: m_ConstrainProportionsScale
+      value: 1
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: -8653719598885068355, guid: f98232bf662364f439ad5b789b9783ce, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 549499232}
+  m_SourcePrefab: {fileID: 4843985084834002234, guid: f98232bf662364f439ad5b789b9783ce, type: 3}
+--- !u!1 &549499231 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: -8653719598885068355, guid: f98232bf662364f439ad5b789b9783ce, type: 3}
+  m_PrefabInstance: {fileID: 549499230}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &549499232
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 549499231}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e128ffc507d1d064881971dc96423d2b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: WelpTimeToDie.RectanglePrototype::WelpTimeToDie.RectanglePrototype.PlayerPhysicsAnimator
+  scale: 7
+  feetOffset: 0.01
+  head:
+    boneName: head
+    length: 0.2
+    frequency: 3.5
+    dampingRatio: 0.4
+    gravityScale: 1
+  upperSpine:
+    boneName: upper spine
+    length: 0.2
+    frequency: 2.8
+    dampingRatio: 0.6
+    gravityScale: 1
+  lowerSpine:
+    boneName: lower spine
+    length: 0.2
+    frequency: 2.5
+    dampingRatio: 0.6
+    gravityScale: 1
+  upperLeftArm:
+    boneName: upper left arm
+    length: 0.2
+    frequency: 3
+    dampingRatio: 0.35
+    gravityScale: 1
+  lowerLeftArm:
+    boneName: lower left arm
+    length: 0.2
+    frequency: 3.2
+    dampingRatio: 0.3
+    gravityScale: 1
+  upperRightArm:
+    boneName: upper right arm
+    length: 0.2
+    frequency: 3
+    dampingRatio: 0.35
+    gravityScale: 1
+  lowerRightArm:
+    boneName: lower right arm
+    length: 0.2
+    frequency: 3.2
+    dampingRatio: 0.3
+    gravityScale: 1
+  upperLeftLeg:
+    boneName: upper left leg
+    length: 0.25
+    frequency: 3.5
+    dampingRatio: 0.5
+    gravityScale: 1
+  lowerLeftLeg:
+    boneName: lower left leg
+    length: 0.25
+    frequency: 3.8
+    dampingRatio: 0.45
+    gravityScale: 1
+  leftFoot:
+    boneName: left foot
+    length: 0.1
+    frequency: 4
+    dampingRatio: 0.6
+    gravityScale: 1
+  upperRightLeg:
+    boneName: upper right leg
+    length: 0.25
+    frequency: 3.5
+    dampingRatio: 0.5
+    gravityScale: 1
+  lowerRightLeg:
+    boneName: lower right leg
+    length: 0.25
+    frequency: 3.8
+    dampingRatio: 0.45
+    gravityScale: 1
+  rightFoot:
+    boneName: right foot
+    length: 0.1
+    frequency: 4
+    dampingRatio: 0.6
+    gravityScale: 1
+  hipFrequency: 3.5
+  hipDampingRatio: 0.5
+  gravity: 9.81
+  simulationRate: 120
+  armReaction: 0.15
+  hitImpulse: 6
+  groundAngle: 82
+--- !u!4 &549499233 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -7552582706839291426, guid: f98232bf662364f439ad5b789b9783ce, type: 3}
+  m_PrefabInstance: {fileID: 549499230}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &618489322
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1595,6 +1780,7 @@ MonoBehaviour:
   playerBody: {fileID: 910455417}
   enemyBody: {fileID: 302241578}
   enemyGolem: {fileID: 618489325}
+  playerAnimator: {fileID: 549499232}
   useMapCamera: 1
 --- !u!4 &1687914101
 Transform:
@@ -1609,6 +1795,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 549499233}
   - {fileID: 910455416}
   - {fileID: 302241579}
   - {fileID: 618489324}

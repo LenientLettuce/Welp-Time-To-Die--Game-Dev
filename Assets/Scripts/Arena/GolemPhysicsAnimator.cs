@@ -43,14 +43,12 @@ namespace WelpTimeToDie.RectanglePrototype
         }
 
         private const int MaxSubsteps = 12;
-        private const float MaxAngularVelocity = 40f, MaxRootAcceleration = 60f, VelocitySmoothing = 0.06f;
+        private const float MaxAngularVelocity = 40f, MaxRootAcceleration = 60f;
+        // Increased smoothing to make rapid directional changes less jerky
+        private const float VelocitySmoothing = 0.12f; 
         private static readonly Color HurtTint = new Color(1f, 0.55f, 0.55f);
         private static readonly Color DeadTint = new Color(0.5f, 0.5f, 0.55f);
 
-        [SerializeField, Tooltip("Uniform scale calibrated to the deformed Golem.psb body, approximately 1.8 world units tall.")]
-        private float scale = 2.1f;
-        [SerializeField, Tooltip("Distance from the PSB pivot to its visible lower body, in imported art units.")]
-        private float feetOffset = 0.375f;
         [SerializeField] private Joint spine = new Joint { boneName = "spine", length = 0.44f, frequency = 2.2f, dampingRatio = 0.55f, gravityScale = 1 };
         [SerializeField] private Joint head = new Joint { boneName = "head", length = 0.32f, frequency = 3.2f, dampingRatio = 0.35f, gravityScale = 1 };
         [SerializeField] private Joint leftArm = new Joint { boneName = "left arm", length = 0.41f, frequency = 2.6f, dampingRatio = 0.32f, gravityScale = 1 };
@@ -89,8 +87,13 @@ namespace WelpTimeToDie.RectanglePrototype
         // Called by RectangleStage whenever a combat snapshot is drawn (live, preview, or playback).
         public void PlaceAtFeet(Vector2 feet, int facing)
         {
-            transform.position = new Vector3(feet.x, feet.y - feetOffset * scale, transform.position.z);
-            transform.localScale = new Vector3(facing < 0 ? -scale : scale, scale, 1);
+            // Directly set the position to the raw coordinate without offsets
+            transform.position = new Vector3(feet.x, feet.y, transform.position.z);
+            
+            // Preserve your custom Inspector scale, but flip the X direction based on facing
+            Vector3 currentScale = transform.localScale;
+            float absScaleX = Mathf.Abs(currentScale.x);
+            transform.localScale = new Vector3(facing < 0 ? -absScaleX : absScaleX, currentScale.y, currentScale.z);
         }
 
         public void Show(RectangleFighter fighter, int frame, bool preview)
@@ -321,7 +324,24 @@ namespace WelpTimeToDie.RectanglePrototype
         {
             foreach (var body in bodies)
                 body.Bone.localRotation = body.BindRotation * Quaternion.Euler(0, 0, body.Angle * Mathf.Rad2Deg);
-            spineBone.localPosition = spineBindPosition + new Vector3(0, hip, 0);
+            
+            if (spineBone != null)
+            {
+                spineBone.localPosition = spineBindPosition + new Vector3(0, hip, 0);
+
+                // Floor constraint: Ensure the lowest part of the golem doesn't penetrate the floor
+                float floorY = transform.position.y;
+                float minBoneY = Mathf.Min(
+                    bodies[(int)GolemBone.Spine].Bone.position.y,
+                    bodies[(int)GolemBone.FrontArm].Bone.position.y,
+                    bodies[(int)GolemBone.BackArm].Bone.position.y
+                );
+                
+                if (minBoneY < floorY)
+                {
+                    spineBone.position += Vector3.up * (floorY - minBoneY);
+                }
+            }
         }
 
         private void SnapToTargets()
@@ -381,4 +401,4 @@ namespace WelpTimeToDie.RectanglePrototype
             return null;
         }
     }
-    }
+}

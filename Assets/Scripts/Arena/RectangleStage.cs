@@ -9,22 +9,52 @@ namespace WelpTimeToDie.RectanglePrototype
         [SerializeField] private SpriteRenderer playerBody;
         [SerializeField] private SpriteRenderer enemyBody;
         [SerializeField] private GolemPhysicsAnimator enemyGolem;
+        [SerializeField] private PlayerPhysicsAnimator playerAnimator;
         [SerializeField] private bool useMapCamera;
-        public void AdvanceRig(float seconds) => enemyGolem?.Simulate(Mathf.Min(seconds, 0.1f));
-        public void BeginPreview() => enemyGolem?.BeginPreview();
-        public void EndPreview() => enemyGolem?.EndPreview();
-        public void ResetRig() => enemyGolem?.ResetRig();
+
+        public void AdvanceRig(float seconds) 
+        {
+            enemyGolem?.Simulate(Mathf.Min(seconds, 0.1f));
+            playerAnimator?.Simulate(Mathf.Min(seconds, 0.1f));
+        }
+
+        public void BeginPreview() 
+        {
+            enemyGolem?.BeginPreview();
+            playerAnimator?.BeginPreview();
+        }
+
+        public void EndPreview() 
+        {
+            enemyGolem?.EndPreview();
+            playerAnimator?.EndPreview();
+        }
+
+        public void ResetRig() 
+        {
+            enemyGolem?.ResetRig();
+            playerAnimator?.ResetRig();
+        }
+
         public void PlaceOnTerrain(WelpTimeToDie.Levels.ProceduralTerrainMap map)
         {
             float center = map.Layout.WorldBounds.center.x;
+            
             playerBody.transform.position = new Vector3(center - 1.5f, map.GetSurfaceHeight(center - 1.5f, 0.45f) + 0.9f, 0);
             playerBody.transform.localScale = new Vector3(0.9f, 1.8f, 1);
+            
             enemyBody.transform.position = new Vector3(center + 1.5f, map.GetSurfaceHeight(center + 1.5f, 0.45f) + 0.9f, 0);
+            
             if (enemyGolem != null)
             {
                 enemyGolem.PlaceAtFeet(new Vector2(center + 1.5f, map.GetSurfaceHeight(center + 1.5f, 0.45f)), -1);
             }
+            if (playerAnimator != null)
+            {
+                playerAnimator.PlaceAtFeet(new Vector2(center - 1.5f, map.GetSurfaceHeight(center - 1.5f, 0.45f)), 1);
+            }
         }
+
         private readonly List<SpriteRenderer> overlays = new List<SpriteRenderer>();
         private Vector3 initialPlayer, initialEnemy;
         private bool captured;
@@ -59,7 +89,25 @@ namespace WelpTimeToDie.RectanglePrototype
         public void Draw(RectangleCombat world, float aimDirection = 0, bool preview = false, RectangleCombat framing = null, RectangleCombat next = null, float blend = 0)
         {
             used = 0;
-            DrawBody(playerBody, world.Player, next?.Player, blend, Blue);
+            
+            // Draw Player or Physics Rig
+            if (playerAnimator != null)
+            {
+                var fighter = world.Player.Copy();
+                fighter.X = Mathf.Lerp(fighter.X, next?.Player.X ?? fighter.X, blend);
+                fighter.Y = Mathf.Lerp(fighter.Y, next?.Player.Y ?? fighter.Y, blend);
+                playerAnimator.Show(fighter, world.Frame, preview);
+                Box(fighter.X, fighter.Y + 2.1f, 1.1f, 0.07f, new Color(0.2f, 0.25f, 0.3f));
+                float width = 1.1f * fighter.Health / fighter.MaxHealth;
+                if (width > 0) Box(fighter.X - 0.55f + width / 2, fighter.Y + 2.1f, width, 0.07f, Blue);
+                playerBody.enabled = false;
+            }
+            else 
+            {
+                DrawBody(playerBody, world.Player, next?.Player, blend, Blue);
+            }
+
+            // Draw Enemy or Physics Rig
             if (enemyGolem != null)
             {
                 var fighter = world.Fighters[1].Copy();
@@ -71,15 +119,22 @@ namespace WelpTimeToDie.RectanglePrototype
                 if (width > 0) Box(fighter.X - 0.55f + width / 2, fighter.Y + 2.1f, width, 0.07f, Red);
                 enemyBody.enabled = false;
             }
-            else DrawBody(enemyBody, world.Fighters[1], next?.Fighters[1], blend, Red);
+            else 
+            {
+                DrawBody(enemyBody, world.Fighters[1], next?.Fighters[1], blend, Red);
+            }
+
             if (aimDirection != 0 && world.Player.IsAlive)
                 Box(world.Player.X + aimDirection * 0.9f, world.Player.Y + 0.9f, 0.35f, 0.08f, Blue);
+            
             if (preview)
             {
                 playerBody.color = new Color(playerBody.color.r, playerBody.color.g, playerBody.color.b, 0.65f);
                 enemyBody.color = new Color(enemyBody.color.r, enemyBody.color.g, enemyBody.color.b, 0.65f);
             }
+            
             for (int i = used; i < overlays.Count; i++) overlays[i].enabled = false;
+            
             if (!useMapCamera) FitCamera(framing ?? world);
         }
 
@@ -116,7 +171,7 @@ namespace WelpTimeToDie.RectanglePrototype
             if (action == CombatMove.Block && fighter.Stun == 0)
                 Box(x + facing * 0.62f, y + 0.9f, 0.08f, 1.65f, new Color(0.55f, 0.9f, 1, 0.8f));
             if (fighter.Stun > 0 || spec.Damage <= 0 || spec.Projectile || strike <= 0.001f) return;
-            // The limb follows the existing strike timing; presentation never changes collision.
+            
             bool kick = action == CombatMove.Kick || action == CombatMove.DashKick;
             float height = kick ? 0.55f : 1.15f;
             float extension = spec.Reach * strike;
