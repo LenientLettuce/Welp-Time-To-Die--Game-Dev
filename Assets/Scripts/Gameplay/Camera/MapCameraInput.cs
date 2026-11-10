@@ -13,7 +13,7 @@ namespace WelpTimeToDie.Cameras
         private Vector2 lastPointerPosition;
         private Vector2 dragOrigin;
         private bool dragging;
-        private bool dragStartedOverHud;
+        private bool browseGesture;
 
         private void Awake()
         {
@@ -30,9 +30,10 @@ namespace WelpTimeToDie.Cameras
             {
                 dragOrigin = lastPointerPosition = pointer;
                 dragging = false;
-                dragStartedOverHud = IsOverHud(pointer);
+                browseGesture = mapCamera.pixelRect.Contains(pointer) && !IsOverHud(pointer);
+                if (browseGesture) controller.BeginBrowse();
             }
-            if (mouse.rightButton.isPressed && !dragStartedOverHud)
+            if (mouse.rightButton.isPressed && browseGesture)
             {
                 if ((pointer - dragOrigin).sqrMagnitude > 9f) dragging = true;
                 if (dragging)
@@ -42,7 +43,7 @@ namespace WelpTimeToDie.Cameras
                 }
                 lastPointerPosition = pointer;
             }
-            if (mouse.rightButton.wasReleasedThisFrame) dragging = false;
+            if (mouse.rightButton.wasReleasedThisFrame) browseGesture = false;
             float scroll = mouse.scroll.ReadValue().y;
             if (scroll != 0f && !IsOverHud(pointer))
                 controller.ZoomBy(scroll / 120f, pointer);
@@ -60,7 +61,7 @@ namespace WelpTimeToDie.Cameras
         private void OnApplicationFocus(bool focused)
         {
             dragging = false;
-            dragStartedOverHud = true;
+            browseGesture = false;
         }
     }
 }

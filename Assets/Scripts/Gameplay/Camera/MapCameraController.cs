@@ -30,7 +30,12 @@ namespace WelpTimeToDie.Cameras
         {
             if (!IsBrowsing && player != null)
                 SetPosition((Vector2)player.position + followOffset);
-            else SetPosition(transform.position);
+        }
+
+        public void FollowPlayer(Transform target)
+        {
+            player = target;
+            RecenterOnPlayer();
         }
 
         public void RecenterOnPlayer()
@@ -39,11 +44,13 @@ namespace WelpTimeToDie.Cameras
             if (player != null) SetPosition((Vector2)player.position + followOffset);
         }
 
+        public void BeginBrowse() => IsBrowsing = true;
+
         public void Pan(Vector2 worldDelta)
         {
             if (worldDelta.sqrMagnitude <= 0f) return;
-            IsBrowsing = true;
-            SetPosition((Vector2)transform.position + worldDelta);
+            BeginBrowse();
+            SetBrowsePosition((Vector2)transform.position + worldDelta);
         }
 
         public void ZoomBy(float scrollSteps, Vector2 screenPosition)
@@ -53,10 +60,10 @@ namespace WelpTimeToDie.Cameras
             ViewCamera.orthographicSize = Mathf.Clamp(Zoom * Mathf.Exp(-scrollSteps * 0.12f),
                 minimumZoom, Mathf.Max(minimumZoom, maximumZoom));
             if (IsBrowsing)
-                SetPosition(transform.position + before - ViewCamera.ScreenToWorldPoint(screenPosition));
+                SetBrowsePosition(transform.position + before - ViewCamera.ScreenToWorldPoint(screenPosition));
         }
 
-        private void SetPosition(Vector2 position)
+        private void SetBrowsePosition(Vector2 position)
         {
             if (level != null)
             {
@@ -64,8 +71,11 @@ namespace WelpTimeToDie.Cameras
                 position.x = ClampAxis(position.x, bounds.min.x, bounds.max.x, Zoom * ViewCamera.aspect);
                 position.y = ClampAxis(position.y, bounds.min.y, bounds.max.y, Zoom);
             }
-            transform.position = new Vector3(position.x, position.y, transform.position.z);
+            SetPosition(position);
         }
+
+        private void SetPosition(Vector2 position) =>
+            transform.position = new Vector3(position.x, position.y, transform.position.z);
 
         public static float ClampAxis(float center, float minimum, float maximum, float halfView) =>
             halfView * 2f >= maximum - minimum ? (minimum + maximum) / 2f : Mathf.Clamp(center, minimum + halfView, maximum - halfView);

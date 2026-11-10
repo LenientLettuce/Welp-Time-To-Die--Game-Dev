@@ -5,6 +5,7 @@ namespace WelpTimeToDie.RectanglePrototype
 {
     public sealed class RectangleStage : MonoBehaviour
     {
+        public const float PlaybackRate = RectangleCombat.FramesPerSecond;
         [SerializeField] private Camera arenaCamera;
         [SerializeField] private SpriteRenderer playerBody;
         [SerializeField] private SpriteRenderer enemyBody;
@@ -18,17 +19,19 @@ namespace WelpTimeToDie.RectanglePrototype
             playerAnimator?.Simulate(Mathf.Min(seconds, 0.1f));
         }
 
-        public void BeginPreview() 
+        private RectangleGhostPreview ghosts;
+
+        public void PreparePreview(RectangleCombat origin, RectanglePlan plan)
         {
-            enemyGolem?.BeginPreview();
-            playerAnimator?.BeginPreview();
+            ghosts ??= new RectangleGhostPreview(playerAnimator, enemyGolem, playerBody, enemyBody);
+            ghosts.Capture(origin, plan, playerAnimator, enemyGolem);
         }
 
-        public void EndPreview() 
-        {
-            enemyGolem?.EndPreview();
-            playerAnimator?.EndPreview();
-        }
+        public RectangleCombat DrawPreview(RectangleCombat origin, RectanglePlan plan, float time) => ghosts.Draw(origin, plan, time);
+
+        public void HidePreview() => ghosts?.Hide();
+
+        private void OnDestroy() => ghosts?.Dispose();
 
         public void ResetRig() 
         {
@@ -60,6 +63,7 @@ namespace WelpTimeToDie.RectanglePrototype
         private bool captured;
         private int used;
         public Camera ArenaCamera => arenaCamera;
+        public Transform PlayerFollowTarget => playerAnimator != null ? playerAnimator.transform : playerBody.transform;
         private static readonly Color Blue = new Color(0.25f, 0.8f, 1f);
         private static readonly Color Red = new Color(1f, 0.35f, 0.40f);
 
@@ -86,7 +90,7 @@ namespace WelpTimeToDie.RectanglePrototype
             fighter.Y = Mathf.Max(RectangleCombat.Ground, position.y - 0.9f);
         }
 
-        public void Draw(RectangleCombat world, float aimDirection = 0, bool preview = false, RectangleCombat framing = null, RectangleCombat next = null, float blend = 0)
+        public void Draw(RectangleCombat world, float aimDirection = 0, RectangleCombat framing = null, RectangleCombat next = null, float blend = 0)
         {
             used = 0;
             
@@ -96,7 +100,7 @@ namespace WelpTimeToDie.RectanglePrototype
                 var fighter = world.Player.Copy();
                 fighter.X = Mathf.Lerp(fighter.X, next?.Player.X ?? fighter.X, blend);
                 fighter.Y = Mathf.Lerp(fighter.Y, next?.Player.Y ?? fighter.Y, blend);
-                playerAnimator.Show(fighter, world.Frame, preview);
+                playerAnimator.Show(fighter, world.Frame, false);
                 Box(fighter.X, fighter.Y + 2.1f, 1.1f, 0.07f, new Color(0.2f, 0.25f, 0.3f));
                 float width = 1.1f * fighter.Health / fighter.MaxHealth;
                 if (width > 0) Box(fighter.X - 0.55f + width / 2, fighter.Y + 2.1f, width, 0.07f, Blue);
@@ -113,7 +117,7 @@ namespace WelpTimeToDie.RectanglePrototype
                 var fighter = world.Fighters[1].Copy();
                 fighter.X = Mathf.Lerp(fighter.X, next?.Fighters[1].X ?? fighter.X, blend);
                 fighter.Y = Mathf.Lerp(fighter.Y, next?.Fighters[1].Y ?? fighter.Y, blend);
-                enemyGolem.Show(fighter, world.Frame, preview);
+                enemyGolem.Show(fighter, world.Frame, false);
                 Box(fighter.X, fighter.Y + 2.1f, 1.1f, 0.07f, new Color(0.2f, 0.25f, 0.3f));
                 float width = 1.1f * fighter.Health / fighter.MaxHealth;
                 if (width > 0) Box(fighter.X - 0.55f + width / 2, fighter.Y + 2.1f, width, 0.07f, Red);
@@ -126,12 +130,6 @@ namespace WelpTimeToDie.RectanglePrototype
 
             if (aimDirection != 0 && world.Player.IsAlive)
                 Box(world.Player.X + aimDirection * 0.9f, world.Player.Y + 0.9f, 0.35f, 0.08f, Blue);
-            
-            if (preview)
-            {
-                playerBody.color = new Color(playerBody.color.r, playerBody.color.g, playerBody.color.b, 0.65f);
-                enemyBody.color = new Color(enemyBody.color.r, enemyBody.color.g, enemyBody.color.b, 0.65f);
-            }
             
             for (int i = used; i < overlays.Count; i++) overlays[i].enabled = false;
             

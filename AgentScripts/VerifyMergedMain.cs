@@ -93,31 +93,83 @@ public static class VerifyMergedMain
         camera.Pan(Vector2.right * 4); Require(camera.IsBrowsing,"Camera browse failed"); await Task.Delay(100);
         Click(root,"recenterPlayer"); Require(!camera.IsBrowsing,"Camera recenter failed");
         float zoom = camera.Zoom; camera.ZoomBy(1, new Vector2(Screen.width/2,Screen.height/2)); Require(camera.Zoom < zoom,"Zoom failed");
-        Click(root,"movePunch"); Click(root,"aimRight");
+        await VerifyPreview(arena, rig);
+        Click(root,"resetEncounter"); Click(root,"moveJump");
+        var jump = arena.CurrentPlan; Require(jump != null,"Jump unavailable at spawn");
+        Click(root,"stepFrame"); Require(arena.World.Frame==1 && arena.IsPaused,"Single step failed");
+        string before = Signature(arena.World); await Task.Delay(200); Require(Signature(arena.World)==before,"Paused playback advanced");
+        for(int i=1;i<jump.Frames.Count;i++) Click(root,"stepFrame");
+        Require(Signature(arena.World)==Signature(jump.Frames.Last()),"Stepped jump differs from rehearsal");
+        Click(root,"resetEncounter");
+        root.Q<Foldout>("mapOptions").value = false;
+        return new { ticking=true, oneGolem=true, rigFreezes=true, previewLoopsWithKeyPoses=true, previewPreservesCombatAndBones=true,
+            goMatchesPreview=true, jumpAndFrameStep=true, seedRepeatable=true, cameraBrowseZoomRecenter=true };
+    }
+
+    public static async Task<object> Preview()
+    {
+        var arena = UnityEngine.Object.FindFirstObjectByType<RectangleArena>();
+        var rig = UnityEngine.Object.FindFirstObjectByType<GolemPhysicsAnimator>();
+        var options = arena.Document.rootVisualElement.Q<Foldout>("mapOptions");
+        bool expanded = options.value;
+        try
+        {
+            arena.Restart();
+            options.value = true;
+            await Task.Delay(150);
+            await VerifyPreview(arena, rig);
+            return new { previewLoopsWithKeyPoses=true, previewPreservesCombatAndBones=true, goMatchesPreview=true };
+        }
+        finally
+        {
+            arena.Restart();
+            options.value = expanded;
+        }
+    }
+
+    private static async Task VerifyPreview(RectangleArena arena, GolemPhysicsAnimator rig)
+    {
+        var root = arena.Document.rootVisualElement;
+        var bones = rig.GetComponentsInChildren<Transform>();
+        var preview = root.Q<Toggle>("showPreview");
+        Require(preview.value && arena.IsWatching, "Preview should start checked and loop automatically");
+        Click(root,"moveDash"); Click(root,"aimLeft");
+        var leftDash = arena.CurrentPlan;
+        Click(root,"aimRight");
+        Require(arena.CurrentPlan != leftDash, "Aiming did not refresh the active preview");
+        var fullDash = arena.CurrentPlan;
+        root.Q<Slider>("dashPower").value = 0.4f;
+        Require(arena.CurrentPlan != fullDash, "Changing dash strength did not refresh the active preview");
+        root.Q<Slider>("dashPower").value = 1f;
+        Click(root,"moveJump");
         var plan = arena.CurrentPlan; Require(plan != null,"No rehearsal");
         string before = Signature(arena.World);
-        float spine = rig.BoneOffset(GolemBone.Spine);
-        Click(root,"watchPreview"); Require(arena.IsWatching,"Preview button failed");
-        await Task.Delay(3200);
-        Require(!arena.IsWatching,"Preview did not return");
+        var rotations = bones.Select(t => t.localRotation).ToArray();
+        await Task.Delay(100);
+        var ghost = GameObject.Find("Player preview");
+        var key = GameObject.Find("Player preview key pose 1");
+        Require(ghost != null && key != null, "Animated ghost and key pose should be visible");
+        var initialGhostPosition = ghost.transform.position;
+        var keyPosition = key.transform.position;
+        await Task.Delay(200);
+        Require(ghost.transform.position != initialGhostPosition, "Ghost pose did not move");
+        await Task.Delay(2200);
+        Require(arena.IsWatching && arena.CurrentPlan == plan, "Preview should keep looping the current plan");
+        Require(key.activeInHierarchy && key.transform.position == keyPosition, "Key pose changed during the loop");
         Require(Signature(arena.World) == before,"Preview mutated live combat");
-        Require(Mathf.Abs(rig.BoneOffset(GolemBone.Spine)-spine)<0.0001f,"Preview did not restore rig");
+        Require(bones.Select((t,i) => t.localRotation == rotations[i]).All(v=>v), "Preview moved live bones");
+        preview.value = false;
+        Require(!arena.IsWatching && !ghost.activeInHierarchy && !key.activeInHierarchy, "Checkbox did not hide ghosts");
+        preview.value = true;
+        await Task.Delay(120);
+        Require(arena.IsWatching && ghost.activeInHierarchy, "Checkbox did not resume the loop");
         Click(root,"goAction"); Require(arena.IsPlaying,"Go button failed");
+        Require(!arena.IsWatching && !ghost.activeInHierarchy, "Ghosts stayed visible during committed playback");
         await Task.Delay(2600);
         Require(!arena.IsPlaying,"Go did not finish");
         Require(Signature(arena.World)==Signature(plan.Frames.Last()),"Go differs from preview");
         rotations = bones.Select(t=>t.localRotation).ToArray();
         await Task.Delay(250);
         Require(bones.Select((t,i)=>t.localRotation==rotations[i]).All(v=>v),"Rig continued settling after Go");
-        Click(root,"resetEncounter"); Click(root,"moveJump");
-        var jump = arena.CurrentPlan; Require(jump != null,"Jump unavailable at spawn");
-        Click(root,"stepFrame"); Require(arena.World.Frame==1 && arena.IsPaused,"Single step failed");
-        before = Signature(arena.World); await Task.Delay(200); Require(Signature(arena.World)==before,"Paused playback advanced");
-        for(int i=1;i<jump.Frames.Count;i++) Click(root,"stepFrame");
-        Require(Signature(arena.World)==Signature(jump.Frames.Last()),"Stepped jump differs from rehearsal");
-        Click(root,"resetEncounter");
-        root.Q<Foldout>("mapOptions").value = false;
-        return new { ticking=true, oneGolem=true, rigFreezes=true, previewRestoresCombatAndBones=true,
-            goMatchesPreview=true, jumpAndFrameStep=true, seedRepeatable=true, cameraBrowseZoomRecenter=true };
     }
 }

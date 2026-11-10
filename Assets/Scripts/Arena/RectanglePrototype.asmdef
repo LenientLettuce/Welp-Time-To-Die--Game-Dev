@@ -1,6 +1,6 @@
 {
     "name": "WelpTimeToDie.RectanglePrototype",
     "rootNamespace": "WelpTimeToDie.RectanglePrototype",
-    "references": ["Unity.InputSystem", "WelpTimeToDie.Gameplay"],
+    "references": ["Unity.InputSystem", "Unity.2D.Animation.Runtime", "WelpTimeToDie.Gameplay"],
     "autoReferenced": false
 }

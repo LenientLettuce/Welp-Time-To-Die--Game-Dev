@@ -35,6 +35,13 @@ namespace WelpTimeToDie.RectanglePrototype
         public const float Width = 30, Height = 12, Ground = 1.4f;
         public const float SpikeLeft = 17, SpikeRight = 20;
         public const float BodySpacing = 1.1f;
+        private const int MotionSubsteps = 2;
+        private const float MotionStep = 1f / (FramesPerSecond * MotionSubsteps);
+        private const float StepSpeed = 7.2f, DashSpeed = 20f, DashKickSpeed = 10.5f;
+        private const float GroundAcceleration = 120f, AirAcceleration = 30f;
+        private const float GroundBrake = 32f, GroundDrag = 2.5f, AirBrake = 2f, HitstunBrake = 22f;
+        private const float JumpSpeed = 14.5f, JumpDrift = 3f;
+        private const float RiseGravity = 38f, FallGravity = 54f, MaxFallSpeed = 26f;
         public readonly List<RectangleFighter> Fighters = new List<RectangleFighter>();
         public readonly List<RectangleProjectile> Projectiles = new List<RectangleProjectile>();
         public bool HazardsEnabled { get; set; } = true;
@@ -168,40 +175,18 @@ namespace WelpTimeToDie.RectanglePrototype
                 }
                 if (fighter.Move == CombatMove.None) continue;
                 fighter.Elapsed++;
-                if (fighter.Move == CombatMove.Jump && fighter.Elapsed == 1) fighter.VelocityY = 14;
+                if (fighter.Elapsed == 1) BeginMotion(fighter);
             }
-          for (int substep = 0; substep < 2; substep++)
+            var previousX = new float[Fighters.Count];
+            for (int substep = 0; substep < MotionSubsteps; substep++)
             {
-                const float dt = 1f / (FramesPerSecond * 2);
-                var previousX = new float[Fighters.Count];
                 for (int i = 0; i < Fighters.Count; i++) previousX[i] = Fighters[i].X;
                 foreach (var fighter in Fighters)
                 {
-                    if (!fighter.IsAlive) continue;
-                    float move = 0;
-                    if (!stunnedThisFrame.Contains(fighter))
-                    {
-                        if (fighter.Move == CombatMove.Move) move = fighter.Facing * 2.4f / 8 * FramesPerSecond;
-                        if (fighter.Move == CombatMove.Dash) move = fighter.Facing * 5f * fighter.Power / 6 * FramesPerSecond;
-                        if (fighter.Move == CombatMove.Jump) move = fighter.Facing * 3;
-                        if (fighter.Move == CombatMove.DashKick && fighter.Elapsed <= Spec(fighter, fighter.Move).Startup)
-                            move = fighter.Facing * 10.5f;
-                    }
-                    float dx = (move + fighter.VelocityX) * dt;
-                    fighter.VelocityX *= 0.90f;
-                    fighter.VelocityY -= 30 * dt;
-                    if (Terrain != null)
-                        Terrain.Move(fighter, dx, fighter.VelocityY * dt,
-                            !stunnedThisFrame.Contains(fighter) && (fighter.Move == CombatMove.Move || fighter.Move == CombatMove.Dash || fighter.Move == CombatMove.DashKick));
-                    else
-                    {
-                        fighter.X = Clamp(fighter.X + dx, LeftLimit, RightLimit);
-                        fighter.Y += fighter.VelocityY * dt;
-                        if (fighter.Y < Ground) { fighter.Y = Ground; fighter.VelocityY = 0; }
-                    }
+                    if (fighter.IsAlive) AdvanceMotion(fighter, stunnedThisFrame.Contains(fighter));
                 }
                 SeparateBodies(previousX);
-                StepProjectiles(dt, hits);
+                StepProjectiles(MotionStep, hits);
             }
            for (int i = 0; i < Fighters.Count; i++)
             {
@@ -240,6 +225,64 @@ namespace WelpTimeToDie.RectanglePrototype
             return boundary || Finished;
         }
 
+        private static void BeginMotion(RectangleFighter fighter)
+        {
+            switch (fighter.Move)
+            {
+                case CombatMove.Jump:
+                    fighter.VelocityY = JumpSpeed;
+                    if (Math.Abs(fighter.VelocityX) < JumpDrift) fighter.VelocityX = fighter.Facing * JumpDrift;
+                    break;
+                case CombatMove.Dash:
+                    SetForwardSpeed(fighter, fighter.Facing, DashSpeed * fighter.Power);
+                    break;
+                case CombatMove.DashKick:
+                    SetForwardSpeed(fighter, fighter.Facing, DashKickSpeed);
+                    break;
+            }
+        }
+
+        private void AdvanceMotion(RectangleFighter fighter, bool stunned)
+        {
+            bool grounded = fighter.IsGrounded;
+            bool stepping = !stunned && fighter.Move == CombatMove.Move;
+            bool dashing = !stunned && (fighter.Move == CombatMove.Dash ||
+                (fighter.Move == CombatMove.DashKick && fighter.Elapsed <= Spec(fighter, fighter.Move).Startup));
+            if (stepping)
+            {
+                float target = fighter.Facing * StepSpeed;
+                float change = (grounded ? GroundAcceleration : AirAcceleration) * MotionStep;
+                fighter.VelocityX += Clamp(target - fighter.VelocityX, -change, change);
+            }
+            else if (!dashing)
+            {
+                // Passive moves coast. Hitstun slides longer on the ground, and air has very little drag.
+                float speed = Math.Abs(fighter.VelocityX);
+                float brake = !grounded ? AirBrake : stunned ? HitstunBrake : GroundBrake + GroundDrag * speed;
+                fighter.VelocityX = Math.Sign(fighter.VelocityX) * Math.Max(0, speed - brake * MotionStep);
+            }
+
+            float gravity = fighter.VelocityY > 0 ? RiseGravity : FallGravity;
+            fighter.VelocityY = Math.Max(-MaxFallSpeed, fighter.VelocityY - gravity * MotionStep);
+            float x = fighter.X + fighter.VelocityX * MotionStep;
+            float y = fighter.Y + fighter.VelocityY * MotionStep;
+            if (Terrain != null)
+            {
+                Terrain.Move(fighter, x - fighter.X, y - fighter.Y, stepping || dashing);
+                return;
+            }
+
+            fighter.X = Clamp(x, LeftLimit, RightLimit);
+            if (fighter.X != x) fighter.VelocityX = 0;
+            fighter.Y = Math.Max(y, Ground);
+            if (y <= Ground) fighter.VelocityY = 0;
+        }
+
+        private static void SetForwardSpeed(RectangleFighter fighter, float direction, float speed)
+        {
+            fighter.VelocityX = direction * Math.Max(speed, fighter.VelocityX * direction);
+        }
+
         private void SeparateBodies(float[] previousX)
         {
             for (int pass = 0; pass < Fighters.Count; pass++)
@@ -253,7 +296,11 @@ namespace WelpTimeToDie.RectanglePrototype
                         var right = firstOnLeft ? second : first;
                         float overlap = BodySpacing - (right.X - left.X);
                         if (overlap <= 0) continue;
-                        float leftShift = Math.Min(overlap / 2, left.X - LeftLimit);
+                        float leftTravel = Math.Max(0, left.X - previousX[firstOnLeft ? a : b]);
+                        float rightTravel = Math.Max(0, previousX[firstOnLeft ? b : a] - right.X);
+                        float inwardTravel = leftTravel + rightTravel;
+                        float leftShare = inwardTravel > 0 ? leftTravel / inwardTravel : 0.5f;
+                        float leftShift = Math.Min(overlap * leftShare, left.X - LeftLimit);
                         float rightShift = Math.Min(overlap - leftShift, RightLimit - right.X);
                         leftShift = Math.Min(overlap - rightShift, left.X - LeftLimit);
                         if (Terrain == null) { left.X -= leftShift; right.X += rightShift; }
@@ -265,8 +312,12 @@ namespace WelpTimeToDie.RectanglePrototype
                             remaining = BodySpacing - (right.X - left.X);
                             if (remaining > 0.001f) Terrain.Move(left, -remaining, 0, false);
                         }
-                        if (left.VelocityX > 0) left.VelocityX = 0;
-                        if (right.VelocityX < 0) right.VelocityX = 0;
+                        if (left.VelocityX > right.VelocityX)
+                        {
+                            // Remove closing speed while preserving shared motion along the ground.
+                            float contactSpeed = Clamp(0, right.VelocityX, left.VelocityX);
+                            left.VelocityX = right.VelocityX = contactSpeed;
+                        }
                     }
         }
 
@@ -328,8 +379,8 @@ namespace WelpTimeToDie.RectanglePrototype
             {
                 target.Move = CombatMove.None; target.Elapsed = 0;
                 target.Stun = target.IsAlive ? hit.Spec.Stun : 0;
-                target.VelocityX = hit.Direction * hit.Spec.Push;
-                if (hit.Spec.Launch > 0) target.VelocityY = hit.Spec.Launch;
+                SetForwardSpeed(target, hit.Direction, hit.Spec.Push);
+                if (hit.Spec.Launch > 0) target.VelocityY = Math.Max(target.VelocityY, hit.Spec.Launch);
             }
             LastEvent = !target.IsAlive ? $"{target.Name} defeated." : counter
                 ? $"COUNTER! {target.Name}'s wind-up cancelled. Stunned for {hit.Spec.Stun} frames."

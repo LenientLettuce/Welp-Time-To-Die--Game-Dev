@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -6,11 +5,11 @@ using UnityEngine.UIElements;
 
 namespace WelpTimeToDie.RectanglePrototype
 {
-  public sealed class RectangleArena : MonoBehaviour
+    public sealed class RectangleArena : MonoBehaviour
     {
         [SerializeField] private RectangleStage stage;
         private readonly Dictionary<CombatMove, Button> moves = new Dictionary<CombatMove, Button>();
-        private RectangleCombat world, rehearsalFrame, playbackOrigin;
+        private RectangleCombat world, playbackOrigin;
         [SerializeField] private UnityEngine.UIElements.VisualTreeAsset hudAsset;
         [SerializeField] private PanelSettings savedPanel;
         [SerializeField] private WelpTimeToDie.Levels.ProceduralTerrainMap terrain;
@@ -21,21 +20,23 @@ namespace WelpTimeToDie.RectanglePrototype
         public RectangleCombat World => world;
         public RectanglePlan CurrentPlan => plan;
         public bool IsPlaying => playing;
-        public bool IsWatching => watching;
+        public bool IsWatching => previewPlan != null;
         public bool IsPaused => paused;
         public UIDocument Document => document;
         private WelpTimeToDie.Levels.TerrainHeightMap initialMap;
         private WelpTimeToDie.Levels.TerrainFeatureState initialTerrain;
-        private RectanglePlan plan, activePlan;
+        private RectanglePlan plan, activePlan, previewPlan;
         private CombatMove selected = CombatMove.Punch;
         private float direction = 1;
         private int playbackIndex;
         private double playbackTime;
-        private float previewHold = -1;
-        private bool playing, watching;
+        private float previewTime;
+        private int previewTerrainRevision = -1;
+        private bool playing, showPreview = true;
         private UIDocument document;
         private Label status, help;
-        private Button goButton, previewButton;
+        private Button goButton;
+        private Toggle previewToggle;
 
         private void OnEnable()
         {
@@ -60,7 +61,9 @@ namespace WelpTimeToDie.RectanglePrototype
                 moves.Add(move, button);
             }
             goButton = root.Q<Button>("goAction"); goButton.clicked += Commit;
-            previewButton = root.Q<Button>("watchPreview"); previewButton.clicked += WatchPreview;
+            previewToggle = root.Q<Toggle>("showPreview");
+            previewToggle.SetValueWithoutNotify(showPreview);
+            previewToggle.RegisterValueChangedCallback(OnPreviewChanged);
             root.Q<Button>("resetEncounter").clicked += Restart;
             root.Q<Button>("pauseAction").clicked += () => paused = !paused;
             root.Q<Button>("stepFrame").clicked += StepFrame;
@@ -80,18 +83,20 @@ namespace WelpTimeToDie.RectanglePrototype
 
         public void Aim(float facing)
         {
-            if (playing || watching) return;
-            direction = facing < 0 ? -1 : 1;
+            if (playing || world == null || world.Finished) return;
+            float nextDirection = facing < 0 ? -1 : 1;
+            if (direction == nextDirection) return;
+            direction = nextDirection;
             RefreshPrediction();
         }
 
         public void StepFrame()
         {
-            if (watching || world.Finished) return;
+            if (world == null || world.Finished) return;
             if (!playing && plan == null)
             {
                 world = world.Copy(); world.Step(); world.PlanEnemies();
-                paused = true; RefreshPrediction(); stage.AdvanceRig(1f / 12);
+                paused = true; RefreshPrediction(); stage.AdvanceRig(1f / RectangleStage.PlaybackRate);
                 return;
             }
             if (!playing) Commit();
@@ -101,12 +106,12 @@ namespace WelpTimeToDie.RectanglePrototype
             playbackTime = 0;
             if (playbackIndex == activePlan.Frames.Count) { playing = false; RefreshPrediction(); }
             else Render();
-            stage.AdvanceRig(1f / 12);
+            stage.AdvanceRig(1f / RectangleStage.PlaybackRate);
         }
 
         public void Restart()
         {
-            stage.EndPreview();
+            HidePreview();
             paused = false;
             world = RectangleCombat.CreateBasic(FighterClass.Barbarian);
             if (terrain != null && terrain.HeightMap != null)
@@ -129,45 +134,58 @@ namespace WelpTimeToDie.RectanglePrototype
             }
             else stage.SetStartingPositions(world);
             stage.ResetRig();
-            mapCamera?.RecenterOnPlayer();
             selected = CombatMove.Punch;
             direction = 1;
             playing = false;
-            watching = false;
-            rehearsalFrame = null;
             activePlan = null;
-            previewHold = -1;
             playbackTime = 0;
             RefreshPrediction();
+            mapCamera?.FollowPlayer(stage.PlayerFollowTarget);
         }
 
         public void Select(CombatMove move)
         {
-            if (playing || watching || world.Finished) return;
+            if (playing || world == null || world.Finished || selected == move) return;
             selected = move;
             RefreshPrediction();
         }
 
-        public void WatchPreview()
+        private void OnPreviewChanged(ChangeEvent<bool> change)
         {
-            if (watching)
+            showPreview = change.newValue;
+            if (!showPreview && previewPlan != null) HidePreview();
+        }
+
+        private void UpdatePreview(float deltaTime)
+        {
+            if (!showPreview || playing || plan == null)
             {
-                watching = false;
-                stage.EndPreview();
-                rehearsalFrame = null;
-                Render();
+                if (previewPlan != null) HidePreview();
                 return;
             }
-            if (playing || plan == null) return;
-            activePlan = plan;
-            playbackOrigin = world;
-            stage.BeginPreview();
-            watching = true;
-            paused = false;
-            playbackIndex = 0;
-            playbackTime = 0;
-            previewHold = -1;
-            Render();
+            if (previewPlan != plan)
+            {
+                stage.PreparePreview(world, plan);
+                previewPlan = plan;
+                previewTime = 0f;
+            }
+            else previewTime += deltaTime;
+
+            var future = stage.DrawPreview(world, previewPlan, previewTime);
+            if (terrain == null || future.Terrain == null) return;
+            int revision = future.Terrain.State.Revision == world.Terrain.State.Revision ? -1 : future.Terrain.State.Revision;
+            if (revision == previewTerrainRevision) return;
+            if (revision < 0) terrain.Features.ClearPreview();
+            else terrain.Features.Visuals.RenderPreview(future.Terrain.State);
+            previewTerrainRevision = revision;
+        }
+
+        private void HidePreview()
+        {
+            stage?.HidePreview();
+            if (previewTerrainRevision >= 0 && terrain != null) terrain.Features?.ClearPreview();
+            previewTerrainRevision = -1;
+            previewPlan = null;
         }
 
         private void RefreshPrediction()
@@ -178,12 +196,11 @@ namespace WelpTimeToDie.RectanglePrototype
 
         public void Commit()
         {
-            if (playing || watching || world == null || plan == null) return;
+            if (playing || world == null || plan == null) return;
             activePlan = plan;
             playbackOrigin = world;
             playing = true;
             paused = false;
-            previewHold = -1;
             playbackIndex = 0;
             playbackTime = 0;
             Render();
@@ -198,19 +215,7 @@ namespace WelpTimeToDie.RectanglePrototype
                 if (keyboard.rKey.wasPressedThisFrame) { Restart(); return; }
                 if (keyboard.enterKey.wasPressedThisFrame) Commit();
             }
-            if (watching && previewHold >= 0)
-            {
-                previewHold -= Time.unscaledDeltaTime;
-                if (previewHold <= 0)
-                {
-                    watching = false;
-                    stage.EndPreview();
-                    rehearsalFrame = null;
-                    Render();
-                }
-                return;
-            }
-            if (!playing && !watching)
+            if (!playing)
             {
                 var mouse = Mouse.current;
                 if (mouse != null && mouse.leftButton.wasPressedThisFrame && world.Player.IsReady && !world.Finished)
@@ -219,104 +224,86 @@ namespace WelpTimeToDie.RectanglePrototype
                     if (stage.ArenaCamera.pixelRect.Contains(screen) && !IsOverHud(screen))
                     {
                         Vector3 point = stage.ArenaCamera.ScreenToWorldPoint(new Vector3(screen.x, screen.y, 10));
-                        direction = point.x < world.Player.X ? -1 : 1;
-                        RefreshPrediction();
+                        Aim(point.x < world.Player.X ? -1 : 1);
                     }
                 }
+                UpdatePreview(Time.unscaledDeltaTime);
                 return;
             }
             if (paused) { Render(); return; }
             stage.AdvanceRig(Time.unscaledDeltaTime);
             playbackTime += Time.unscaledDeltaTime;
-            while ((playing || watching) && playbackTime >= 1d / 12)
+            while (playing && playbackTime >= 1d / RectangleStage.PlaybackRate)
             {
-                playbackTime -= 1d / 12;
-                var previous = watching && rehearsalFrame != null ? rehearsalFrame : world;
+                playbackTime -= 1d / RectangleStage.PlaybackRate;
                 var next = activePlan.Frames[playbackIndex++];
-                bool impact = next.Player.Health < previous.Player.Health || next.Fighters[1].Health < previous.Fighters[1].Health;
-                if (watching) rehearsalFrame = next;
-                else world = next.Copy();
+                bool impact = next.Player.Health < world.Player.Health || next.Fighters[1].Health < world.Fighters[1].Health;
+                world = next.Copy();
                 if (playbackIndex == activePlan.Frames.Count)
                 {
                     playbackTime = 0;
-                    if (watching)
-                    {
-                        previewHold = 1.1f;
-                        Render();
-                    }
-                    else
-                    {
-                        playing = false;
-                        RefreshPrediction();
-                    }
+                    playing = false;
+                    RefreshPrediction();
                     break;
                 }
                 else Render();
                 if (impact) { playbackTime = -0.065; break; }
             }
-            if (playing || watching) Render();
+            if (playing) Render();
         }
 
         private WelpTimeToDie.Levels.TerrainFeatureState renderedTerrain;
         private void Render()
         {
-            var shown = watching && rehearsalFrame != null ? rehearsalFrame : world;
-            var enemy = shown.Fighters[1];
-            string phase = watching ? "PREVIEW - nothing committed" : world.Lost ? "You died - Reset to retry" : world.Won ? "You win!" : playing ? "Playing..."
+            var enemy = world.Fighters[1];
+            string phase = world.Lost ? "You died - Reset to retry" : world.Won ? "You win!" : playing ? "Playing..."
                 : !world.Player.IsReady ? "Move still running - Continue" : "Paused";
             string intent = !enemy.IsAlive ? "Defeated" : enemy.Stun > 0 ? $"Stunned {enemy.Stun}f" : enemy.Move == CombatMove.None ? "Ready"
                 : enemy.Elapsed < RectangleCombat.Spec(enemy, enemy.Move).Startup ? $"{RectangleCombat.Spec(enemy, enemy.Move).Name} in {RectangleCombat.Spec(enemy, enemy.Move).Startup - enemy.Elapsed}f"
                 : $"{RectangleCombat.Spec(enemy, enemy.Move).Name} ({enemy.Remaining}f left)";
-            status.text = $"{phase} | You {shown.Player.Health} HP | Enemy {enemy.Health} HP - {intent}";
+            status.text = $"{phase} | You {world.Player.Health} HP | Enemy {enemy.Health} HP - {intent}";
             var enemyMove = RectangleCombat.Spec(enemy, enemy.Move);
             status.tooltip = enemy.IsAlive && enemy.Move != CombatMove.None
                 ? $"Enemy: {enemyMove.Name}. Hits in {Mathf.Max(0, enemyMove.Startup - enemy.Elapsed)} frames.\n{world.LastEvent}"
                 : world.LastEvent;
             foreach (var pair in moves)
             {
-                bool available = !playing && !watching && world.CanStart(0, pair.Key);
-                pair.Value.SetEnabled(!playing && !watching && !world.Finished);
+                bool available = !playing && world.CanStart(0, pair.Key);
+                pair.Value.SetEnabled(!playing && !world.Finished);
                 pair.Value.tooltip = available ? RectangleCombat.Spec(world.Player, pair.Key).Name : "Recharging or requires ground contact";
                 pair.Value.EnableInClassList("selected", selected == pair.Key);
             }
             goButton.text = !world.Player.IsReady && !world.Finished ? "Continue >" : "Go  >";
-            goButton.SetEnabled(!playing && !watching && plan != null);
-            previewButton.text = watching ? "Stop preview" : "Watch preview";
-            previewButton.SetEnabled(!playing && !world.Finished);
-            if (!watching) previewButton.SetEnabled(!playing && plan != null);
-            string moveName = RectangleCombat.Spec(world.Player, selected).Name;
-            help.text = watching ? (previewHold >= 0 ? activePlan.Summary : $"Previewing {activePlan.MoveName}... Your real position and health are safe.")
-                : world.Finished ? "Reset to try again."
+            goButton.SetEnabled(!playing && plan != null);
+            string moveName = plan?.MoveName ?? RectangleCombat.Spec(world.Player, selected).Name;
+            help.text = world.Finished ? "Reset to try again."
                 : playing ? "Resolving your move..."
                 : plan == null ? $"{moveName} is recharging. Choose another move."
                 : $"{moveName} {(direction < 0 ? "left" : "right")}. {plan.Summary}";
-            RectangleCombat nextVisual = (playing || watching) && previewHold < 0 && playbackIndex < activePlan.Frames.Count
+            RectangleCombat nextVisual = playing && playbackIndex < activePlan.Frames.Count
                 ? activePlan.Frames[playbackIndex] : null;
-            root.Q<Label>("frameCount").text = $"Frame {shown.Frame} · 24 Hz combat / 12 Hz playback";
-            root.Q<Button>("generateMap").SetEnabled(!playing && !watching);
-            root.Q<Button>("randomizeMap").SetEnabled(!playing && !watching);
-            root.Q<Slider>("dashPower").SetEnabled(!playing && !watching);
-            if (terrain != null && shown.Terrain != null)
+            root.Q<Label>("frameCount").text = $"Frame {world.Frame} · {RectangleCombat.FramesPerSecond} Hz combat";
+            root.Q<Button>("generateMap").SetEnabled(!playing);
+            root.Q<Button>("randomizeMap").SetEnabled(!playing);
+            root.Q<Slider>("dashPower").SetEnabled(!playing);
+            if (terrain != null && world.Terrain != null && renderedTerrain != world.Terrain.State)
             {
-                if (watching) terrain.Features.Visuals.RenderPreview(shown.Terrain.State);
-                else
-                {
-                    terrain.Features.ClearPreview();
-                    if (renderedTerrain != shown.Terrain.State)
-                    { terrain.Features.RestoreCommitted(shown.Terrain.State); renderedTerrain = shown.Terrain.State; }
-                }
+                terrain.Features.RestoreCommitted(world.Terrain.State);
+                renderedTerrain = world.Terrain.State;
+                previewTerrainRevision = -1;
             }
-            stage.Draw(shown, !playing && !watching && world.Player.IsReady ? direction : 0, watching,
-                watching || playing ? playbackOrigin : null, nextVisual, Mathf.Clamp01((float)playbackTime * 12));
+            stage.Draw(world, !playing && world.Player.IsReady ? direction : 0, playing ? playbackOrigin : null,
+                nextVisual, Mathf.Clamp01((float)playbackTime * RectangleStage.PlaybackRate));
+            if ((playing || plan == null) && previewPlan != null) HidePreview();
         }
 
         private void OnDisable()
         {
             playing = false;
-            watching = false;
+            previewToggle?.UnregisterValueChangedCallback(OnPreviewChanged);
             moves.Clear();
-            if (terrain != null) { terrain.Generated -= Restart; terrain.Features?.ClearPreview(); }
-            stage?.EndPreview();
+            if (terrain != null) terrain.Generated -= Restart;
+            HidePreview();
         }
     }
 }

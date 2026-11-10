@@ -70,7 +70,8 @@ namespace WelpTimeToDie.RectanglePrototype
             float stepX = dx / steps, stepY = dy / steps;
             for (int i = 0; i < steps; i++)
             {
-                float x = Mathf.Clamp(fighter.X + stepX, MinX + HalfWidth, MaxX - HalfWidth);
+                float targetX = fighter.X + stepX;
+                float x = Mathf.Clamp(targetX, MinX + HalfWidth, MaxX - HalfWidth);
                 if (Fits(x, fighter.Y)) fighter.X = x;
                 else
                 {
@@ -86,8 +87,13 @@ namespace WelpTimeToDie.RectanglePrototype
                             { fighter.X = x; fighter.Y = top; stepped = true; }
                         }
                     }
-                    if (!stepped) fighter.VelocityX = 0;
+                    if (!stepped)
+                    {
+                        if (fighter.VelocityX * stepX > 0) fighter.VelocityX = 0;
+                        stepX = 0;
+                    }
                 }
+                if (x != targetX && fighter.VelocityX * stepX > 0) fighter.VelocityX = 0;
                 float y = fighter.Y + stepY;
                 if (Fits(fighter.X, y)) fighter.Y = y;
                 else

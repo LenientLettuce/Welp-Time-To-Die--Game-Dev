@@ -20,7 +20,7 @@ namespace WelpTimeToDie.RectanglePrototype
         public bool IsAlive => Health > 0;
         public bool IsReady => IsAlive && Move == CombatMove.None && Stun == 0;
         public bool? TerrainGrounded;
-        public bool IsGrounded => TerrainGrounded ?? Y <= RectangleCombat.Ground + 0.001f;
+        public bool IsGrounded => VelocityY <= 0 && (TerrainGrounded ?? Y <= RectangleCombat.Ground + 0.001f);
         public int Remaining => Move == CombatMove.None ? Stun : Math.Max(0, RectangleCombat.Spec(this, Move).Duration - Elapsed);
 
         public RectangleFighter Copy()

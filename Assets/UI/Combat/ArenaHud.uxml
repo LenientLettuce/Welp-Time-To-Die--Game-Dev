@@ -16,7 +16,8 @@
         <ui:Button name="moveWait" text="Wait" tooltip="Advance 4 combat frames." />
       </ui:VisualElement>
       <ui:VisualElement class="arena-row">
-        <ui:Button name="watchPreview" text="Watch preview" />
+        <ui:Toggle name="showPreview" text="Show preview" value="true" class="preview-toggle"
+          tooltip="Loop the selected move. Cyan is you, amber is the enemy, and faint silhouettes mark key poses." />
         <ui:Button name="goAction" class="go-action" text="Go  &gt;" />
       </ui:VisualElement>
       <ui:Label name="arenaHelp" class="arena-help" />

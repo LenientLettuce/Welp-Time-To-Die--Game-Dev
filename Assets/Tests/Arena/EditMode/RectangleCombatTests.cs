@@ -271,6 +271,64 @@ namespace WelpTimeToDie.RectanglePrototype.Tests
         }
 
         [Test]
+        public void WaitCoastsAfterDashAndMatchesTheRehearsal()
+        {
+            var world = RectangleCombat.CreateBasic(FighterClass.Barbarian);
+            var enemy = world.Fighters[1];
+            enemy.X = 25;
+            enemy.Move = CombatMove.None;
+            enemy.Stun = 100;
+            world.Start(0, CombatMove.Dash, 1, 0);
+            Advance(world, 6);
+            float dashEnd = world.Player.X;
+            float dashSpeed = world.Player.VelocityX;
+            Assert.That(dashSpeed, Is.GreaterThan(0));
+
+            var plan = RectanglePlan.Create(world, CombatMove.Wait, 1);
+            Assert.That(world.Player.VelocityX, Is.EqualTo(dashSpeed));
+            Assert.That(world.Start(0, CombatMove.Wait, 1, 0), Is.True);
+            foreach (var frame in plan.Frames)
+            {
+                Advance(world, 1);
+                Assert.That(world.Player.X, Is.EqualTo(frame.Player.X));
+                Assert.That(world.Player.VelocityX, Is.EqualTo(frame.Player.VelocityX));
+            }
+            Assert.That(world.Player.X, Is.GreaterThan(dashEnd + 1));
+            Assert.That(world.Player.VelocityX, Is.InRange(0.1f, dashSpeed - 0.1f));
+        }
+
+        [Test]
+        public void AirborneWaitKeepsHorizontalMomentumWhileGravityContinues()
+        {
+            var world = RectangleCombat.CreateBasic(FighterClass.Barbarian);
+            world.Player.Y = RectangleCombat.Ground + 4;
+            world.Player.VelocityX = -10;
+            world.Start(0, CombatMove.Wait, 1, 0);
+            Advance(world, 4);
+
+            Assert.That(world.Player.VelocityX, Is.LessThan(-9));
+            Assert.That(world.Player.X, Is.LessThan(7));
+            Assert.That(world.Player.Y, Is.LessThan(RectangleCombat.Ground + 4));
+            Assert.That(world.Player.VelocityY, Is.LessThan(0));
+        }
+
+        [Test]
+        public void KnockbackCarriesAnEnemyThroughHitstun()
+        {
+            var world = RectangleCombat.CreateBasic(FighterClass.Barbarian);
+            var enemy = world.Fighters[1];
+            world.Start(0, CombatMove.Kick, 1, 0);
+            Advance(world, 7);
+            float impactX = enemy.X;
+            Assert.That(enemy.Stun, Is.EqualTo(9));
+            Advance(world, 4);
+
+            Assert.That(enemy.Stun, Is.EqualTo(5));
+            Assert.That(enemy.X, Is.GreaterThan(impactX + 1));
+            Assert.That(enemy.VelocityX, Is.GreaterThan(4));
+        }
+
+        [Test]
         public void FrontalBlockReducesHeavyDamageWithoutHitstun()
         {
             var world = RectangleCombat.Create(FighterClass.Barbarian);

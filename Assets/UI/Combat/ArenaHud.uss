@@ -9,6 +9,8 @@
 .arena-root Button:disabled { opacity: 0.4; }
 .arena-header Button { flex-grow: 0; width: 72px; }
 .arena-root Button.go-action { background-color: rgb(31, 102, 117); }
+.preview-toggle { height: 32px; margin: 0 12px 3px 3px; padding: 0 6px; color: rgb(185, 228, 255); }
+.preview-toggle .unity-toggle__checkmark { margin-right: 6px; }
 .arena-help { margin-top: 5px; white-space: normal; font-size: 12px; }
 .advanced-scroll { max-height: 180px; }
 .seed-label { white-space: normal; font-size: 11px; }
