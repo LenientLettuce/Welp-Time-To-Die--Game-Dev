@@ -15,6 +15,8 @@ namespace WelpTimeToDie.Cameras
         [SerializeField, Min(0.1f)] private float minimumZoom = 2f;
         [SerializeField, Min(0.1f)] private float maximumZoom = 24f;
         private Camera mapCamera;
+        private Vector2 followViewport = new Vector2(0, 1);
+        private Vector2? fighterHeights;
 
         public bool IsBrowsing { get; private set; }
         public float Zoom => ViewCamera.orthographicSize;
@@ -29,7 +31,37 @@ namespace WelpTimeToDie.Cameras
         private void LateUpdate()
         {
             if (!IsBrowsing && player != null)
-                SetPosition((Vector2)player.position + followOffset);
+                UpdateFollowPosition();
+        }
+
+        public void SetCombatFraming(Vector2 viewport, Vector2 feet)
+        {
+            followViewport = viewport;
+            fighterHeights = feet;
+        }
+
+        private void UpdateFollowPosition()
+        {
+            var position = (Vector2)player.position + followOffset;
+            if (fighterHeights is Vector2 feet)
+            {
+                const float fighterClearance = 2.35f;
+                float viewHeight = Zoom * 2f;
+                float bottom = (followViewport.x - 0.5f) * viewHeight;
+                float top = (followViewport.y - 0.5f) * viewHeight;
+                float minCenter = Mathf.Max(feet.x, feet.y) + fighterClearance - top;
+                float maxCenter = Mathf.Min(feet.x, feet.y) - bottom;
+                if (minCenter > maxCenter)
+                {
+                    // At close zoom, frame the player if both fighters don't fit.
+                    position.y = (minCenter + maxCenter) * 0.5f;
+                    minCenter = feet.x + fighterClearance - top;
+                    maxCenter = feet.x - bottom;
+                }
+                position.y = minCenter <= maxCenter ? Mathf.Clamp(position.y, minCenter, maxCenter)
+                    : (minCenter + maxCenter) * 0.5f;
+            }
+            SetPosition(position);
         }
 
         public void FollowPlayer(Transform target)
@@ -41,7 +73,7 @@ namespace WelpTimeToDie.Cameras
         public void RecenterOnPlayer()
         {
             IsBrowsing = false;
-            if (player != null) SetPosition((Vector2)player.position + followOffset);
+            if (player != null) UpdateFollowPosition();
         }
 
         public void BeginBrowse() => IsBrowsing = true;

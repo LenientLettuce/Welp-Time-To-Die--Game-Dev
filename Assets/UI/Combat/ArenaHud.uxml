@@ -1,24 +1,53 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements">
   <ui:Style src="ArenaHud.uss" />
   <ui:VisualElement name="arenaRoot" class="arena-root" picking-mode="Ignore">
-    <ui:VisualElement class="arena-header">
-      <ui:Label name="arenaStatus" class="arena-status" />
-      <ui:Button name="resetEncounter" text="Reset" />
+    <ui:VisualElement name="arenaHeader" class="arena-header">
+      <ui:VisualElement class="fighter-card player-card">
+        <ui:VisualElement class="fighter-heading">
+          <ui:Label text="PLAYER" class="eyebrow" />
+          <ui:Label name="playerHealth" class="health-label" />
+        </ui:VisualElement>
+        <ui:VisualElement class="health-track"><ui:VisualElement name="playerHealthFill" class="health-fill" /></ui:VisualElement>
+      </ui:VisualElement>
+      <ui:VisualElement class="intent-card">
+        <ui:Label text="GOLEM INTENT" class="eyebrow" />
+        <ui:Label name="arenaStatus" class="arena-status" />
+      </ui:VisualElement>
+      <ui:VisualElement class="fighter-card enemy-card">
+        <ui:VisualElement class="fighter-heading">
+          <ui:Label text="GOLEM" class="eyebrow" />
+          <ui:Label name="enemyHealth" class="health-label" />
+        </ui:VisualElement>
+        <ui:VisualElement class="health-track"><ui:VisualElement name="enemyHealthFill" class="health-fill" /></ui:VisualElement>
+      </ui:VisualElement>
+      <ui:Button name="resetEncounter" text="Reset" tooltip="Restart this encounter (R)." />
     </ui:VisualElement>
-    <ui:VisualElement class="arena-footer">
-      <ui:VisualElement class="arena-row">
-        <ui:Button name="moveMove" text="Move" tooltip="Step for 8 combat frames. Steps up one-block slopes." />
+    <ui:VisualElement name="arenaFooter" class="arena-footer">
+      <ui:VisualElement class="arena-row move-row">
+        <ui:Label text="STRIKE" class="eyebrow group-label" />
         <ui:Button name="movePunch" text="Punch" tooltip="4-frame startup. Fast interrupt; 9 frames total." />
         <ui:Button name="moveUppercut" text="Uppercut" tooltip="6-frame startup. Launches the target; 15 frames total." />
         <ui:Button name="moveKick" text="Kick" tooltip="7-frame startup. Long reach and knockback; 16 frames total." />
         <ui:Button name="moveDashKick" text="Dash kick" tooltip="8-frame rushing startup; 21 frames total. Terrain and bodies block the rush." />
+        <ui:Button name="moveSweep" text="Sweep" tooltip="5-frame startup. Trips a grounded enemy for 11 frames of stun. Grounded only." />
+        <ui:Button name="moveHeavy" text="Heavy strike" tooltip="9-frame startup. Deals 4 damage, or 1 through a frontal block." />
+      </ui:VisualElement>
+      <ui:VisualElement class="arena-row move-row mobility-row">
+        <ui:Label text="TACTICS" class="eyebrow group-label" />
+        <ui:Button name="moveMove" text="Step" tooltip="Step for 8 combat frames. Steps up one-block slopes." />
+        <ui:Button name="moveDash" text="Dash" tooltip="6 frames. Adjust dash strength in advanced controls." />
+        <ui:Button name="moveJump" text="Jump" tooltip="12 frames. Grounded only; aim sets horizontal drift." />
+        <ui:Button name="moveBackstep" text="Backstep" tooltip="Retreat opposite your aim without turning around. Grounded only." />
         <ui:Button name="moveBlock" text="Block" tooltip="Guard your chosen side for 8 frames." />
         <ui:Button name="moveWait" text="Wait" tooltip="Advance 4 combat frames." />
       </ui:VisualElement>
-      <ui:VisualElement class="arena-row">
+      <ui:VisualElement class="arena-row action-row">
+        <ui:Label text="AIM" class="eyebrow group-label" />
+        <ui:Button name="aimLeft" text="‹ Left" />
+        <ui:Button name="aimRight" text="Right ›" />
         <ui:Toggle name="showPreview" text="Show preview" value="true" class="preview-toggle"
-          tooltip="Loop the selected move. Cyan is you, amber is the enemy, and faint silhouettes mark key poses." />
-        <ui:Button name="goAction" class="go-action" text="Go  &gt;" />
+          tooltip="Cyan traces your move. Amber is the Golem. The diamond marks your endpoint, and white marks contact." />
+        <ui:Button name="goAction" class="go-action" text="Commit move  ›" />
       </ui:VisualElement>
       <ui:Label name="arenaHelp" class="arena-help" />
       <ui:Foldout name="mapOptions" text="Map &amp; advanced controls" value="false">
@@ -32,12 +61,6 @@
             <ui:Button name="recenterPlayer" text="Recenter on player" />
           </ui:VisualElement>
           <ui:Label text="Right mouse: browse map · Scroll: zoom · Click world: face left/right" />
-          <ui:VisualElement class="arena-row">
-            <ui:Button name="moveDash" text="Dash" tooltip="6 frames. Distance scales with strength; terrain blocks movement." />
-            <ui:Button name="moveJump" text="Jump" tooltip="12 frames. Grounded only; aim sets horizontal drift." />
-            <ui:Button name="aimLeft" text="Face left" />
-            <ui:Button name="aimRight" text="Face right" />
-          </ui:VisualElement>
           <ui:Slider name="dashPower" label="Dash strength" low-value="0.1" high-value="1" value="1" />
           <ui:VisualElement class="arena-row">
             <ui:Button name="pauseAction" text="Pause / Resume" />
@@ -46,6 +69,14 @@
           </ui:VisualElement>
         </ui:ScrollView>
       </ui:Foldout>
+    </ui:VisualElement>
+    <ui:VisualElement name="resultOverlay" class="result-overlay hidden">
+      <ui:VisualElement class="result-card">
+        <ui:Label text="ENCOUNTER COMPLETE" class="eyebrow" />
+        <ui:Label name="resultTitle" class="result-title" />
+        <ui:Label name="resultDetails" class="result-details" />
+        <ui:Button name="rematchButton" text="Fight again  ›" class="go-action rematch-button" />
+      </ui:VisualElement>
     </ui:VisualElement>
   </ui:VisualElement>
 </ui:UXML>

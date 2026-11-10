@@ -1,18 +1,123 @@
-.arena-root { flex-grow: 1; color: rgb(236, 242, 250); font-size: 14px; }
-.arena-header { position: absolute; left: 0; right: 0; top: 0; flex-direction: row; align-items: center; padding: 5px 12px; background-color: rgb(14, 18, 26); }
-.arena-status { flex-grow: 1; white-space: normal; }
-.arena-footer { position: absolute; left: 0; right: 0; bottom: 0; padding: 8px 10px; background-color: rgb(14, 18, 26); }
+.arena-root {
+    --panel: rgb(17, 24, 34);
+    --line: rgb(61, 80, 98);
+    --text: rgb(236, 245, 250);
+    --muted: rgb(169, 190, 207);
+    --cyan: rgb(116, 228, 246);
+    --amber: rgb(255, 192, 117);
+    flex-grow: 1;
+    color: var(--text);
+    font-size: 14px;
+}
+
+.arena-header, .arena-footer {
+    position: absolute;
+    left: 16px;
+    right: 16px;
+    padding: 10px 14px;
+    background-color: var(--panel);
+    border-width: 1px;
+    border-color: var(--line);
+    border-radius: 10px;
+}
+
+.arena-header {
+    top: 12px;
+    flex-direction: row;
+    align-items: center;
+}
+
+.fighter-card { flex: 1 1 0; min-width: 0; }
+.fighter-heading { flex-direction: row; align-items: center; justify-content: space-between; }
+.eyebrow {
+    margin: 0;
+    font-size: 11px;
+    -unity-font-style: bold;
+    letter-spacing: 1px;
+    color: var(--muted);
+}
+.player-card .eyebrow { color: var(--cyan); }
+.enemy-card .eyebrow { color: var(--amber); }
+.health-label { margin: 0; font-size: 12px; -unity-font-style: bold; }
+.health-track { height: 7px; margin-top: 5px; border-radius: 4px; background-color: rgb(43, 58, 73); overflow: hidden; }
+.health-fill { height: 100%; border-radius: 4px; }
+.player-card .health-fill { background-color: var(--cyan); }
+.enemy-card .health-fill { background-color: var(--amber); }
+.intent-card { width: 26%; min-width: 136px; align-items: center; padding: 0 8px; }
+.arena-status { margin: 2px 0 0; white-space: normal; -unity-text-align: middle-center; -unity-font-style: bold; }
+
+.arena-footer { bottom: 12px; background-color: rgba(17, 24, 34, 0.68); }
 .arena-row { flex-direction: row; flex-wrap: wrap; align-items: center; }
-.arena-root Button { height: 32px; min-width: 72px; flex-grow: 1; margin: 0 5px 3px 0; padding: 0 9px; background-color: rgb(36, 46, 61); color: rgb(245, 248, 255); border-width: 1px; border-color: rgb(71, 89, 112); -unity-text-align: middle-center; }
-.arena-root Button:hover { background-color: rgb(49, 66, 84); }
-.arena-root Button.selected { background-color: rgb(31, 92, 122); }
-.arena-root Button:disabled { opacity: 0.4; }
-.arena-header Button { flex-grow: 0; width: 72px; }
-.arena-root Button.go-action { background-color: rgb(31, 102, 117); }
-.preview-toggle { height: 32px; margin: 0 12px 3px 3px; padding: 0 6px; color: rgb(185, 228, 255); }
+.group-label { width: 70px; }
+.arena-root Button {
+    min-height: 34px;
+    min-width: 64px;
+    flex-grow: 1;
+    margin: 2px 5px 2px 0;
+    padding: 2px 10px;
+    border-width: 1px;
+    border-bottom-width: 3px;
+    border-radius: 7px;
+    border-color: var(--line);
+    border-bottom-color: rgb(17, 24, 34);
+    background-color: rgb(39, 52, 68);
+    color: var(--text);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    transition-property: background-color, border-color;
+    transition-duration: 0.1s;
+}
+.arena-root Button:hover { background-color: rgb(55, 75, 95); }
+.arena-root Button:active { background-color: rgb(28, 42, 57); }
+.arena-root Button:focus { border-color: var(--cyan); }
+.arena-root Button.selected { background-color: rgb(25, 78, 94); border-color: var(--cyan); }
+.arena-root Button:disabled { opacity: 0.42; }
+.arena-header Button { flex-grow: 0; margin: 0 0 0 12px; }
+.move-row Button { flex-basis: 90px; }
+.mobility-row Button { background-color: rgb(32, 53, 64); }
+.action-row { margin-top: 5px; padding-top: 4px; border-top-width: 1px; border-top-color: var(--line); }
+.action-row Button { flex-grow: 0; }
+.arena-root Button.go-action {
+    background-color: var(--cyan);
+    border-color: rgb(174, 245, 255);
+    border-bottom-color: rgb(70, 158, 180);
+    color: rgb(11, 34, 43);
+    min-width: 144px;
+}
+.arena-root Button.go-action:hover, .arena-root Button.go-action:focus { background-color: rgb(187, 247, 255); }
+.arena-root Button.go-action:active { background-color: rgb(89, 186, 210); }
+.preview-toggle { flex-grow: 1; min-height: 32px; margin: 0 8px; color: var(--muted); }
 .preview-toggle .unity-toggle__checkmark { margin-right: 6px; }
-.arena-help { margin-top: 5px; white-space: normal; font-size: 12px; }
-.advanced-scroll { max-height: 180px; }
+.arena-help { margin: 5px 0 3px; white-space: normal; font-size: 13px; color: var(--muted); }
+.advanced-scroll { max-height: 156px; }
 .seed-label { white-space: normal; font-size: 11px; }
-.arena-root TextField .unity-base-text-field__input { background-color: rgb(22, 30, 42); color: rgb(240, 245, 252); border-color: rgb(71, 89, 112); }
+.arena-root TextField .unity-base-text-field__input { background-color: rgb(22, 30, 42); color: var(--text); border-color: var(--line); }
+
+.result-overlay {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(8, 13, 20, 0.78);
+}
+.result-card {
+    align-items: center;
+    width: 88%;
+    max-width: 432px;
+    padding: 24px;
+    border-width: 1px;
+    border-top-width: 4px;
+    border-color: var(--line);
+    border-top-color: var(--cyan);
+    border-radius: 12px;
+    background-color: var(--panel);
+}
+.result-title { margin: 4px 0; font-size: 48px; -unity-font-style: bold; color: var(--cyan); }
+.result-details { margin: 0 0 14px; white-space: normal; -unity-text-align: middle-center; }
+.result-card Button.rematch-button { flex-grow: 0; margin: 0; }
+.result-loss .result-card { border-top-color: var(--amber); }
+.result-loss .result-title { color: var(--amber); }
 .hidden { display: none; }

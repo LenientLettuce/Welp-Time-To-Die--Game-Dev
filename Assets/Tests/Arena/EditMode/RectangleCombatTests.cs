@@ -104,6 +104,7 @@ namespace WelpTimeToDie.RectanglePrototype.Tests
         [TestCase(CombatMove.Uppercut)]
         [TestCase(CombatMove.Kick)]
         [TestCase(CombatMove.DashKick)]
+        [TestCase(CombatMove.Sweep)]
         public void EveryAttackHitsOnceAndRehearsalMatchesPlayback(CombatMove move)
         {
             var live = RectangleCombat.CreateBasic(FighterClass.Barbarian);
@@ -123,6 +124,87 @@ namespace WelpTimeToDie.RectanglePrototype.Tests
             Assert.That(enemy.Health, Is.EqualTo(30 - RectangleCombat.Spec(live.Player, move).Damage));
             Assert.That(live.Player.IsReady, Is.True);
             if (move == CombatMove.Uppercut) Assert.That(enemy.Y, Is.GreaterThan(RectangleCombat.Ground));
+        }
+
+        [Test]
+        public void SweepTripsGroundedFightersButPassesUnderAirborneFighters()
+        {
+            var world = RectangleCombat.CreateBasic(FighterClass.Barbarian);
+            var enemy = world.Fighters[1];
+            enemy.X = world.Player.X + 2;
+            enemy.Move = CombatMove.None;
+            enemy.Stun = 100;
+            Assert.That(world.Start(0, CombatMove.Sweep, 1, 0), Is.True);
+            var airborne = world.Copy();
+            airborne.Fighters[1].Y += 1.2f;
+            airborne.Fighters[1].VelocityY = 2;
+
+            Advance(world, 5);
+            Advance(airborne, 5);
+
+            Assert.That(enemy.Health, Is.EqualTo(6));
+            Assert.That(enemy.Stun, Is.EqualTo(11));
+            Assert.That(airborne.Fighters[1].Health, Is.EqualTo(7));
+        }
+
+        [TestCase(-1)]
+        [TestCase(1)]
+        public void BackstepMovesOppositeAimAndKeepsFacing(int aim)
+        {
+            var world = RectangleCombat.CreateBasic(FighterClass.Barbarian);
+            world.Fighters[1].X = 24;
+            world.Fighters[1].Move = CombatMove.None;
+            world.Fighters[1].Stun = 100;
+            float startX = world.Player.X;
+            Assert.That(world.Start(0, CombatMove.Backstep, aim, 0), Is.True);
+            Advance(world, 5);
+            Assert.That((world.Player.X - startX) * aim, Is.LessThan(-3));
+            Assert.That(world.Player.Facing, Is.EqualTo(aim));
+            Assert.That(world.CanStart(0, CombatMove.Backstep), Is.False);
+        }
+
+        [TestCase(CombatMove.Jump, -1)]
+        [TestCase(CombatMove.Jump, 1)]
+        [TestCase(CombatMove.Move, -1)]
+        [TestCase(CombatMove.Move, 1)]
+        public void AimedMovementReversesOpposingMomentumInPreviewAndPlayback(CombatMove move, int aim)
+        {
+            var world = RectangleCombat.CreateBasic(FighterClass.Barbarian);
+            world.Fighters[1].Stun = 100;
+            world.Player.VelocityX = -aim * 16;
+            if (move == CombatMove.Move) world.Player.Y += 3f;
+
+            float startX = world.Player.X;
+            var plan = RectanglePlan.Create(world, move, aim);
+            Assert.That((plan.Frames[0].Player.X - startX) * aim, Is.GreaterThan(0));
+            Assert.That(plan.Frames[0].Player.Facing, Is.EqualTo(aim));
+            Assert.That(world.Start(0, move, aim, 0), Is.True);
+            foreach (var frame in plan.Frames)
+            {
+                world.Step();
+                Assert.That(world.Player.X, Is.EqualTo(frame.Player.X));
+            }
+        }
+
+        [Test]
+        public void TacticalEnemyGuardsAThreatButPunishesRecovery()
+        {
+            var world = RectangleCombat.CreateBasic(FighterClass.Barbarian);
+            world.TacticalEnemies = true;
+            var enemy = world.Fighters[1];
+            enemy.Move = CombatMove.None;
+            enemy.X = world.Player.X + 2;
+            System.Array.Clear(enemy.Cooldowns, 0, enemy.Cooldowns.Length);
+            world.Start(0, CombatMove.Punch, 1, 0);
+            var threat = world.Copy();
+            threat.PlanEnemies();
+            Assert.That(threat.Fighters[1].Move, Is.EqualTo(CombatMove.Block));
+            Assert.That(enemy.Move, Is.EqualTo(CombatMove.None));
+
+            world.Player.Move = CombatMove.DashKick;
+            world.Player.Elapsed = 12;
+            world.PlanEnemies();
+            Assert.That(enemy.Move, Is.EqualTo(CombatMove.Heavy));
         }
 
         [Test]

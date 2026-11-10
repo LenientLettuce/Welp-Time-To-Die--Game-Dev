@@ -249,6 +249,16 @@ namespace WelpTimeToDie.RectanglePrototype
                     new Pose(-10, 0, -55, 15, -0.03f, 1),
                     new Pose(18, 5, 95, -25, -0.05f, 1.8f),
                     new Pose(6, 2, 35, -8, -0.02f, 1));
+                case CombatMove.Kick:
+                    return Strike(e, spec,
+                    new Pose(-12, -4, 25, -30, -0.06f, 1),
+                    new Pose(24, 6, 100, 75, -0.1f, 1.8f),
+                    new Pose(8, 3, 24, 14, -0.03f, 1));
+                case CombatMove.DashKick:
+                    return Strike(e, spec,
+                    new Pose(25, -8, -60, -45, -0.08f, 1.4f),
+                    new Pose(34, 10, 110, 95, -0.12f, 2),
+                    new Pose(10, 4, 30, 18, -0.04f, 1));
                 case CombatMove.Heavy:
                     return Strike(e, spec,
                     new Pose(-18, -12, 165, 160, 0.03f, 1),

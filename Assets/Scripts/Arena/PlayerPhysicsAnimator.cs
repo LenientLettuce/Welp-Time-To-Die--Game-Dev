@@ -295,6 +295,8 @@ namespace WelpTimeToDie.RectanglePrototype
                     }
                 case CombatMove.Dash: 
                     return new Pose(-10, 11, 11, -45, -60, -55, -70, -20, -40, 10, -40, -60, 20, -0.06f, 1.2f);
+                case CombatMove.Backstep:
+                    return new Pose(12, -10, -10, 55, 75, 45, 65, 12, -25, 0, -25, 10, 5, -0.07f, 1.3f);
                 case CombatMove.Jump:
                     return f.VelocityY > 0
                     ? new Pose(-10, -2.5f, -2.5f, 140, 120, 130, 110, -15, -30, 10, -30, -60, 20, 0.02f, 1)
@@ -328,6 +330,11 @@ namespace WelpTimeToDie.RectanglePrototype
                     new Pose(-10, -10, -10, -30, -40, 30, 40, 45, -60, 0, -20, 20, 0, -0.08f, 1.2f),
                     new Pose(15, 10, 10, 60, 30, -60, -30, 130, 0, 20, -40, 40, 0, 0.1f, 2f),
                     new Pose(5, 5, 5, 15, 15, -15, -15, 30, -30, 0, -15, 15, 0, 0, 1));
+                case CombatMove.Sweep:
+                    return Strike(e, spec,
+                    new Pose(12, -8, -8, -30, -45, 30, 40, 35, -55, 10, -10, -30, 0, -0.16f, 1.2f),
+                    new Pose(18, 7, 7, -45, -25, 35, 30, 72, 0, 0, -12, -65, 10, -0.24f, 1.8f),
+                    new Pose(5, 4, 4, -10, -15, 10, 15, 20, -25, 0, -10, -15, 0, -0.1f, 1));
                 case CombatMove.Uppercut:
                     return Strike(e, spec,
                     new Pose(-10, -15, -15, -60, -80, 20, 10, 20, -20, 0, -20, 20, 0, -0.1f, 1f),

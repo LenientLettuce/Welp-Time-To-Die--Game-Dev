@@ -3,7 +3,7 @@ using System;
 namespace WelpTimeToDie.RectanglePrototype
 {
     public enum FighterClass { Barbarian, Rogue, Wizard }
-    public enum CombatMove { None, Move, Dash, Jump, Punch, Heavy, Block, Special, Wait, Uppercut, Kick, DashKick }
+    public enum CombatMove { None, Move, Dash, Jump, Punch, Heavy, Block, Special, Wait, Uppercut, Kick, DashKick, Sweep, Backstep }
     public sealed class RectangleFighter
     {
         public string Name;

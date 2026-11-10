@@ -20,6 +20,7 @@ namespace WelpTimeToDie.RectanglePrototype
         }
 
         private RectangleGhostPreview ghosts;
+        private SpriteRenderer aimMarker;
 
         public void PreparePreview(RectangleCombat origin, RectanglePlan plan)
         {
@@ -27,9 +28,17 @@ namespace WelpTimeToDie.RectanglePrototype
             ghosts.Capture(origin, plan, playerAnimator, enemyGolem);
         }
 
-        public RectangleCombat DrawPreview(RectangleCombat origin, RectanglePlan plan, float time) => ghosts.Draw(origin, plan, time);
+        public RectangleCombat DrawPreview(RectangleCombat origin, RectanglePlan plan, float time)
+        {
+            if (aimMarker != null) aimMarker.enabled = false;
+            return ghosts.Draw(origin, plan, time);
+        }
 
-        public void HidePreview() => ghosts?.Hide();
+        public void HidePreview()
+        {
+            ghosts?.Hide();
+            if (aimMarker != null) aimMarker.enabled = true;
+        }
 
         private void OnDestroy() => ghosts?.Dispose();
 
@@ -100,6 +109,7 @@ namespace WelpTimeToDie.RectanglePrototype
                 var fighter = world.Player.Copy();
                 fighter.X = Mathf.Lerp(fighter.X, next?.Player.X ?? fighter.X, blend);
                 fighter.Y = Mathf.Lerp(fighter.Y, next?.Player.Y ?? fighter.Y, blend);
+                if (aimDirection != 0) fighter.Facing = aimDirection < 0 ? -1 : 1;
                 playerAnimator.Show(fighter, world.Frame, false);
                 Box(fighter.X, fighter.Y + 2.1f, 1.1f, 0.07f, new Color(0.2f, 0.25f, 0.3f));
                 float width = 1.1f * fighter.Health / fighter.MaxHealth;
@@ -108,7 +118,7 @@ namespace WelpTimeToDie.RectanglePrototype
             }
             else 
             {
-                DrawBody(playerBody, world.Player, next?.Player, blend, Blue);
+                DrawBody(playerBody, world.Player, next?.Player, blend, Blue, aimDirection);
             }
 
             // Draw Enemy or Physics Rig
@@ -128,15 +138,16 @@ namespace WelpTimeToDie.RectanglePrototype
                 DrawBody(enemyBody, world.Fighters[1], next?.Fighters[1], blend, Red);
             }
 
-            if (aimDirection != 0 && world.Player.IsAlive)
-                Box(world.Player.X + aimDirection * 0.9f, world.Player.Y + 0.9f, 0.35f, 0.08f, Blue);
+            aimMarker = aimDirection != 0 && world.Player.IsAlive
+                ? Box(world.Player.X + aimDirection * 0.9f, world.Player.Y + 0.9f, 0.35f, 0.08f, Blue)
+                : null;
             
             for (int i = used; i < overlays.Count; i++) overlays[i].enabled = false;
             
             if (!useMapCamera) FitCamera(framing ?? world);
         }
 
-        private void DrawBody(SpriteRenderer body, RectangleFighter fighter, RectangleFighter next, float blend, Color color)
+        private void DrawBody(SpriteRenderer body, RectangleFighter fighter, RectangleFighter next, float blend, Color color, float aim = 0)
         {
             float x = Mathf.Lerp(fighter.X, next?.X ?? fighter.X, blend);
             float y = Mathf.Lerp(fighter.Y, next?.Y ?? fighter.Y, blend);
@@ -145,6 +156,7 @@ namespace WelpTimeToDie.RectanglePrototype
             if (action == CombatMove.None && next != null && next.Move != CombatMove.None && next.Elapsed == 1)
             { action = next.Move; elapsed = blend; }
             int facing = fighter.Move == CombatMove.None && next != null && next.Elapsed == 1 ? next.Facing : fighter.Facing;
+            if (aim != 0) facing = aim < 0 ? -1 : 1;
             var spec = RectangleCombat.Spec(fighter, action);
             float strike = spec.Damage > 0 && !spec.Projectile
                 ? Mathf.SmoothStep(0, 1, Mathf.InverseLerp(spec.Startup - 1, spec.Startup, elapsed))
@@ -170,8 +182,8 @@ namespace WelpTimeToDie.RectanglePrototype
                 Box(x + facing * 0.62f, y + 0.9f, 0.08f, 1.65f, new Color(0.55f, 0.9f, 1, 0.8f));
             if (fighter.Stun > 0 || spec.Damage <= 0 || spec.Projectile || strike <= 0.001f) return;
             
-            bool kick = action == CombatMove.Kick || action == CombatMove.DashKick;
-            float height = kick ? 0.55f : 1.15f;
+            bool kick = action == CombatMove.Kick || action == CombatMove.DashKick || action == CombatMove.Sweep;
+            float height = action == CombatMove.Sweep ? 0.25f : kick ? 0.55f : 1.15f;
             float extension = spec.Reach * strike;
             float swing = Mathf.InverseLerp(spec.Startup - 1, spec.Startup + spec.Active, elapsed);
             float angle = spec.Launch > 0 ? facing * Mathf.Lerp(-25, 65, swing) : 0;
@@ -188,7 +200,7 @@ namespace WelpTimeToDie.RectanglePrototype
                     extension * 0.75f, 0.045f, new Color(color.r, color.g, color.b, strike * 0.25f), angle);
         }
 
-        private void Box(float x, float y, float width, float height, Color color, float angle = 0)
+        private SpriteRenderer Box(float x, float y, float width, float height, Color color, float angle = 0)
         {
             if (used == overlays.Count)
             {
@@ -206,6 +218,7 @@ namespace WelpTimeToDie.RectanglePrototype
             item.transform.localScale = new Vector3(width, height, 1);
             item.transform.rotation = Quaternion.Euler(0, 0, angle);
             item.color = color;
+            return item;
         }
 
         private void FitCamera(RectangleCombat world)

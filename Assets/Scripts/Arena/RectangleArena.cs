@@ -35,7 +35,10 @@ namespace WelpTimeToDie.RectanglePrototype
         private bool playing, showPreview = true;
         private UIDocument document;
         private Label status, help;
-        private Button goButton;
+        private Label playerHealth, enemyHealth, resultTitle, resultDetails;
+        private VisualElement playerHealthFill, enemyHealthFill, resultOverlay, header, footer;
+        private Button rematchButton;
+        private Button goButton, aimLeft, aimRight;
         private Toggle previewToggle;
 
         private void OnEnable()
@@ -52,8 +55,20 @@ namespace WelpTimeToDie.RectanglePrototype
             root = document.rootVisualElement;
             root.pickingMode = PickingMode.Ignore;
             status = root.Q<Label>("arenaStatus"); help = root.Q<Label>("arenaHelp");
+            header = root.Q("arenaHeader");
+            footer = root.Q("arenaFooter");
+            playerHealth = root.Q<Label>("playerHealth");
+            enemyHealth = root.Q<Label>("enemyHealth");
+            playerHealthFill = root.Q("playerHealthFill");
+            enemyHealthFill = root.Q("enemyHealthFill");
+            resultOverlay = root.Q("resultOverlay");
+            resultTitle = root.Q<Label>("resultTitle");
+            resultDetails = root.Q<Label>("resultDetails");
+            rematchButton = root.Q<Button>("rematchButton");
+            rematchButton.clicked += Restart;
             foreach (CombatMove move in new[] { CombatMove.Move, CombatMove.Punch, CombatMove.Uppercut,
-                CombatMove.Kick, CombatMove.DashKick, CombatMove.Block, CombatMove.Wait, CombatMove.Dash, CombatMove.Jump })
+                CombatMove.Kick, CombatMove.DashKick, CombatMove.Heavy, CombatMove.Sweep, CombatMove.Backstep,
+                CombatMove.Block, CombatMove.Wait, CombatMove.Dash, CombatMove.Jump })
             {
                 var choice = move;
                 var button = root.Q<Button>("move" + move);
@@ -67,8 +82,8 @@ namespace WelpTimeToDie.RectanglePrototype
             root.Q<Button>("resetEncounter").clicked += Restart;
             root.Q<Button>("pauseAction").clicked += () => paused = !paused;
             root.Q<Button>("stepFrame").clicked += StepFrame;
-            root.Q<Button>("aimLeft").clicked += () => Aim(-1);
-            root.Q<Button>("aimRight").clicked += () => Aim(1);
+            aimLeft = root.Q<Button>("aimLeft"); aimLeft.clicked += () => Aim(-1);
+            aimRight = root.Q<Button>("aimRight"); aimRight.clicked += () => Aim(1);
             root.Q<Slider>("dashPower").RegisterValueChangedCallback(e => { strength = e.newValue; RefreshPrediction(); });
             if (terrain != null) terrain.Generated += Restart;
             Restart();
@@ -83,7 +98,7 @@ namespace WelpTimeToDie.RectanglePrototype
 
         public void Aim(float facing)
         {
-            if (playing || world == null || world.Finished) return;
+            if (playing || world == null || world.Finished || !world.Player.IsReady) return;
             float nextDirection = facing < 0 ? -1 : 1;
             if (direction == nextDirection) return;
             direction = nextDirection;
@@ -114,6 +129,7 @@ namespace WelpTimeToDie.RectanglePrototype
             HidePreview();
             paused = false;
             world = RectangleCombat.CreateBasic(FighterClass.Barbarian);
+            world.TacticalEnemies = true;
             if (terrain != null && terrain.HeightMap != null)
             {
                 if (initialMap != terrain.HeightMap)
@@ -210,10 +226,11 @@ namespace WelpTimeToDie.RectanglePrototype
         {
             if (world == null) return;
             var keyboard = Keyboard.current;
-            if (keyboard != null && !(root?.focusController?.focusedElement is TextField) && !(root?.focusController?.focusedElement is TextElement))
+            var focused = root?.focusController?.focusedElement as VisualElement;
+            if (keyboard != null && !(focused is TextField) && focused?.GetFirstAncestorOfType<TextField>() == null)
             {
                 if (keyboard.rKey.wasPressedThisFrame) { Restart(); return; }
-                if (keyboard.enterKey.wasPressedThisFrame) Commit();
+                if (keyboard.enterKey.wasPressedThisFrame && !(focused is TextElement)) Commit();
             }
             if (!playing)
             {
@@ -252,34 +269,57 @@ namespace WelpTimeToDie.RectanglePrototype
             if (playing) Render();
         }
 
+        private void LateUpdate()
+        {
+            if (mapCamera == null || world == null || root?.panel == null) return;
+            Rect panel = root.worldBound;
+            if (panel.height <= 0) return;
+            float bottom = (panel.yMax - footer.worldBound.yMin + 6f) / panel.height;
+            float top = (panel.yMax - header.worldBound.yMax - 6f) / panel.height;
+            if (float.IsNaN(bottom) || float.IsNaN(top)) return;
+            mapCamera.SetCombatFraming(new Vector2(Mathf.Clamp01(bottom), Mathf.Clamp01(top)),
+                new Vector2(world.Player.Y, world.Fighters[1].Y));
+        }
+
         private WelpTimeToDie.Levels.TerrainFeatureState renderedTerrain;
         private void Render()
         {
             var enemy = world.Fighters[1];
-            string phase = world.Lost ? "You died - Reset to retry" : world.Won ? "You win!" : playing ? "Playing..."
-                : !world.Player.IsReady ? "Move still running - Continue" : "Paused";
-            string intent = !enemy.IsAlive ? "Defeated" : enemy.Stun > 0 ? $"Stunned {enemy.Stun}f" : enemy.Move == CombatMove.None ? "Ready"
-                : enemy.Elapsed < RectangleCombat.Spec(enemy, enemy.Move).Startup ? $"{RectangleCombat.Spec(enemy, enemy.Move).Name} in {RectangleCombat.Spec(enemy, enemy.Move).Startup - enemy.Elapsed}f"
-                : $"{RectangleCombat.Spec(enemy, enemy.Move).Name} ({enemy.Remaining}f left)";
-            status.text = $"{phase} | You {world.Player.Health} HP | Enemy {enemy.Health} HP - {intent}";
             var enemyMove = RectangleCombat.Spec(enemy, enemy.Move);
-            status.tooltip = enemy.IsAlive && enemy.Move != CombatMove.None
-                ? $"Enemy: {enemyMove.Name}. Hits in {Mathf.Max(0, enemyMove.Startup - enemy.Elapsed)} frames.\n{world.LastEvent}"
-                : world.LastEvent;
+            int untilStrike = enemyMove.Startup - enemy.Elapsed;
+            string intent = !enemy.IsAlive ? "Defeated" : enemy.Stun > 0 ? $"Stunned · {enemy.Stun}f"
+                : enemy.Move == CombatMove.None ? "Ready"
+                : untilStrike > 0 ? $"{enemyMove.Name} · hits in {untilStrike}f"
+                : enemyMove.Damage > 0 && enemy.Elapsed >= enemyMove.Startup + enemyMove.Active ? $"Recovering · {enemy.Remaining}f"
+                : $"{enemyMove.Name} · {enemy.Remaining}f left";
+            status.text = intent;
+            status.tooltip = world.LastEvent;
+            playerHealth.text = $"{world.Player.Health} / {world.Player.MaxHealth} HP";
+            enemyHealth.text = $"{enemy.Health} / {enemy.MaxHealth} HP";
+            playerHealthFill.style.width = Length.Percent(100f * world.Player.Health / world.Player.MaxHealth);
+            enemyHealthFill.style.width = Length.Percent(100f * enemy.Health / enemy.MaxHealth);
+            RenderResult();
+            bool choosing = !playing && !world.Finished && world.Player.IsReady;
             foreach (var pair in moves)
             {
-                bool available = !playing && world.CanStart(0, pair.Key);
-                pair.Value.SetEnabled(!playing && !world.Finished);
-                pair.Value.tooltip = available ? RectangleCombat.Spec(world.Player, pair.Key).Name : "Recharging or requires ground contact";
+                pair.Value.SetEnabled(choosing && world.CanStart(0, pair.Key));
                 pair.Value.EnableInClassList("selected", selected == pair.Key);
             }
-            goButton.text = !world.Player.IsReady && !world.Finished ? "Continue >" : "Go  >";
+            goButton.text = !world.Player.IsReady && !world.Finished ? "Continue  ›" : "Commit move  ›";
             goButton.SetEnabled(!playing && plan != null);
             string moveName = plan?.MoveName ?? RectangleCombat.Spec(world.Player, selected).Name;
+            string aim = direction < 0 ? "left" : "right";
+            string choice = selected == CombatMove.Backstep
+                ? $"Backstep {(direction < 0 ? "right" : "left")} · face {aim}"
+                : $"{moveName} · aim {aim}";
             help.text = world.Finished ? "Reset to try again."
                 : playing ? "Resolving your move..."
-                : plan == null ? $"{moveName} is recharging. Choose another move."
-                : $"{moveName} {(direction < 0 ? "left" : "right")}. {plan.Summary}";
+                : plan == null ? $"{moveName} is unavailable. Check its cooldown or ground requirement."
+                : $"{(choosing ? choice : moveName)}. {plan.Summary}";
+            aimLeft.SetEnabled(choosing);
+            aimRight.SetEnabled(choosing);
+            aimLeft.EnableInClassList("selected", direction < 0);
+            aimRight.EnableInClassList("selected", direction > 0);
             RectangleCombat nextVisual = playing && playbackIndex < activePlan.Frames.Count
                 ? activePlan.Frames[playbackIndex] : null;
             root.Q<Label>("frameCount").text = $"Frame {world.Frame} · {RectangleCombat.FramesPerSecond} Hz combat";
@@ -297,9 +337,32 @@ namespace WelpTimeToDie.RectanglePrototype
             if ((playing || plan == null) && previewPlan != null) HidePreview();
         }
 
+        private void RenderResult()
+        {
+            bool finished = world.Finished && !playing;
+            if (finished == !resultOverlay.ClassListContains("hidden")) return;
+
+            resultOverlay.EnableInClassList("hidden", !finished);
+            header.SetEnabled(!finished);
+            footer.SetEnabled(!finished);
+            if (!finished)
+            {
+                rematchButton.Blur();
+                return;
+            }
+
+            resultOverlay.EnableInClassList("result-loss", world.Lost);
+            resultTitle.text = world.Lost ? "You Lose" : "You Win";
+            resultDetails.text = world.Lost
+                ? world.Won ? "Both fighters fell." : "The Golem won this round."
+                : $"The Golem fell. You finished with {world.Player.Health} HP.";
+            rematchButton.Focus();
+        }
+
         private void OnDisable()
         {
             playing = false;
+            if (rematchButton != null) rematchButton.clicked -= Restart;
             previewToggle?.UnregisterValueChangedCallback(OnPreviewChanged);
             moves.Clear();
             if (terrain != null) terrain.Generated -= Restart;
