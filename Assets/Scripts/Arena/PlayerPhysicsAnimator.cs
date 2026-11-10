@@ -338,7 +338,23 @@ namespace WelpTimeToDie.RectanglePrototype
         }
 
         private static Pose Strike(int elapsed, MoveSpec spec, Pose windUp, Pose hit, Pose recover)
-            => elapsed < spec.Startup ? windUp : elapsed < spec.Startup + 3 ? hit : recover;
+        {
+            // Give the physics springs 4 frames to travel so the limb is fully extended EXACTLY at spec.Startup
+            int swingStart = Mathf.Max(0, spec.Startup - 4);
+
+            if (elapsed < swingStart)
+            {
+                return windUp; // Hold the wind-up pose
+            }
+            else if (elapsed < spec.Startup + spec.Active)
+            {
+                return hit;    // Whip the limb forward and hold it through the active frames
+            }
+            else
+            {
+                return recover;// Pull back for the remainder of spec.Duration
+            }
+        }
 
         private void SampleRoot(float deltaTime)
         {
