@@ -346,7 +346,7 @@ namespace WelpTimeToDie.RectanglePrototype.Tests
             Assert.That(world.Start(0, CombatMove.Dash, 1, 0, 0.5f), Is.True);
             for (int i = 0; i < 6; i++) world.Step();
             Assert.That(world.Frame, Is.EqualTo(6));
-            Assert.That(world.Player.X, Is.EqualTo(5.5f).Within(0.0001f));
+            Assert.That(world.Player.X, Is.EqualTo(3f + 2.5f / RectangleCombat.LegacyMovementPower).Within(0.0001f));
             Assert.That(world.Player.IsReady, Is.True);
             Assert.That(world.Player.Cooldowns[(int)CombatMove.Dash], Is.EqualTo(6));
             Assert.That(world.CanStart(0, CombatMove.Dash), Is.False);
@@ -360,7 +360,7 @@ namespace WelpTimeToDie.RectanglePrototype.Tests
             enemy.X = 25;
             enemy.Move = CombatMove.None;
             enemy.Stun = 100;
-            world.Start(0, CombatMove.Dash, 1, 0);
+            world.Start(0, CombatMove.Dash, 1, 0, 0.6f);
             Advance(world, 6);
             float dashEnd = world.Player.X;
             float dashSpeed = world.Player.VelocityX;
@@ -433,7 +433,7 @@ namespace WelpTimeToDie.RectanglePrototype.Tests
             world.PlanEnemies();
             world.Start(0, CombatMove.Punch, 1, 0);
             for (int i = 0; i < 4; i++) world.Step();
-            Assert.That(golem.Health, Is.EqualTo(8));
+            Assert.That(golem.Health, Is.EqualTo(golem.MaxHealth - 2));
             Assert.That(golem.Move, Is.EqualTo(CombatMove.Heavy));
             Assert.That(golem.Stun, Is.Zero);
         }
@@ -466,19 +466,76 @@ namespace WelpTimeToDie.RectanglePrototype.Tests
             world.Step();
             Assert.That(world.Player.Health, Is.EqualTo(12));
             for (int i = 0; i < 8; i++) world.Step();
-            Assert.That(world.Fighters[2].Health, Is.LessThan(10));
+            Assert.That(world.Fighters[2].Health, Is.LessThan(world.Fighters[2].MaxHealth));
         }
 
         [Test]
-        public void JumpCanFinishWhileAirborneButCannotBeStartedAgainInAir()
+        public void GolemClosesDistanceDuringTheLongerShoveWindup()
+        {
+            var world = RectangleCombat.CreateBasic(FighterClass.Barbarian, golemEncounter: true);
+            var golem = world.Fighters[1];
+            Assert.That(golem.Health, Is.EqualTo(10));
+            Assert.That(golem.BodyHeight, Is.EqualTo(2.7f).Within(0.001f));
+            golem.X = world.Player.X + 6;
+            golem.Move = CombatMove.None;
+            Assert.That(world.Start(1, CombatMove.Kick, -1, 0), Is.True);
+            float startX = golem.X;
+            var shove = RectangleCombat.Spec(golem, CombatMove.Kick);
+            Assert.That(shove.Startup, Is.EqualTo(8));
+            Assert.That(shove.Duration, Is.EqualTo(17));
+            Assert.That(shove.Damage, Is.EqualTo(4));
+
+            Advance(world, 7);
+            Assert.That(golem.X, Is.LessThan(startX - 2.5f));
+            Assert.That(golem.VelocityX, Is.EqualTo(-10.8f).Within(0.001f));
+            Assert.That(world.Player.Health, Is.EqualTo(world.Player.MaxHealth));
+            Advance(world, 1);
+            Assert.That(world.Player.Health, Is.EqualTo(world.Player.MaxHealth - 4));
+        }
+
+        [Test]
+        public void JumpCanBeUsedInAirAfterRecharging()
         {
             var world = RectangleCombat.Create(FighterClass.Rogue);
-            world.Start(0, CombatMove.Jump, -1, 0);
+            world.Start(0, CombatMove.Jump, 0, 1, 0.6f);
             for (int i = 0; i < 12; i++) world.Step();
             Assert.That(world.Player.IsReady, Is.True);
             Assert.That(world.Player.IsGrounded, Is.False);
-            world.Player.Cooldowns[(int)CombatMove.Jump] = 0;
             Assert.That(world.CanStart(0, CombatMove.Jump), Is.False);
+            for (int i = 0; i < 4; i++) world.Step();
+            Assert.That(world.Player.IsGrounded, Is.False);
+            Assert.That(world.CanStart(0, CombatMove.Jump), Is.True);
+        }
+
+        [Test]
+        public void MovementAimAndPowerDriveBothPreviewAndCommittedMotion(
+            [Values(CombatMove.Dash, CombatMove.Jump, CombatMove.DashKick)] CombatMove move,
+            [Values(45, 90, 135, 225, 270, 315)] int degrees)
+        {
+            var world = RectangleCombat.CreateBasic(FighterClass.Barbarian);
+            world.HazardsEnabled = false;
+            world.Player.X = 15f;
+            world.Player.Y = RectangleCombat.Ground + 8f;
+            world.Fighters[1].X = 29f;
+            world.Fighters[1].Stun = 100;
+            double radians = degrees * System.Math.PI / 180;
+            float x = (float)System.Math.Cos(radians), y = (float)System.Math.Sin(radians);
+            var low = RectanglePlan.Create(world, move, x, y, RectangleCombat.LegacyMovementPower).Frames[0].Player;
+            var plan = RectanglePlan.Create(world, move, x, y, 1f);
+            var full = plan.Frames[0].Player;
+
+            if (System.Math.Abs(x) > 0.01f)
+                Assert.That((full.X - world.Player.X) * x, Is.GreaterThan(0f));
+            else Assert.That(full.X, Is.EqualTo(world.Player.X).Within(0.0001f));
+            Assert.That((full.Y - world.Player.Y) * y, Is.GreaterThan(0f));
+            Assert.That(System.Math.Abs(full.VelocityY), Is.GreaterThan(System.Math.Abs(low.VelocityY) * 2f));
+            Assert.That(world.Start(0, move, x, y, 1f), Is.True);
+            foreach (var frame in plan.Frames)
+            {
+                Advance(world, 1);
+                Assert.That(world.Player.X, Is.EqualTo(frame.Player.X));
+                Assert.That(world.Player.Y, Is.EqualTo(frame.Player.Y));
+            }
         }
 
         [Test]

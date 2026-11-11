@@ -147,9 +147,11 @@ namespace WelpTimeToDie.RectanglePrototype
                 if (!rigged)
                 {
                     var body = source[0];
-                    var center = new Vector3(fighter.X, fighter.Y + (fighter.IsAlive ? 0.9f : 0.15f), body.position.z);
+                    var center = new Vector3(fighter.X, fighter.Y + (fighter.IsAlive ? fighter.BodyHeight / 2 : 0.15f), body.position.z);
                     samples[offset].Position = body.parent != null ? body.parent.InverseTransformPoint(center) : center;
-                    samples[offset].Scale = fighter.IsAlive ? new Vector3(0.9f, 1.8f, 1f) : new Vector3(1.8f, 0.3f, 1f);
+                    samples[offset].Scale = fighter.IsAlive
+                        ? new Vector3(2 * fighter.HalfWidth, fighter.BodyHeight, 1f)
+                        : new Vector3(fighter.BodyHeight, 0.3f, 1f);
                 }
             }
 

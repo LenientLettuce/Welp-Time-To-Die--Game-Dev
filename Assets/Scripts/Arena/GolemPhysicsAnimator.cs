@@ -53,6 +53,7 @@ namespace WelpTimeToDie.RectanglePrototype
         [SerializeField] private Joint head = new Joint { boneName = "head", length = 0.32f, frequency = 3.2f, dampingRatio = 0.35f, gravityScale = 1 };
         [SerializeField] private Joint leftArm = new Joint { boneName = "left arm", length = 0.41f, frequency = 2.6f, dampingRatio = 0.32f, gravityScale = 1 };
         [SerializeField] private Joint rightArm = new Joint { boneName = "right arm", length = 0.40f, frequency = 2.6f, dampingRatio = 0.32f, gravityScale = 1 };
+        [SerializeField] private float feetOffset;
         [SerializeField, Tooltip("Vertical hip spring (crouch, bob, slam dip) in Hz.")]
         private float hipFrequency = 3f;
         [SerializeField, Range(0, 2)] private float hipDampingRatio = 0.5f;
@@ -87,13 +88,21 @@ namespace WelpTimeToDie.RectanglePrototype
         // Called by RectangleStage whenever a combat snapshot is drawn (live, preview, or playback).
         public void PlaceAtFeet(Vector2 feet, int facing)
         {
-            // Directly set the position to the raw coordinate without offsets
-            transform.position = new Vector3(feet.x, feet.y, transform.position.z);
+            transform.position = new Vector3(feet.x, feet.y + feetOffset, transform.position.z);
             
             // Preserve your custom Inspector scale, but flip the X direction based on facing
             Vector3 currentScale = transform.localScale;
             float absScaleX = Mathf.Abs(currentScale.x);
             transform.localScale = new Vector3(facing < 0 ? -absScaleX : absScaleX, currentScale.y, currentScale.z);
+        }
+
+        public float VisualTop(float minimum)
+        {
+            if (parts == null) return minimum;
+            foreach (var part in parts)
+                if (part != null && part.enabled)
+                    minimum = Mathf.Max(minimum, part.bounds.max.y);
+            return minimum;
         }
 
         public void Show(RectangleFighter fighter, int frame, bool preview)
@@ -356,7 +365,7 @@ namespace WelpTimeToDie.RectanglePrototype
                 spineBone.localPosition = spineBindPosition + new Vector3(0, hip, 0);
 
                 // Floor constraint: Ensure the lowest part of the golem doesn't penetrate the floor
-                float floorY = transform.position.y;
+                float floorY = transform.position.y - feetOffset;
                 float minBoneY = Mathf.Min(
                     bodies[(int)GolemBone.Spine].Bone.position.y,
                     bodies[(int)GolemBone.FrontArm].Bone.position.y,

@@ -21,6 +21,7 @@ namespace WelpTimeToDie.Cameras
         private ProceduralTerrainMap terrain;
         private Vector2 followViewport = new Vector2(0, 1);
         private Vector2? fighterHeights;
+        private Vector2 fighterBodyHeights;
 
         public bool IsBrowsing { get; private set; }
         public float Zoom => ViewCamera.orthographicSize;
@@ -65,10 +66,11 @@ namespace WelpTimeToDie.Cameras
             backdrop.transform.localPosition = position;
         }
 
-        public void SetCombatFraming(Vector2 viewport, Vector2 feet)
+        public void SetCombatFraming(Vector2 viewport, Vector2 feet, Vector2 bodyHeights)
         {
             followViewport = viewport;
             fighterHeights = feet;
+            fighterBodyHeights = bodyHeights;
         }
 
         private void UpdateFollowPosition()
@@ -76,17 +78,17 @@ namespace WelpTimeToDie.Cameras
             var position = (Vector2)player.position + followOffset;
             if (fighterHeights is Vector2 feet)
             {
-                const float fighterClearance = 2.35f;
+                const float headroom = 0.55f;
                 float viewHeight = Zoom * 2f;
                 float bottom = (followViewport.x - 0.5f) * viewHeight;
                 float top = (followViewport.y - 0.5f) * viewHeight;
-                float minCenter = Mathf.Max(feet.x, feet.y) + fighterClearance - top;
+                float minCenter = Mathf.Max(feet.x + fighterBodyHeights.x, feet.y + fighterBodyHeights.y) + headroom - top;
                 float maxCenter = Mathf.Min(feet.x, feet.y) - bottom;
                 if (minCenter > maxCenter)
                 {
                     // At close zoom, frame the player if both fighters don't fit.
                     position.y = (minCenter + maxCenter) * 0.5f;
-                    minCenter = feet.x + fighterClearance - top;
+                    minCenter = feet.x + fighterBodyHeights.x + headroom - top;
                     maxCenter = feet.x - bottom;
                 }
                 position.y = minCenter <= maxCenter ? Mathf.Clamp(position.y, minCenter, maxCenter)

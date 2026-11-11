@@ -10,11 +10,14 @@ namespace WelpTimeToDie.RectanglePrototype
         public string MoveName { get; private set; }
 
         public static RectanglePlan Create(RectangleCombat live, CombatMove move, float direction, float strength = 1)
+            => Create(live, move, direction, 0, strength);
+
+        public static RectanglePlan Create(RectangleCombat live, CombatMove move, float aimX, float aimY, float strength)
         {
             if (live.Finished || (live.Player.IsReady && !live.CanStart(0, move))) return null;
             var simulation = live.Copy();
             var plan = new RectanglePlan { MoveName = live.Player.IsReady ? RectangleCombat.Spec(live.Player, move).Name : "Finish move" };
-            if (simulation.Player.IsReady) simulation.Start(0, move, direction, 0, strength);
+            if (simulation.Player.IsReady) simulation.Start(0, move, aimX, aimY, strength);
             for (int frame = 0; frame < RectangleCombat.PreviewFrames; frame++)
             {
                 simulation.Step();

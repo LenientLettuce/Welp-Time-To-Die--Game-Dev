@@ -9,6 +9,12 @@ namespace WelpTimeToDie.RectanglePrototype
         public string Name;
         public FighterClass Class;
         public bool IsPlayer, Armored;
+        public bool IsGolem;
+        public const float GolemSizeMultiplier = 1.5f;
+        public const float BaseHalfWidth = 0.45f, BaseHeight = 1.8f;
+        public float SizeMultiplier => IsGolem ? GolemSizeMultiplier : 1f;
+        public float HalfWidth => BaseHalfWidth * SizeMultiplier;
+        public float BodyHeight => BaseHeight * SizeMultiplier;
         public float X, Y, VelocityX, VelocityY;
         public int Facing = 1;
         public int MaxHealth, Health, Stun, HurtFlash, HazardCooldown;

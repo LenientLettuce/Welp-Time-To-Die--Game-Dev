@@ -79,8 +79,12 @@ public static class VerifyMergedMain
         Require(arena.World.Fighters.Count == 2, "Expected one enemy");
         var renderers = rig.GetComponentsInChildren<SpriteRenderer>();
         var bounds = renderers[0].bounds; foreach(var r in renderers) bounds.Encapsulate(r.bounds);
-        Require(Mathf.Abs(bounds.min.y-arena.World.Fighters[1].Y)<0.12f,"Golem art floats or sinks into terrain");
-        Require(bounds.size.y>1.6f && bounds.size.y<2.1f,"Golem art scale differs from combat body");
+        var golem = arena.World.Fighters[1];
+        Require(golem.IsGolem && golem.Health == 10, "Expected the 10 HP Golem in Main");
+        Require(Mathf.Abs(rig.transform.position.y - golem.Y - 0.06f) < 0.01f, "Golem rig is detached from its combat feet");
+        Require(Mathf.Abs(bounds.min.y - golem.Y) < 0.4f, "Golem art floats or sinks into terrain");
+        Require(Mathf.Abs(rig.transform.localScale.y - 3.15f) < 0.01f && bounds.size.y > golem.BodyHeight,
+            "Golem art was not enlarged");
         root.Q<Foldout>("mapOptions").value = true;
         await Task.Delay(100);
         Require(root.Q<TextField>("seedInput").resolvedStyle.display != DisplayStyle.None, "Map panel missing");
@@ -102,7 +106,7 @@ public static class VerifyMergedMain
         Require(Signature(arena.World)==Signature(jump.Frames.Last()),"Stepped jump differs from rehearsal");
         Click(root,"resetEncounter");
         root.Q<Foldout>("mapOptions").value = false;
-        return new { ticking=true, oneGolem=true, rigFreezes=true, previewLoopsWithKeyPoses=true, previewPreservesCombatAndBones=true,
+        return new { ticking=true, oneGolem=true, rigFreezes=true, previewLoopsWithTrajectory=true, previewPreservesCombatAndBones=true,
             goMatchesPreview=true, jumpAndFrameStep=true, seedRepeatable=true, cameraBrowseZoomRecenter=true };
     }
 
@@ -110,20 +114,25 @@ public static class VerifyMergedMain
     {
         var arena = UnityEngine.Object.FindFirstObjectByType<RectangleArena>();
         var rig = UnityEngine.Object.FindFirstObjectByType<GolemPhysicsAnimator>();
-        var options = arena.Document.rootVisualElement.Q<Foldout>("mapOptions");
+        var root = arena.Document.rootVisualElement;
+        var options = root.Q<Foldout>("mapOptions");
+        var preview = root.Q<Toggle>("showPreview");
         bool expanded = options.value;
+        bool previewEnabled = preview.value;
         try
         {
             arena.Restart();
             options.value = true;
+            preview.value = true;
             await Task.Delay(150);
             await VerifyPreview(arena, rig);
-            return new { previewLoopsWithKeyPoses=true, previewPreservesCombatAndBones=true, goMatchesPreview=true };
+            return new { movementDialUpdatesAimAndPower=true, previewLoopsWithTrajectory=true, previewPreservesCombatAndBones=true, goMatchesPreview=true };
         }
         finally
         {
             arena.Restart();
             options.value = expanded;
+            preview.value = previewEnabled;
         }
     }
 
@@ -137,29 +146,40 @@ public static class VerifyMergedMain
         var leftDash = arena.CurrentPlan;
         Click(root,"aimRight");
         Require(arena.CurrentPlan != leftDash, "Aiming did not refresh the active preview");
-        var fullDash = arena.CurrentPlan;
-        root.Q<Slider>("dashPower").value = 0.4f;
-        Require(arena.CurrentPlan != fullDash, "Changing dash strength did not refresh the active preview");
-        root.Q<Slider>("dashPower").value = 1f;
+        var horizontalDash = arena.CurrentPlan;
+        await Task.Delay(100);
+        var dial = root.Q("movementDial");
+        var point = dial.worldBound.center + new Vector2(20f, -15f);
+        using (var down = PointerDownEvent.GetPooled(new Event { type = EventType.MouseDown, button = 0, mousePosition = dial.worldBound.center }))
+            dial.SendEvent(down);
+        using (var drag = PointerMoveEvent.GetPooled(new Event { type = EventType.MouseDrag, button = 0, mousePosition = point }))
+            dial.SendEvent(drag);
+        var angledDash = arena.CurrentPlan;
+        Require(angledDash != horizontalDash && angledDash.Frames[0].Player.AimY > 0
+            && angledDash.Frames[0].Player.Power < horizontalDash.Frames[0].Player.Power,
+            "Dragging the movement dial did not update the preview's direction and power");
+        using (var up = PointerUpEvent.GetPooled(new Event { type = EventType.MouseUp, button = 0, mousePosition = point }))
+            dial.SendEvent(up);
         Click(root,"moveJump");
         var plan = arena.CurrentPlan; Require(plan != null,"No rehearsal");
         string before = Signature(arena.World);
         var rotations = bones.Select(t => t.localRotation).ToArray();
         await Task.Delay(100);
         var ghost = GameObject.Find("Player preview");
-        var key = GameObject.Find("Player preview key pose 1");
-        Require(ghost != null && key != null, "Animated ghost and key pose should be visible");
+        var path = GameObject.Find("Player preview path")?.GetComponent<LineRenderer>();
+        Require(ghost != null && path != null && path.enabled && path.positionCount > 1,
+            "Animated ghost and movement path should be visible");
         var initialGhostPosition = ghost.transform.position;
-        var keyPosition = key.transform.position;
+        var endpoint = path.GetPosition(path.positionCount - 1);
         await Task.Delay(200);
         Require(ghost.transform.position != initialGhostPosition, "Ghost pose did not move");
         await Task.Delay(2200);
         Require(arena.IsWatching && arena.CurrentPlan == plan, "Preview should keep looping the current plan");
-        Require(key.activeInHierarchy && key.transform.position == keyPosition, "Key pose changed during the loop");
+        Require(path.enabled && path.GetPosition(path.positionCount - 1) == endpoint, "Path endpoint changed during the loop");
         Require(Signature(arena.World) == before,"Preview mutated live combat");
         Require(bones.Select((t,i) => t.localRotation == rotations[i]).All(v=>v), "Preview moved live bones");
         preview.value = false;
-        Require(!arena.IsWatching && !ghost.activeInHierarchy && !key.activeInHierarchy, "Checkbox did not hide ghosts");
+        Require(!arena.IsWatching && !ghost.activeInHierarchy && !path.enabled, "Checkbox did not hide the ghost and path");
         preview.value = true;
         await Task.Delay(120);
         Require(arena.IsWatching && ghost.activeInHierarchy, "Checkbox did not resume the loop");

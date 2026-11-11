@@ -14,8 +14,8 @@ the blue rectangle player. Victory or defeat stops combat until Reset.
 | Dash kick | 8f | 21f | 24f |
 | Block | Immediate | 8f | 4f |
 | Wait | Immediate | 4f | None |
-| Dash (advanced) | Immediate | 6f | 12f |
-| Jump (advanced) | Immediate | 12f | 16f |
+| Dash | Immediate | 6f | 12f |
+| Jump | Immediate | 12f | 16f |
 
 Select a move and click left/right in the world to choose facing. Watch preview
 rehearses the next player decision interval without committing it. Go plays the
@@ -25,12 +25,15 @@ advances one action frame, or one idle combat frame when selection is unavailabl
 Pause preserves the current action and bone pose. R/Reset restores the encounter
 and the seed's original unbroken terrain. Enter commits outside text entry.
 
-The advanced panel exposes Dash/Jump and dash strength. Dash uses the arena's
-five-unit maximum distance scaled by strength. Jump requires ground contact and
-uses the arena's fixed launch speed and facing-based drift. Ground movement and
-dash kicks step up one block. Higher walls require jumping; knockback does not
-step up cliffs. Bodies stop at terrain, tunnel ceilings, each other, and map
-boundaries. Solid rock blocks melee. Vertically clear airborne bodies can pass.
+Dash, Jump, and Dash Kick show a movement dial at the top left. Drag around the
+dial to aim and outward to increase launch speed. The inner ring at 30% marks
+the previous launch speed. Each move starts at 60% power and remembers its aim
+and power until Reset. Clicking the world changes aim while keeping power.
+Jump can launch in midair once its cooldown clears. Dash Kick still strikes
+forward after the rush. Terrain, gravity, and fighters shape the resulting path,
+which the preview traces before commitment. Ground movement can step up one
+block. Bodies stop at terrain, tunnel ceilings, each other, and map boundaries.
+Solid rock blocks melee. Vertically clear airborne bodies can pass.
 
 The integrated code is in `Assets/Scripts/Arena`; its existing namespace and
 assembly names (`WelpTimeToDie.RectanglePrototype`) remain stable:
@@ -43,8 +46,11 @@ assembly names (`WelpTimeToDie.RectanglePrototype`) remain stable:
 - GolemPhysicsAnimator: Abbas's spring/torque solver, advanced only during
   playback or explicit frame steps. Preview saves/restores the solver state.
 
-The golem's imported Animator is disabled. Its visible body is calibrated to
-approximately 1.8 world units, with its lower edge at the logical feet.
+The Golem in Main has 10 HP and a 2.7-unit-tall collision body. It moves at
+150% of its previous speed and advances during melee windups. Windup duration
+is multiplied by 1.2 and attack damage by 1.5, rounded down to whole frames
+and HP. The golem's imported Animator is disabled, and the scaled physics rig
+is aligned to the logical feet.
 MainCharacter, Mimic, and Stick_Figure art remains under `Assets/Sprites`.
 
 `Assets/UI/Combat/ArenaHud.uxml` and `.uss` define the UI. MapHudPresenter binds

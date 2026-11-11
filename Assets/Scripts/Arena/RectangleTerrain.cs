@@ -17,7 +17,7 @@ namespace WelpTimeToDie.RectanglePrototype
         public float MaxX => origin.x + map.Width * cellSize.x;
         public float MinY => origin.y;
         public float MaxY => origin.y + map.Height * cellSize.y;
-        private const float HalfWidth = 0.45f, BodyHeight = 1.8f, Skin = 0.002f;
+        private const float Skin = 0.002f;
 
         public RectangleTerrain(ProceduralTerrainMap terrain) : this(terrain.HeightMap,
             terrain.Features.State.Copy(), terrain.Layout.Grid.CellToWorld(terrain.Layout.PlayableCells.min),
@@ -32,22 +32,24 @@ namespace WelpTimeToDie.RectanglePrototype
 
         public RectangleTerrain Copy() => new RectangleTerrain(map, State.Copy(), origin, cellSize, revealDistance);
 
-        public float Surface(float x)
+        public float Surface(float x, float halfWidth = RectangleFighter.BaseHalfWidth)
         {
-            int left = Mathf.FloorToInt((x - HalfWidth - origin.x) / cellSize.x);
-            int right = Mathf.FloorToInt((x + HalfWidth - origin.x) / cellSize.x);
+            int left = Mathf.FloorToInt((x - halfWidth - origin.x) / cellSize.x);
+            int right = Mathf.FloorToInt((x + halfWidth - origin.x) / cellSize.x);
             int height = 0;
             for (int c = left; c <= right; c++) height = Math.Max(height, map.GetColumnHeight(c));
             return origin.y + height * cellSize.y + Skin;
         }
 
-        public bool Fits(float x, float y)
+        public bool Fits(float x, float y, RectangleFighter fighter = null)
         {
-            if (x - HalfWidth < MinX || x + HalfWidth > MaxX || y < MinY || y + BodyHeight > MaxY) return false;
-            int left = Mathf.FloorToInt((x - HalfWidth + Skin - origin.x) / cellSize.x);
-            int right = Mathf.FloorToInt((x + HalfWidth - Skin - origin.x) / cellSize.x);
+            float halfWidth = fighter?.HalfWidth ?? RectangleFighter.BaseHalfWidth;
+            float height = fighter?.BodyHeight ?? RectangleFighter.BaseHeight;
+            if (x - halfWidth < MinX || x + halfWidth > MaxX || y < MinY || y + height > MaxY) return false;
+            int left = Mathf.FloorToInt((x - halfWidth + Skin - origin.x) / cellSize.x);
+            int right = Mathf.FloorToInt((x + halfWidth - Skin - origin.x) / cellSize.x);
             int bottom = Mathf.FloorToInt((y + Skin - origin.y) / cellSize.y);
-            int top = Mathf.FloorToInt((y + BodyHeight - Skin - origin.y) / cellSize.y);
+            int top = Mathf.FloorToInt((y + height - Skin - origin.y) / cellSize.y);
             for (int c = left; c <= right; c++)
                 for (int r = bottom; r <= top; r++)
                     if (map.IsSolid(c, r) && !State.IsRemoved(new Vector3Int(c, r))) return false;
@@ -57,22 +59,23 @@ namespace WelpTimeToDie.RectanglePrototype
         private void Evaluate(RectangleFighter fighter)
         {
             var center = new Vector3((fighter.X - origin.x) / cellSize.x,
-                (fighter.Y + BodyHeight / 2 - origin.y) / cellSize.y);
-            State.Evaluate(new Bounds(center, new Vector3(2 * HalfWidth / cellSize.x, BodyHeight / cellSize.y, 0)),
+                (fighter.Y + fighter.BodyHeight / 2 - origin.y) / cellSize.y);
+            State.Evaluate(new Bounds(center, new Vector3(2 * fighter.HalfWidth / cellSize.x, fighter.BodyHeight / cellSize.y, 0)),
                 fighter.VelocityY, revealDistance);
         }
 
         public void Move(RectangleFighter fighter, float dx, float dy, bool allowStep)
         {
             Evaluate(fighter);
-            bool grounded = !Fits(fighter.X, fighter.Y - 0.035f) && fighter.VelocityY <= 0;
+            float halfWidth = fighter.HalfWidth;
+            bool grounded = !Fits(fighter.X, fighter.Y - 0.035f, fighter) && fighter.VelocityY <= 0;
             int steps = Math.Max(1, Mathf.CeilToInt(Mathf.Max(Mathf.Abs(dx), Mathf.Abs(dy)) / 0.08f));
             float stepX = dx / steps, stepY = dy / steps;
             for (int i = 0; i < steps; i++)
             {
                 float targetX = fighter.X + stepX;
-                float x = Mathf.Clamp(targetX, MinX + HalfWidth, MaxX - HalfWidth);
-                if (Fits(x, fighter.Y)) fighter.X = x;
+                float x = Mathf.Clamp(targetX, MinX + halfWidth, MaxX - halfWidth);
+                if (Fits(x, fighter.Y, fighter)) fighter.X = x;
                 else
                 {
                     bool stepped = false;
@@ -83,7 +86,8 @@ namespace WelpTimeToDie.RectanglePrototype
                         for (int row = first; row <= first + 1 && !stepped; row++)
                         {
                             float top = origin.y + row * cellSize.y + Skin;
-                            if (top - fighter.Y > 0.02f && top - fighter.Y <= cellSize.y + 0.01f && Fits(fighter.X, top) && Fits(x, top))
+                            if (top - fighter.Y > 0.02f && top - fighter.Y <= cellSize.y + 0.01f &&
+                                Fits(fighter.X, top, fighter) && Fits(x, top, fighter))
                             { fighter.X = x; fighter.Y = top; stepped = true; }
                         }
                     }
@@ -95,7 +99,7 @@ namespace WelpTimeToDie.RectanglePrototype
                 }
                 if (x != targetX && fighter.VelocityX * stepX > 0) fighter.VelocityX = 0;
                 float y = fighter.Y + stepY;
-                if (Fits(fighter.X, y)) fighter.Y = y;
+                if (Fits(fighter.X, y, fighter)) fighter.Y = y;
                 else
                 {
                     // Find the contact, rather than leaving the body floating a movement slice away.
@@ -103,7 +107,7 @@ namespace WelpTimeToDie.RectanglePrototype
                     for (int j = 0; j < 12; j++)
                     {
                         float middle = (low + high) / 2;
-                        if (Fits(fighter.X, fighter.Y + stepY * middle)) low = middle; else high = middle;
+                        if (Fits(fighter.X, fighter.Y + stepY * middle, fighter)) low = middle; else high = middle;
                     }
                     fighter.Y += stepY * low;
                     fighter.VelocityY = 0;
@@ -111,13 +115,13 @@ namespace WelpTimeToDie.RectanglePrototype
                 }
                 Evaluate(fighter);
             }
-            fighter.TerrainGrounded = !Fits(fighter.X, fighter.Y - 0.035f) && fighter.VelocityY <= 0;
+            fighter.TerrainGrounded = !Fits(fighter.X, fighter.Y - 0.035f, fighter) && fighter.VelocityY <= 0;
         }
 
         public bool ClearStrike(RectangleFighter from, RectangleFighter to)
         {
-            var a = new Vector2(from.X, from.Y + 0.9f);
-            var b = new Vector2(to.X, to.Y + 0.9f);
+            var a = new Vector2(from.X, from.Y + from.BodyHeight / 2);
+            var b = new Vector2(to.X, to.Y + to.BodyHeight / 2);
             int steps = Mathf.CeilToInt(Vector2.Distance(a, b) / 0.1f);
             for (int i = 1; i < steps; i++)
             {

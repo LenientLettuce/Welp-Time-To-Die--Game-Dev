@@ -14,7 +14,8 @@ namespace WelpTimeToDie.RectanglePrototype
         [SerializeField] private PanelSettings savedPanel;
         [SerializeField] private WelpTimeToDie.Levels.ProceduralTerrainMap terrain;
         [SerializeField] private WelpTimeToDie.Cameras.MapCameraController mapCamera;
-        private float strength = 1;
+        private const float DefaultMovementPower = 0.6f;
+        private readonly Dictionary<CombatMove, Vector2> movementAims = new Dictionary<CombatMove, Vector2>();
         private bool paused;
         private VisualElement root;
         public RectangleCombat World => world;
@@ -40,6 +41,12 @@ namespace WelpTimeToDie.RectanglePrototype
         private Button rematchButton;
         private Button goButton, aimLeft, aimRight;
         private Toggle previewToggle;
+        private VisualElement movementPanel;
+        private Label movementTitle, movementReadout;
+        private MovementAimDial movementDial;
+
+        private bool Choosing => !playing && world != null && !world.Finished && world.Player.IsReady;
+        private bool UsesMovementAim => RectangleCombat.UsesMovementAim(selected);
 
         private void OnEnable()
         {
@@ -84,7 +91,12 @@ namespace WelpTimeToDie.RectanglePrototype
             root.Q<Button>("stepFrame").clicked += StepFrame;
             aimLeft = root.Q<Button>("aimLeft"); aimLeft.clicked += () => Aim(-1);
             aimRight = root.Q<Button>("aimRight"); aimRight.clicked += () => Aim(1);
-            root.Q<Slider>("dashPower").RegisterValueChangedCallback(e => { strength = e.newValue; RefreshPrediction(); });
+            movementPanel = root.Q("movementPanel");
+            movementTitle = movementPanel.Q<Label>("movementTitle");
+            movementReadout = movementPanel.Q<Label>("movementReadout");
+            movementDial = new MovementAimDial();
+            movementPanel.Insert(1, movementDial);
+            movementDial.AimChanged += SetMovementAim;
             if (terrain != null) terrain.Generated += Restart;
             Restart();
         }
@@ -98,10 +110,23 @@ namespace WelpTimeToDie.RectanglePrototype
 
         public void Aim(float facing)
         {
-            if (playing || world == null || world.Finished || !world.Player.IsReady) return;
+            if (!Choosing) return;
             float nextDirection = facing < 0 ? -1 : 1;
+            if (UsesMovementAim)
+            {
+                SetMovementAim(new Vector2(nextDirection * movementAims[selected].magnitude, 0));
+                return;
+            }
             if (direction == nextDirection) return;
             direction = nextDirection;
+            RefreshPrediction();
+        }
+
+        private void SetMovementAim(Vector2 aim)
+        {
+            if (!Choosing || !UsesMovementAim || movementAims[selected] == aim) return;
+            movementAims[selected] = aim;
+            if (Mathf.Abs(aim.normalized.x) > 0.01f) direction = Mathf.Sign(aim.x);
             RefreshPrediction();
         }
 
@@ -128,7 +153,7 @@ namespace WelpTimeToDie.RectanglePrototype
         {
             HidePreview();
             paused = false;
-            world = RectangleCombat.CreateBasic(FighterClass.Barbarian);
+            world = RectangleCombat.CreateBasic(FighterClass.Barbarian, golemEncounter: true);
             world.TacticalEnemies = true;
             if (terrain != null && terrain.HeightMap != null)
             {
@@ -141,9 +166,8 @@ namespace WelpTimeToDie.RectanglePrototype
                 world.Player.Y = world.Terrain.Surface(world.Player.X);
                 world.Player.TerrainGrounded = true;
                 var golem = world.Fighters[1];
-                golem.X = Mathf.Min(world.Terrain.MaxX - 0.6f, center + 1.5f);
-                golem.Y = world.Terrain.Surface(golem.X); golem.TerrainGrounded = true;
-                golem.Name = "GOLEM";
+                golem.X = Mathf.Min(world.Terrain.MaxX - golem.HalfWidth, center + 1.5f);
+                golem.Y = world.Terrain.Surface(golem.X, golem.HalfWidth); golem.TerrainGrounded = true;
                 golem.Move = CombatMove.None;
                 System.Array.Clear(golem.Cooldowns, 0, golem.Cooldowns.Length);
                 world.PlanEnemies();
@@ -152,6 +176,9 @@ namespace WelpTimeToDie.RectanglePrototype
             stage.ResetRig();
             selected = CombatMove.Punch;
             direction = 1;
+            movementAims[CombatMove.Dash] = Vector2.right * DefaultMovementPower;
+            movementAims[CombatMove.DashKick] = Vector2.right * DefaultMovementPower;
+            movementAims[CombatMove.Jump] = new Vector2(0.2f, 1f).normalized * DefaultMovementPower;
             playing = false;
             activePlan = null;
             playbackTime = 0;
@@ -206,7 +233,13 @@ namespace WelpTimeToDie.RectanglePrototype
 
         private void RefreshPrediction()
         {
-            plan = RectanglePlan.Create(world, selected, direction, strength);
+            if (UsesMovementAim)
+            {
+                Vector2 aim = movementAims[selected];
+                Vector2 unit = aim.normalized;
+                plan = RectanglePlan.Create(world, selected, unit.x, unit.y, aim.magnitude);
+            }
+            else plan = RectanglePlan.Create(world, selected, direction);
             Render();
         }
 
@@ -241,7 +274,13 @@ namespace WelpTimeToDie.RectanglePrototype
                     if (stage.ArenaCamera.pixelRect.Contains(screen) && !IsOverHud(screen))
                     {
                         Vector3 point = stage.ArenaCamera.ScreenToWorldPoint(new Vector3(screen.x, screen.y, 10));
-                        Aim(point.x < world.Player.X ? -1 : 1);
+                        if (UsesMovementAim)
+                        {
+                            Vector2 offset = (Vector2)point - new Vector2(world.Player.X, world.Player.Y + 0.9f);
+                            if (offset.sqrMagnitude > 0.001f)
+                                SetMovementAim(offset.normalized * movementAims[selected].magnitude);
+                        }
+                        else Aim(point.x < world.Player.X ? -1 : 1);
                     }
                 }
                 UpdatePreview(Time.unscaledDeltaTime);
@@ -278,7 +317,8 @@ namespace WelpTimeToDie.RectanglePrototype
             float top = (panel.yMax - header.worldBound.yMax - 6f) / panel.height;
             if (float.IsNaN(bottom) || float.IsNaN(top)) return;
             mapCamera.SetCombatFraming(new Vector2(Mathf.Clamp01(bottom), Mathf.Clamp01(top)),
-                new Vector2(world.Player.Y, world.Fighters[1].Y));
+                new Vector2(world.Player.Y, world.Fighters[1].Y),
+                new Vector2(world.Player.BodyHeight, stage.EnemyVisualHeight));
         }
 
         private WelpTimeToDie.Levels.TerrainFeatureState renderedTerrain;
@@ -299,7 +339,7 @@ namespace WelpTimeToDie.RectanglePrototype
             playerHealthFill.style.width = Length.Percent(100f * world.Player.Health / world.Player.MaxHealth);
             enemyHealthFill.style.width = Length.Percent(100f * enemy.Health / enemy.MaxHealth);
             RenderResult();
-            bool choosing = !playing && !world.Finished && world.Player.IsReady;
+            bool choosing = Choosing;
             foreach (var pair in moves)
             {
                 pair.Value.SetEnabled(choosing && world.CanStart(0, pair.Key));
@@ -309,7 +349,7 @@ namespace WelpTimeToDie.RectanglePrototype
             goButton.SetEnabled(!playing && plan != null);
             string moveName = plan?.MoveName ?? RectangleCombat.Spec(world.Player, selected).Name;
             string aim = direction < 0 ? "left" : "right";
-            string choice = selected == CombatMove.Backstep
+            string choice = UsesMovementAim ? moveName : selected == CombatMove.Backstep
                 ? $"Backstep {(direction < 0 ? "right" : "left")} · face {aim}"
                 : $"{moveName} · aim {aim}";
             help.text = world.Finished ? "Reset to try again."
@@ -318,21 +358,35 @@ namespace WelpTimeToDie.RectanglePrototype
                 : $"{(choosing ? choice : moveName)}. {plan.Summary}";
             aimLeft.SetEnabled(choosing);
             aimRight.SetEnabled(choosing);
-            aimLeft.EnableInClassList("selected", direction < 0);
-            aimRight.EnableInClassList("selected", direction > 0);
+            movementPanel.EnableInClassList("hidden", !UsesMovementAim || world.Finished);
+            movementPanel.SetEnabled(choosing && plan != null);
+            float facing = direction;
+            bool horizontalAim = true;
+            if (UsesMovementAim)
+            {
+                Vector2 aimVector = movementAims[selected];
+                Vector2 unit = aimVector.normalized;
+                facing = Mathf.Abs(unit.x) > 0.01f ? Mathf.Sign(unit.x) : world.Player.Facing;
+                horizontalAim = Mathf.Abs(unit.y) < 0.01f;
+                int degrees = Mathf.RoundToInt(Mathf.Repeat(Mathf.Atan2(unit.y, unit.x) * Mathf.Rad2Deg, 360f)) % 360;
+                movementTitle.text = RectangleCombat.Spec(world.Player, selected).Name;
+                movementReadout.text = $"{degrees}°  ·  {Mathf.RoundToInt(aimVector.magnitude * 100f)}% power";
+                movementDial.SetAim(aimVector);
+            }
+            aimLeft.EnableInClassList("selected", horizontalAim && facing < 0);
+            aimRight.EnableInClassList("selected", horizontalAim && facing > 0);
             RectangleCombat nextVisual = playing && playbackIndex < activePlan.Frames.Count
                 ? activePlan.Frames[playbackIndex] : null;
             root.Q<Label>("frameCount").text = $"Frame {world.Frame} · {RectangleCombat.FramesPerSecond} Hz combat";
             root.Q<Button>("generateMap").SetEnabled(!playing);
             root.Q<Button>("randomizeMap").SetEnabled(!playing);
-            root.Q<Slider>("dashPower").SetEnabled(!playing);
             if (terrain != null && world.Terrain != null && renderedTerrain != world.Terrain.State)
             {
                 terrain.Features.RestoreCommitted(world.Terrain.State);
                 renderedTerrain = world.Terrain.State;
                 previewTerrainRevision = -1;
             }
-            stage.Draw(world, !playing && world.Player.IsReady ? direction : 0, playing ? playbackOrigin : null,
+            stage.Draw(world, choosing ? facing : 0, playing ? playbackOrigin : null,
                 nextVisual, Mathf.Clamp01((float)playbackTime * RectangleStage.PlaybackRate));
             if ((playing || plan == null) && previewPlan != null) HidePreview();
         }
@@ -364,6 +418,7 @@ namespace WelpTimeToDie.RectanglePrototype
             playing = false;
             if (rematchButton != null) rematchButton.clicked -= Restart;
             previewToggle?.UnregisterValueChangedCallback(OnPreviewChanged);
+            if (movementDial != null) movementDial.AimChanged -= SetMovementAim;
             moves.Clear();
             if (terrain != null) terrain.Generated -= Restart;
             HidePreview();

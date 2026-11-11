@@ -10,10 +10,15 @@
     font-size: 14px;
 }
 
-.arena-header, .arena-footer {
+.arena-top, .arena-footer {
     position: absolute;
     left: 16px;
     right: 16px;
+}
+
+.arena-top { top: 12px; }
+
+.arena-header, .arena-footer, .movement-panel {
     padding: 10px 14px;
     background-color: var(--panel);
     border-width: 1px;
@@ -22,10 +27,21 @@
 }
 
 .arena-header {
-    top: 12px;
     flex-direction: row;
     align-items: center;
 }
+
+.movement-panel {
+    align-self: flex-start;
+    align-items: center;
+    margin-top: 8px;
+    padding: 8px 10px;
+    background-color: rgba(17, 24, 34, 0.92);
+}
+.movement-title { color: var(--cyan); }
+.movement-dial { width: 120px; height: 120px; }
+.movement-readout { margin: 0; font-size: 12px; color: var(--text); }
+.movement-panel:disabled { opacity: 0.55; }
 
 .fighter-card { flex: 1 1 0; min-width: 0; }
 .fighter-heading { flex-direction: row; align-items: center; justify-content: space-between; }

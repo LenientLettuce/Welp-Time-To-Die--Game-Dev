@@ -81,9 +81,14 @@ namespace WelpTimeToDie.RectanglePrototype.Tests
                 var map = new TerrainHeightGenerator().Generate(new TerrainSettings(), seed);
                 var settings = new TerrainFeatureSettings();
                 var terrain = new RectangleTerrain(map, new TerrainFeatureState(new TerrainFeatureGenerator().Generate(map, settings)), Vector2.zero, Vector2.one);
-                var world = RectangleCombat.CreateBasic(FighterClass.Barbarian); world.Terrain = terrain;
+                var world = RectangleCombat.CreateBasic(FighterClass.Barbarian, golemEncounter: true);
+                world.Terrain = terrain;
+                world.TacticalEnemies = true;
                 world.Player.X = 61; world.Player.Y = terrain.Surface(61); world.Player.TerrainGrounded = true;
-                world.Fighters[1].X = 64; world.Fighters[1].Y = terrain.Surface(64); world.Fighters[1].TerrainGrounded = true;
+                var golem = world.Fighters[1];
+                golem.X = 64; golem.Y = terrain.Surface(64, golem.HalfWidth); golem.TerrainGrounded = true;
+                golem.Move = CombatMove.None;
+                world.PlanEnemies();
                 foreach (var move in new[] {CombatMove.Move,CombatMove.Punch,CombatMove.Uppercut,CombatMove.Kick,CombatMove.DashKick,CombatMove.Block,CombatMove.Wait,CombatMove.Dash,CombatMove.Jump})
                 {
                     var plan = RectanglePlan.Create(world, move, 1);
@@ -97,7 +102,8 @@ namespace WelpTimeToDie.RectanglePrototype.Tests
                             Assert.That(actual.Fighters[i].X, Is.EqualTo(frame.Fighters[i].X));
                             Assert.That(actual.Fighters[i].Y, Is.EqualTo(frame.Fighters[i].Y));
                             Assert.That(actual.Fighters[i].Health, Is.EqualTo(frame.Fighters[i].Health));
-                            Assert.That(actual.Terrain.Fits(actual.Fighters[i].X, actual.Fighters[i].Y), Is.True, seed + " " + move);
+                            var fighter = actual.Fighters[i];
+                            Assert.That(actual.Terrain.Fits(fighter.X, fighter.Y, fighter), Is.True, seed + " " + move);
                         }
                     }
                 }

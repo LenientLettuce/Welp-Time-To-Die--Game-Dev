@@ -59,7 +59,8 @@ namespace WelpTimeToDie.RectanglePrototype
             
             if (enemyGolem != null)
             {
-                enemyGolem.PlaceAtFeet(new Vector2(center + 1.5f, map.GetSurfaceHeight(center + 1.5f, 0.45f)), -1);
+                float halfWidth = RectangleFighter.BaseHalfWidth * RectangleFighter.GolemSizeMultiplier;
+                enemyGolem.PlaceAtFeet(new Vector2(center + 1.5f, map.GetSurfaceHeight(center + 1.5f, halfWidth)), -1);
             }
             if (playerAnimator != null)
             {
@@ -72,6 +73,7 @@ namespace WelpTimeToDie.RectanglePrototype
         private bool captured;
         private int used;
         public Camera ArenaCamera => arenaCamera;
+        public float EnemyVisualHeight { get; private set; }
         public Transform PlayerFollowTarget => playerAnimator != null ? playerAnimator.transform : playerBody.transform;
         private static readonly Color Blue = new Color(0.25f, 0.8f, 1f);
         private static readonly Color Red = new Color(1f, 0.35f, 0.40f);
@@ -111,9 +113,7 @@ namespace WelpTimeToDie.RectanglePrototype
                 fighter.Y = Mathf.Lerp(fighter.Y, next?.Player.Y ?? fighter.Y, blend);
                 if (aimDirection != 0) fighter.Facing = aimDirection < 0 ? -1 : 1;
                 playerAnimator.Show(fighter, world.Frame, false);
-                Box(fighter.X, fighter.Y + 2.1f, 1.1f, 0.07f, new Color(0.2f, 0.25f, 0.3f));
-                float width = 1.1f * fighter.Health / fighter.MaxHealth;
-                if (width > 0) Box(fighter.X - 0.55f + width / 2, fighter.Y + 2.1f, width, 0.07f, Blue);
+                DrawHealthBar(fighter.X, fighter.Y + fighter.BodyHeight, fighter, Blue);
                 playerBody.enabled = false;
             }
             else 
@@ -128,13 +128,14 @@ namespace WelpTimeToDie.RectanglePrototype
                 fighter.X = Mathf.Lerp(fighter.X, next?.Fighters[1].X ?? fighter.X, blend);
                 fighter.Y = Mathf.Lerp(fighter.Y, next?.Fighters[1].Y ?? fighter.Y, blend);
                 enemyGolem.Show(fighter, world.Frame, false);
-                Box(fighter.X, fighter.Y + 2.1f, 1.1f, 0.07f, new Color(0.2f, 0.25f, 0.3f));
-                float width = 1.1f * fighter.Health / fighter.MaxHealth;
-                if (width > 0) Box(fighter.X - 0.55f + width / 2, fighter.Y + 2.1f, width, 0.07f, Red);
+                float visualTop = enemyGolem.VisualTop(fighter.Y + fighter.BodyHeight);
+                EnemyVisualHeight = visualTop - fighter.Y;
+                DrawHealthBar(fighter.X, visualTop, fighter, Red);
                 enemyBody.enabled = false;
             }
             else 
             {
+                EnemyVisualHeight = world.Fighters[1].BodyHeight;
                 DrawBody(enemyBody, world.Fighters[1], next?.Fighters[1], blend, Red);
             }
 
@@ -161,14 +162,14 @@ namespace WelpTimeToDie.RectanglePrototype
             float strike = spec.Damage > 0 && !spec.Projectile
                 ? Mathf.SmoothStep(0, 1, Mathf.InverseLerp(spec.Startup - 1, spec.Startup, elapsed))
                     * (1 - Mathf.SmoothStep(0, 1, Mathf.InverseLerp(spec.Startup + spec.Active, spec.Duration, elapsed))) : 0;
-            body.transform.position = new Vector3(x, y + (fighter.IsAlive ? 0.9f : 0.15f), 0);
-            body.transform.localScale = fighter.IsAlive ? new Vector3(0.9f, 1.8f, 1) : new Vector3(1.8f, 0.3f, 1);
+            body.transform.position = new Vector3(x, y + (fighter.IsAlive ? fighter.BodyHeight / 2 : 0.15f), 0);
+            body.transform.localScale = fighter.IsAlive
+                ? new Vector3(2 * fighter.HalfWidth, fighter.BodyHeight, 1)
+                : new Vector3(fighter.BodyHeight, 0.3f, 1);
             body.transform.rotation = Quaternion.identity;
             body.color = !fighter.IsAlive ? Color.gray : fighter.HurtFlash > 0 ? Color.Lerp(color, Color.white, fighter.HurtFlash / 4f) : color;
             if (!fighter.IsAlive) return;
-            Box(x, y + 2.1f, 1.1f, 0.07f, new Color(0.2f, 0.25f, 0.3f));
-            float width = 1.1f * fighter.Health / fighter.MaxHealth;
-            if (width > 0) Box(x - 0.55f + width / 2, y + 2.1f, width, 0.07f, color);
+            DrawHealthBar(x, y + fighter.BodyHeight, fighter, color);
             Box(x + facing * 0.33f, y + 1.15f, 0.12f, 0.18f, Color.white);
             if (fighter.HurtFlash > 0)
             {
@@ -198,6 +199,15 @@ namespace WelpTimeToDie.RectanglePrototype
             if (strike > 0.5f)
                 Box(shoulderX + dx / 2, y + height + dy / 2 - 0.18f,
                     extension * 0.75f, 0.045f, new Color(color.r, color.g, color.b, strike * 0.25f), angle);
+        }
+
+        private void DrawHealthBar(float x, float top, RectangleFighter fighter, Color color)
+        {
+            float barY = top + 0.3f;
+            float barWidth = 1.1f * fighter.SizeMultiplier;
+            Box(x, barY, barWidth, 0.07f, new Color(0.2f, 0.25f, 0.3f));
+            float fill = barWidth * fighter.Health / fighter.MaxHealth;
+            if (fill > 0) Box(x - (barWidth - fill) / 2, barY, fill, 0.07f, color);
         }
 
         private SpriteRenderer Box(float x, float y, float width, float height, Color color, float angle = 0)
