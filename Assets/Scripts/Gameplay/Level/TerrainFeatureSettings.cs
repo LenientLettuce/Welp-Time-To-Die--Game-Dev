@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.Tilemaps;
 
 namespace WelpTimeToDie.Levels
 {
@@ -8,8 +9,9 @@ namespace WelpTimeToDie.Levels
     {
         [Min(0)] public int backgroundHeight = 16;
         public Color backgroundColor = new Color(0.30f, 0.18f, 0.43f);
-        [Tooltip("Show buried passages in red while editing. Unopened passages always look like ordinary ground during play.")]
-        public bool showTunnelLayoutInEditor = true;
+        [Tooltip("When assigned, backs the terrain so the underground stays visible after a tunnel or pit opens.")]
+        public TileBase undergroundBackgroundTile;
+        public TileBase undergroundDetailTile;
         [Min(0)] public int tunnelCount = 6;
         [Min(16)] public int tunnelMinLength = 28;
         [Min(16)] public int tunnelMaxLength = 64;

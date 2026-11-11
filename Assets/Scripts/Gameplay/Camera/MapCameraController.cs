@@ -10,11 +10,15 @@ namespace WelpTimeToDie.Cameras
     {
         [SerializeField] private Transform player;
         [SerializeField] private LevelLayout level;
+        [SerializeField] private SpriteRenderer backdrop;
+        [SerializeField, Min(1f)] private float backdropScale = 1f;
+        [SerializeField] private Vector2 backdropParallax;
         [SerializeField] private Vector2 followOffset = new Vector2(0f, 2f);
         [SerializeField, Min(0.1f)] private float defaultZoom = 6.75f;
         [SerializeField, Min(0.1f)] private float minimumZoom = 2f;
         [SerializeField, Min(0.1f)] private float maximumZoom = 24f;
         private Camera mapCamera;
+        private ProceduralTerrainMap terrain;
         private Vector2 followViewport = new Vector2(0, 1);
         private Vector2? fighterHeights;
 
@@ -24,14 +28,41 @@ namespace WelpTimeToDie.Cameras
 
         private void Awake()
         {
+            if (level != null) level.TryGetComponent(out terrain);
             ViewCamera.orthographic = true;
             ViewCamera.orthographicSize = defaultZoom;
+            UpdateScenery();
         }
 
         private void LateUpdate()
         {
             if (!IsBrowsing && player != null)
                 UpdateFollowPosition();
+            UpdateScenery();
+        }
+
+        private void UpdateScenery()
+        {
+            float halfWidth = Zoom * ViewCamera.aspect;
+            var halfView = new Vector3(halfWidth, Zoom, 0f);
+            Vector3 center = transform.position;
+            if (terrain != null)
+                terrain.Features?.Visuals.EnsureSceneryCovers(center - halfView, center + halfView);
+
+            if (backdrop == null || backdrop.sprite == null) return;
+            Vector3 spriteSize = backdrop.sprite.bounds.size;
+            float height = Zoom * 2f;
+            float width = halfWidth * 2f;
+            float scale = Mathf.Max(width / spriteSize.x, height / spriteSize.y) * backdropScale;
+            backdrop.transform.localScale = new Vector3(scale, scale, 1f);
+
+            Vector2 levelCenter = level != null ? (Vector2)level.WorldBounds.center : Vector2.zero;
+            Vector2 shift = Vector2.Scale(levelCenter - (Vector2)center, backdropParallax);
+            Vector2 margin = (Vector2)(spriteSize * scale - halfView * 2f) * 0.5f;
+            var position = backdrop.transform.localPosition;
+            position.x = Mathf.Clamp(shift.x, -margin.x, margin.x);
+            position.y = Mathf.Clamp(shift.y, -margin.y, margin.y);
+            backdrop.transform.localPosition = position;
         }
 
         public void SetCombatFraming(Vector2 viewport, Vector2 feet)
