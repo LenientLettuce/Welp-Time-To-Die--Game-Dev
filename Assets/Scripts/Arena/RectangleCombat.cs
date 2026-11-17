@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 
 namespace WelpTimeToDie.RectanglePrototype
@@ -32,10 +33,12 @@ namespace WelpTimeToDie.RectanglePrototype
     public sealed class RectangleCombat
     {
         public const int FramesPerSecond = 24, PreviewFrames = 24;
+        public const int DefaultBlockFrames = 8, MaxBlockFrames = PreviewFrames;
         public const float Width = 30, Height = 12, Ground = 1.4f;
         public const float SpikeLeft = 17, SpikeRight = 20;
         public const float BodySpacing = 1.1f;
         private const float GolemSpeedMultiplier = 1.5f;
+        private const int RockSpikeFrames = 4;
         private const int MotionSubsteps = 2;
         private const float MotionStep = 1f / (FramesPerSecond * MotionSubsteps);
         private const float StepSpeed = 7.2f, DashSpeed = 20f, DashKickSpeed = 10.5f;
@@ -46,6 +49,7 @@ namespace WelpTimeToDie.RectanglePrototype
         public const float LegacyMovementPower = 0.3f, MinMovementPower = 0.1f;
         public readonly List<RectangleFighter> Fighters = new List<RectangleFighter>();
         public readonly List<RectangleProjectile> Projectiles = new List<RectangleProjectile>();
+        private uint stunRandomState;
         public bool HazardsEnabled { get; set; } = true;
         public bool TacticalEnemies { get; set; }
         public RectangleTerrain Terrain { get; set; }
@@ -54,6 +58,7 @@ namespace WelpTimeToDie.RectanglePrototype
         private float RightLimit(RectangleFighter fighter) =>
             Terrain == null ? Width - 0.6f * fighter.SizeMultiplier : Terrain.MaxX - fighter.HalfWidth;
         public int Frame { get; private set; }
+        internal int LastPlayerBlockFrame { get; private set; }
         public string LastEvent { get; private set; } = "Read enemy intent, choose a move, then preview before committing.";
         public RectangleFighter Player => Fighters[0];
         public bool Lost => !Player.IsAlive;
@@ -65,9 +70,11 @@ namespace WelpTimeToDie.RectanglePrototype
         public bool SpikesActive => HazardsEnabled && Frame % 48 >= 8 && Frame % 48 < 24;
         public bool SpikesWarning => HazardsEnabled && Frame % 48 < 8;
 
-        public static RectangleCombat Create(FighterClass character)
+        private RectangleCombat(uint stunSeed) => stunRandomState = stunSeed == 0 ? 1 : stunSeed;
+
+        public static RectangleCombat Create(FighterClass character, uint? stunSeed = null)
         {
-            var world = new RectangleCombat();
+            var world = new RectangleCombat(stunSeed ?? unchecked((uint)Guid.NewGuid().GetHashCode()));
             int hp = character == FighterClass.Barbarian ? 14 : character == FighterClass.Rogue ? 10 : 9;
             world.Fighters.Add(new RectangleFighter { Name = "YOU", Class = character, IsPlayer = true, X = 8, Y = Ground, MaxHealth = hp, Health = hp });
             world.Fighters.Add(new RectangleFighter { Name = "GUARD", Class = FighterClass.Barbarian, X = 11, Y = Ground, Facing = -1, MaxHealth = 7, Health = 7 });
@@ -76,9 +83,9 @@ namespace WelpTimeToDie.RectanglePrototype
             return world;
         }
 
-        public static RectangleCombat CreateBasic(FighterClass character, bool golemEncounter = false)
+        public static RectangleCombat CreateBasic(FighterClass character, bool golemEncounter = false, uint? stunSeed = null)
         {
-            var world = Create(character);
+            var world = Create(character, stunSeed);
             world.Fighters.RemoveAt(2);
             var enemy = world.Fighters[1];
             enemy.IsGolem = golemEncounter;
@@ -90,10 +97,10 @@ namespace WelpTimeToDie.RectanglePrototype
 
         public RectangleCombat Copy()
         {
-            var copy = new RectangleCombat
+            var copy = new RectangleCombat(stunRandomState)
             {
                 Frame = Frame, LastEvent = LastEvent, HazardsEnabled = HazardsEnabled,
-                TacticalEnemies = TacticalEnemies, Terrain = Terrain?.Copy()
+                TacticalEnemies = TacticalEnemies, Terrain = Terrain?.Copy(), LastPlayerBlockFrame = LastPlayerBlockFrame
             };
             foreach (var fighter in Fighters) copy.Fighters.Add(fighter.Copy());
             foreach (var projectile in Projectiles) copy.Projectiles.Add(projectile.Copy());
@@ -102,6 +109,29 @@ namespace WelpTimeToDie.RectanglePrototype
 
         public static MoveSpec Spec(RectangleFighter fighter, CombatMove move)
         {
+            var spec = UnadjustedSpec(fighter, move);
+            if (!fighter.IsGolem && spec.Damage > 0)
+            {
+                int reduction = spec.Duration < 15 ? 3 : 4;
+                spec.Startup -= reduction;
+                spec.Duration -= reduction;
+                spec.Recharge -= reduction;
+            }
+            return spec;
+        }
+
+        private static MoveSpec UnadjustedSpec(RectangleFighter fighter, CombatMove move)
+        {
+            if (move == CombatMove.RaiseRock)
+            {
+                var punch = UnadjustedSpec(fighter, CombatMove.Punch);
+                return new MoveSpec("Raise rock", 8, 8, 26, punch.Damage, push: punch.Push, stun: punch.Stun);
+            }
+            if (move == CombatMove.CoreLaser)
+            {
+                var heavy = UnadjustedSpec(fighter, CombatMove.Heavy);
+                return new MoveSpec("Core laser", 15, 21, 34, heavy.Damage, 6, heavy.Push, heavy.Stun, active: 6);
+            }
             var spec = BaseSpec(fighter, move);
             if (!fighter.IsGolem) return spec;
 
@@ -121,14 +151,16 @@ namespace WelpTimeToDie.RectanglePrototype
                 case CombatMove.Jump: return new MoveSpec("Jump", 0, 12, 16);
                 case CombatMove.Punch: return new MoveSpec("Punch", 4, 9, 12, 2, 2.3f, 3, 4);
                 case CombatMove.Uppercut: return new MoveSpec("Uppercut", 6, 15, 15, 3, 2.1f, 2, 12, active: 2, launch: 11);
-                case CombatMove.Kick: return new MoveSpec(fighter.IsPlayer ? "Kick" : "Shove", 7, 16, 16, 3, 3.3f, 9, 9, active: 3);
+                case CombatMove.Kick: return new MoveSpec(fighter.IsPlayer ? "Kick" : "Shove", 7, 16, fighter.IsPlayer ? 18 : 16, 3, 3.3f, 9, 9, active: 3);
                 case CombatMove.DashKick: return new MoveSpec(fighter.IsPlayer ? "Dash kick" : "Rush", 8, 21, 24, 3, 2.5f, 11, 10, active: 4);
                 case CombatMove.Sweep: return new MoveSpec("Sweep", 5, 12, 18, 1, 1.9f, 1, 11, active: 2);
-                case CombatMove.Backstep: return new MoveSpec("Backstep", 0, 5, 14);
+                case CombatMove.Backstep: return new MoveSpec("Backstep", 0, 5, 9);
                 case CombatMove.Heavy: return fighter.Armored
                     ? new MoveSpec("UNSTOPPABLE SLAM", 12, 22, 28, 4, 3.2f, 9, 8, unstoppable: true)
                     : new MoveSpec("Heavy strike", 9, 18, 24, 4, 3, 8, 7);
-                case CombatMove.Block: return new MoveSpec("Block", 0, 8, 4);
+                case CombatMove.Block: return fighter.IsPlayer
+                    ? new MoveSpec("Block", 0, fighter.BlockFrames, BlockRecharge(fighter.BlockFrames))
+                    : new MoveSpec("Block", 0, DefaultBlockFrames, 4);
                 case CombatMove.Special:
                     if (fighter.Class == FighterClass.Wizard) return new MoveSpec("Fireball", 10, 16, 28, 3, 0, 7, 6, true);
                     if (fighter.Class == FighterClass.Rogue) return new MoveSpec("Throw dagger", 5, 11, 18, 2, 0, 3, 4, true);
@@ -139,29 +171,55 @@ namespace WelpTimeToDie.RectanglePrototype
         }
 
         public static bool UsesMovementAim(CombatMove move) =>
-            move == CombatMove.Dash || move == CombatMove.Jump || move == CombatMove.DashKick;
+            move == CombatMove.Dash || move == CombatMove.Jump || move == CombatMove.DashKick || move == CombatMove.Heavy;
+
+        internal static int BlockRecharge(int frames) => (frames + 1) / 2;
+
+        internal static bool IsGolemRangedMove(CombatMove move) =>
+            move == CombatMove.RaiseRock || move == CombatMove.CoreLaser;
 
         public bool CanStart(int index, CombatMove move)
         {
             if (Finished || index < 0 || index >= Fighters.Count || move <= CombatMove.None || (int)move >= Enum.GetValues(typeof(CombatMove)).Length) return false;
             var fighter = Fighters[index];
+            if (IsGolemRangedMove(move) && (!fighter.IsGolem || fighter.IsPlayer ||
+                (move == CombatMove.RaiseRock && !Player.IsGrounded))) return false;
             bool needsGround = (move == CombatMove.Jump && !fighter.IsPlayer) ||
                 move == CombatMove.Sweep || move == CombatMove.Backstep;
             return fighter.IsReady && fighter.Cooldowns[(int)move] == 0 && (!needsGround || fighter.IsGrounded);
         }
 
-        public bool Start(int index, CombatMove move, float aimX, float aimY, float power = 1)
+        public bool Start(int index, CombatMove move, float aimX, float aimY, float power = 1, int blockFrames = DefaultBlockFrames)
         {
             if (!CanStart(index, move)) return false;
             var fighter = Fighters[index];
+            if (move == CombatMove.RaiseRock)
+                fighter.RockSpike = Terrain?.SpikeAtFeet(Player) ?? new Rect(Mathf.Floor(Player.X), Ground, 1, 1);
+            if (move == CombatMove.CoreLaser)
+                AimLaserAtPlayer(fighter);
+            else
+                SetAim(fighter, aimX, aimY);
+            fighter.Move = move; fighter.Elapsed = 0; fighter.HitTargets = 0;
+            fighter.Power = Clamp(power, MinMovementPower, 1);
+            if (fighter.IsPlayer && move == CombatMove.Block)
+                fighter.BlockFrames = Math.Clamp(blockFrames, 1, MaxBlockFrames);
+            else
+                fighter.Cooldowns[(int)move] = Spec(fighter, move).Recharge;
+            return true;
+        }
+
+        private static void SetAim(RectangleFighter fighter, float aimX, float aimY)
+        {
             double length = Math.Sqrt(aimX * aimX + aimY * aimY);
             if (length < 0.001) { aimX = fighter.Facing; aimY = 0; length = 1; }
             fighter.AimX = (float)(aimX / length); fighter.AimY = (float)(aimY / length);
             if (Math.Abs(aimX) > 0.01f) fighter.Facing = aimX < 0 ? -1 : 1;
-            fighter.Move = move; fighter.Elapsed = 0; fighter.HitTargets = 0;
-            fighter.Power = Clamp(power, MinMovementPower, 1);
-            fighter.Cooldowns[(int)move] = Spec(fighter, move).Recharge;
-            return true;
+        }
+
+        private void AimLaserAtPlayer(RectangleFighter fighter)
+        {
+            Vector2 offset = CorePosition(Player) - CorePosition(fighter);
+            SetAim(fighter, offset.x, offset.y);
         }
 
         public void PlanEnemies()
@@ -177,6 +235,12 @@ namespace WelpTimeToDie.RectanglePrototype
                     Start(i, ChooseEnemyMove(i, dx), dx, 0);
                     continue;
                 }
+                CombatMove ranged = ChooseGolemRangedMove(i);
+                if (ranged != CombatMove.None)
+                {
+                    Start(i, ranged, dx, 0);
+                    continue;
+                }
                 CombatMove move = Math.Abs(dx) > 3.1f ? CombatMove.Move
                     : enemy.Cooldowns[(int)CombatMove.Heavy] == 0 ? CombatMove.Heavy
                     : enemy.Cooldowns[(int)CombatMove.Punch] == 0 ? CombatMove.Punch : CombatMove.Wait;
@@ -185,6 +249,21 @@ namespace WelpTimeToDie.RectanglePrototype
                     move = CombatMove.Jump;
                 Start(i, move, dx, 0);
             }
+        }
+
+        private CombatMove ChooseGolemRangedMove(int index)
+        {
+            var enemy = Fighters[index];
+            if (!enemy.IsGolem) return CombatMove.None;
+            Vector2 core = CorePosition(enemy), target = CorePosition(Player);
+            float distance = Vector2.Distance(core, target);
+            if (Math.Abs(core.x - target.x) <= 3.1f && OverlapHeight(enemy, Player, 0.2f))
+                return CombatMove.None;
+            if (distance <= LaserRange(enemy) && CanStart(index, CombatMove.CoreLaser) &&
+                (Terrain == null || Terrain.ClipBeam(core, target) == target))
+                return CombatMove.CoreLaser;
+            return distance <= 2 * LaserRange(enemy) && CanStart(index, CombatMove.RaiseRock)
+                ? CombatMove.RaiseRock : CombatMove.None;
         }
 
         private CombatMove ChooseEnemyMove(int index, float dx)
@@ -203,6 +282,9 @@ namespace WelpTimeToDie.RectanglePrototype
                 && distance < playerMove.Reach + reachPadding + (Player.Move == CombatMove.DashKick ? 1.5f : 0);
             if (underThreat && CanStart(index, CombatMove.Block))
                 return CombatMove.Block;
+
+            CombatMove ranged = ChooseGolemRangedMove(index);
+            if (ranged != CombatMove.None) return ranged;
 
             if (clearStrike && inHeight)
             {
@@ -270,8 +352,12 @@ namespace WelpTimeToDie.RectanglePrototype
                 var attacker = Fighters[i];
                 if (!attacker.IsAlive || stunnedThisFrame.Contains(attacker) || attacker.Move == CombatMove.None) continue;
                 MoveSpec spec = Spec(attacker, attacker.Move);
+                if (attacker.Move == CombatMove.CoreLaser && attacker.Elapsed <= spec.Startup)
+                    AimLaserAtPlayer(attacker);
                 if (spec.Damage == 0 || (attacker.Elapsed < spec.Startup || attacker.Elapsed >= spec.Startup + spec.Active)) continue;
-                if (spec.Projectile)
+                if (IsGolemRangedMove(attacker.Move))
+                    StepGolemRangedAttack(i, spec, hits);
+                else if (spec.Projectile)
                 {
                     float speed = attacker.Class == FighterClass.Rogue ? 26 : 18;
                     Projectiles.Add(new RectangleProjectile { Owner = i, X = attacker.X + attacker.AimX * 0.7f, Y = attacker.Y + 0.9f + attacker.AimY * 0.7f,
@@ -298,9 +384,48 @@ namespace WelpTimeToDie.RectanglePrototype
                 }
                 if (!fighter.IsAlive) { fighter.Move = CombatMove.None; boundary = true; continue; }
                 if (fighter.Move != CombatMove.None && fighter.Elapsed >= Spec(fighter, fighter.Move).Duration)
-                { fighter.Move = CombatMove.None; fighter.Elapsed = 0; boundary = true; }
+                {
+                    EndMove(fighter);
+                    boundary = true;
+                }
             }
             return boundary || Finished;
+        }
+
+        internal static Vector2 CorePosition(RectangleFighter fighter) =>
+            new Vector2(fighter.X, fighter.Y + fighter.BodyHeight / 2);
+
+        private float LaserRange(RectangleFighter fighter) =>
+            Spec(fighter, CombatMove.CoreLaser).Reach * (Terrain?.BlockWidth ?? 1);
+
+        internal Vector2 LaserEnd(RectangleFighter fighter)
+        {
+            Vector2 start = CorePosition(fighter);
+            Vector2 end = start + new Vector2(fighter.AimX, fighter.AimY) * LaserRange(fighter);
+            return Terrain?.ClipBeam(start, end) ?? end;
+        }
+
+        private void StepGolemRangedAttack(int index, MoveSpec spec, List<Hit> hits)
+        {
+            var attacker = Fighters[index];
+            bool raisingRock = attacker.Move == CombatMove.RaiseRock;
+            if (raisingRock) attacker.RockSpikeUntil = Frame + RockSpikeFrames;
+            if (attacker.HitTargets != 0) return;
+
+            Rect spike = attacker.RockSpike;
+            Vector2 start = CorePosition(attacker);
+            Vector2 end = raisingRock ? start : LaserEnd(attacker);
+            var player = Player;
+            float left = player.X - player.HalfWidth, right = player.X + player.HalfWidth;
+            float top = player.Y + player.BodyHeight;
+            bool hit = raisingRock
+                ? left < spike.xMax && right > spike.xMin && player.Y < spike.yMax && top > spike.yMin
+                : end != start && SegmentHitsBox(start.x, start.y, end.x, end.y, left, player.Y, right, top);
+            if (!hit) return;
+
+            attacker.HitTargets |= 1;
+            float direction = raisingRock ? (player.X < spike.center.x ? -1 : 1) : attacker.Facing;
+            hits.Add(new Hit { Attacker = index, Target = 0, Spec = spec, Direction = direction });
         }
 
         private static void BeginMotion(RectangleFighter fighter)
@@ -310,13 +435,25 @@ namespace WelpTimeToDie.RectanglePrototype
                 float baseSpeed = fighter.Move switch
                 {
                     CombatMove.Dash => DashSpeed,
-                    CombatMove.DashKick => DashKickSpeed,
+                    CombatMove.DashKick or CombatMove.Heavy => DashKickSpeed,
                     _ => (float)Math.Sqrt(JumpSpeed * JumpSpeed + JumpDrift * JumpDrift)
                 };
                 float speed = baseSpeed * fighter.Power / LegacyMovementPower;
                 fighter.VelocityX = fighter.AimX * speed;
                 fighter.VelocityY = fighter.AimY * speed;
                 return;
+            }
+
+            if (fighter.IsPlayer)
+            {
+                float lunge = fighter.Move switch
+                {
+                    CombatMove.Punch or CombatMove.Sweep => 4.5f,
+                    CombatMove.Uppercut => 5f,
+                    CombatMove.Kick => 6f,
+                    _ => 0
+                };
+                if (lunge > 0) SetForwardSpeed(fighter, fighter.Facing, lunge);
             }
 
             float speedMultiplier = fighter.IsGolem ? GolemSpeedMultiplier : 1f;
@@ -346,10 +483,11 @@ namespace WelpTimeToDie.RectanglePrototype
             bool grounded = fighter.IsGrounded;
             var spec = Spec(fighter, fighter.Move);
             bool advancingAttack = fighter.IsGolem && fighter.Move != CombatMove.DashKick &&
-                spec.Damage > 0 && !spec.Projectile && fighter.Elapsed <= spec.Startup;
+                !IsGolemRangedMove(fighter.Move) && spec.Damage > 0 && !spec.Projectile && fighter.Elapsed <= spec.Startup;
             bool stepping = !stunned && (fighter.Move == CombatMove.Move || advancingAttack);
+            bool rushingStrike = fighter.Move == CombatMove.DashKick || (fighter.IsPlayer && fighter.Move == CombatMove.Heavy);
             bool dashing = !stunned && (fighter.Move == CombatMove.Dash || fighter.Move == CombatMove.Backstep ||
-                (fighter.Move == CombatMove.DashKick && fighter.Elapsed <= spec.Startup));
+                (rushingStrike && fighter.Elapsed <= spec.Startup));
             if (stepping)
             {
                 float speedMultiplier = fighter.IsGolem ? GolemSpeedMultiplier : 1f;
@@ -468,7 +606,7 @@ namespace WelpTimeToDie.RectanglePrototype
             return Clip(x0, x1 - x0, left, right, ref min, ref max) && Clip(y0, y1 - y0, bottom, top, ref min, ref max);
         }
 
-        private static bool Clip(float start, float delta, float low, float high, ref float min, ref float max)
+        internal static bool Clip(float start, float delta, float low, float high, ref float min, ref float max)
         {
             if (Math.Abs(delta) < 0.000001f) return start >= low && start <= high;
             float a = (low - start) / delta, b = (high - start) / delta;
@@ -482,21 +620,46 @@ namespace WelpTimeToDie.RectanglePrototype
             var attacker = Fighters[hit.Attacker]; var target = Fighters[hit.Target];
             if (!target.IsAlive) return;
             bool blocking = target.Move == CombatMove.Block && target.Stun == 0 && (attacker.X - target.X) * target.Facing >= 0;
-            int damage = blocking ? Math.Max(0, hit.Spec.Damage - 3) : hit.Spec.Damage;
+            float damage = blocking ? hit.Spec.Damage * 0.25f : hit.Spec.Damage;
             target.Health = Math.Max(0, target.Health - damage); target.HurtFlash = 4;
-            if (blocking) { LastEvent = $"{target.Name} blocked {hit.Spec.Name} ({damage} damage)."; return; }
+            if (blocking)
+            {
+                if (target.IsPlayer) LastPlayerBlockFrame = Frame;
+                LastEvent = $"{target.Name} blocked {hit.Spec.Name} ({damage} damage).";
+                return;
+            }
             bool armored = target.Move != CombatMove.None && Spec(target, target.Move).Unstoppable;
             bool counter = target.Move != CombatMove.None && target.Elapsed < Spec(target, target.Move).Startup && !armored;
+            bool stuns = target.IsAlive && !armored && hit.Spec.Stun > 0 && RollStun();
             if (!armored || !target.IsAlive)
             {
-                target.Move = CombatMove.None; target.Elapsed = 0;
-                target.Stun = target.IsAlive ? hit.Spec.Stun : 0;
+                EndMove(target);
+                if (stuns) target.Stun = Math.Max(target.Stun, hit.Spec.Stun);
+                else if (!target.IsAlive) target.Stun = 0;
                 SetForwardSpeed(target, hit.Direction, hit.Spec.Push);
                 if (hit.Spec.Launch > 0) target.VelocityY = Math.Max(target.VelocityY, hit.Spec.Launch);
             }
+            string stunText = stuns ? $" Stunned for {target.Stun} frames." : "";
             LastEvent = !target.IsAlive ? $"{target.Name} defeated." : counter
-                ? $"COUNTER! {target.Name}'s wind-up cancelled. Stunned for {hit.Spec.Stun} frames."
-                : $"{target.Name} took {damage} damage{(armored ? "; unstoppable attack continues" : "")}.";
+                ? $"COUNTER! {target.Name}'s wind-up cancelled.{stunText}"
+                : $"{target.Name} took {damage} damage.{stunText}{(armored ? " Unstoppable attack continues." : "")}";
+        }
+
+        private bool RollStun()
+        {
+            // Keep the xorshift state in the world so a forecast rolls from the same state as playback.
+            stunRandomState ^= stunRandomState << 13;
+            stunRandomState ^= stunRandomState >> 17;
+            stunRandomState ^= stunRandomState << 5;
+            return (stunRandomState & 3) == 0;
+        }
+
+        private static void EndMove(RectangleFighter fighter)
+        {
+            if (fighter.IsPlayer && fighter.Move == CombatMove.Block)
+                fighter.Cooldowns[(int)CombatMove.Block] = BlockRecharge(fighter.BlockFrames);
+            fighter.Move = CombatMove.None;
+            fighter.Elapsed = 0;
         }
 
         public static float Clamp(float value, float low, float high) => Math.Max(low, Math.Min(high, value));

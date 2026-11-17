@@ -8,10 +8,11 @@ namespace WelpTimeToDie.RectanglePrototype.Tests
         public void RehearsalEndsAtThePlayersNextDecisionInsteadOfTwentyFourFramesLater()
         {
             var live = RectangleCombat.CreateBasic(FighterClass.Barbarian);
+            live.Fighters[1].Cooldowns[(int)CombatMove.Punch] = 20;
             var plan = RectanglePlan.Create(live, CombatMove.Punch, 1);
-            Assert.That(plan.Frames.Count, Is.EqualTo(9));
-            Assert.That(plan.Frames[8].Player.IsReady, Is.True);
-            Assert.That(plan.Frames[8].Fighters[1].Health, Is.EqualTo(5));
+            Assert.That(plan.Frames.Count, Is.EqualTo(6));
+            Assert.That(plan.Frames[5].Player.IsReady, Is.True);
+            Assert.That(plan.Frames[5].Fighters[1].Health, Is.EqualTo(5));
             Assert.That(plan.Summary, Does.Contain("enemy loses 2 HP"));
             Assert.That(live.Frame, Is.Zero);
             Assert.That(live.Fighters[1].Health, Is.EqualTo(7));
@@ -50,10 +51,18 @@ namespace WelpTimeToDie.RectanglePrototype.Tests
         [Test]
         public void PreviewWarnsWhenBlockFinishesBeforeAnIncomingAttack()
         {
-            var live = RectangleCombat.CreateBasic(FighterClass.Barbarian);
+            var live = RectangleCombat.CreateBasic(FighterClass.Barbarian, golemEncounter: true);
+            live.Fighters[1].Armored = true;
             var plan = RectanglePlan.Create(live, CombatMove.Block, 1);
             Assert.That(plan.Frames.Count, Is.EqualTo(8));
             Assert.That(plan.Summary, Does.Contain("before the enemy strikes"));
+            int recommended = RectanglePlan.RecommendBlockDuration(live, 1);
+            Assert.That(recommended, Is.EqualTo(14));
+            var guarded = RectanglePlan.Create(live, CombatMove.Block, 1, 0, 1, recommended);
+            Assert.That(guarded.Frames[recommended - 1].Player.Health, Is.EqualTo(12.5f));
+            Assert.That(RectanglePlan.RecommendBlockDuration(live, -1), Is.Zero);
+            Assert.That(live.Frame, Is.Zero);
+            Assert.That(live.Player.Health, Is.EqualTo(14));
         }
 
         [Test]
@@ -61,7 +70,7 @@ namespace WelpTimeToDie.RectanglePrototype.Tests
         {
             var live = RectangleCombat.CreateBasic(FighterClass.Barbarian);
             live.Player.Health = 4;
-            live.Fighters[1].Elapsed = 8;
+            live.Fighters[1].Elapsed = 4;
             var plan = RectanglePlan.Create(live, CombatMove.Punch, 1);
             Assert.That(plan.Frames.Count, Is.EqualTo(1));
             Assert.That(plan.Frames[0].Lost, Is.True);
@@ -129,18 +138,17 @@ namespace WelpTimeToDie.RectanglePrototype.Tests
         [Test]
         public void SweepTripsGroundedFightersButPassesUnderAirborneFighters()
         {
-            var world = RectangleCombat.CreateBasic(FighterClass.Barbarian);
+            var world = RectangleCombat.CreateBasic(FighterClass.Barbarian, stunSeed: 4);
             var enemy = world.Fighters[1];
             enemy.X = world.Player.X + 2;
-            enemy.Move = CombatMove.None;
-            enemy.Stun = 100;
+            enemy.Move = CombatMove.Wait;
             Assert.That(world.Start(0, CombatMove.Sweep, 1, 0), Is.True);
             var airborne = world.Copy();
             airborne.Fighters[1].Y += 1.2f;
             airborne.Fighters[1].VelocityY = 2;
 
-            Advance(world, 5);
-            Advance(airborne, 5);
+            Advance(world, 2);
+            Advance(airborne, 2);
 
             Assert.That(enemy.Health, Is.EqualTo(6));
             Assert.That(enemy.Stun, Is.EqualTo(11));
@@ -161,6 +169,7 @@ namespace WelpTimeToDie.RectanglePrototype.Tests
             Assert.That((world.Player.X - startX) * aim, Is.LessThan(-3));
             Assert.That(world.Player.Facing, Is.EqualTo(aim));
             Assert.That(world.CanStart(0, CombatMove.Backstep), Is.False);
+            Assert.That(world.Player.Cooldowns[(int)CombatMove.Backstep], Is.EqualTo(4));
         }
 
         [TestCase(CombatMove.Jump, -1)]
@@ -202,7 +211,7 @@ namespace WelpTimeToDie.RectanglePrototype.Tests
             Assert.That(enemy.Move, Is.EqualTo(CombatMove.None));
 
             world.Player.Move = CombatMove.DashKick;
-            world.Player.Elapsed = 12;
+            world.Player.Elapsed = 8;
             world.PlanEnemies();
             Assert.That(enemy.Move, Is.EqualTo(CombatMove.Heavy));
         }
@@ -214,9 +223,38 @@ namespace WelpTimeToDie.RectanglePrototype.Tests
             var enemy = world.Fighters[1];
             enemy.Move = CombatMove.None; enemy.Stun = 100;
             world.Start(0, CombatMove.DashKick, 1, 0);
-            for (int i = 0; i < 8; i++) world.Step();
+            Advance(world, 4);
             Assert.That(world.Player.X, Is.LessThan(enemy.X));
             Assert.That(enemy.Health, Is.EqualTo(4));
+        }
+
+        [Test]
+        public void HeavyStrikeDashesIntoRangeBeforeSwinging()
+        {
+            var world = RectangleCombat.CreateBasic(FighterClass.Barbarian);
+            var enemy = world.Fighters[1];
+            enemy.X = world.Player.X + 5;
+            enemy.Stun = 100;
+            Assert.That(world.Start(0, CombatMove.Heavy, 1, 0, RectangleCombat.LegacyMovementPower), Is.True);
+            Advance(world, 4);
+            Assert.That(enemy.Health, Is.EqualTo(7));
+            Advance(world, 1);
+            Assert.That(world.Player.X, Is.EqualTo(8 + 5 * 10.5f / RectangleCombat.FramesPerSecond).Within(0.001f));
+            Assert.That(enemy.Health, Is.EqualTo(3));
+        }
+
+        [TestCase(CombatMove.Punch, -1)]
+        [TestCase(CombatMove.Uppercut, 1)]
+        [TestCase(CombatMove.Kick, -1)]
+        [TestCase(CombatMove.Sweep, 1)]
+        public void CloseRangeAttacksPushThePlayerForward(CombatMove move, int direction)
+        {
+            var world = RectangleCombat.CreateBasic(FighterClass.Barbarian);
+            world.Fighters[1].X = 24;
+            world.Fighters[1].Stun = 100;
+            Assert.That(world.Start(0, move, direction, 0), Is.True);
+            Advance(world, 1);
+            Assert.That((world.Player.X - 8) * direction, Is.InRange(0.1f, 0.3f));
         }
 
         [TestCase(CombatMove.Uppercut)]
@@ -323,19 +361,20 @@ namespace WelpTimeToDie.RectanglePrototype.Tests
             }
         }
 
-        [Test]
-        public void FourFramePunchCancelsNineFrameHeavyAndStunsForFourFrames()
+        [TestCase(4u, 4)]
+        [TestCase(1u, 0)]
+        public void PunchInterruptsHeavyAndForecastMatchesTheStunRoll(uint stunSeed, int stun)
         {
-            var world = RectangleCombat.Create(FighterClass.Barbarian);
+            var world = RectangleCombat.Create(FighterClass.Barbarian, stunSeed);
+            var forecast = RectanglePlan.Create(world, CombatMove.Punch, 1);
+            Assert.That(world.Fighters[1].Health, Is.EqualTo(7));
             world.Start(0, CombatMove.Punch, 1, 0);
-            for (int i = 0; i < 4; i++) world.Step();
+            world.Step();
             Assert.That(world.Fighters[1].Health, Is.EqualTo(5));
             Assert.That(world.Fighters[1].Move, Is.EqualTo(CombatMove.None));
-            Assert.That(world.Fighters[1].Stun, Is.EqualTo(4));
+            Assert.That(world.Fighters[1].Stun, Is.EqualTo(stun));
+            Assert.That(forecast.Frames[0].Fighters[1].Stun, Is.EqualTo(stun));
             Assert.That(world.LastEvent, Does.Contain("COUNTER"));
-            for (int i = 0; i < 4; i++) world.Step();
-            Assert.That(world.Fighters[1].Stun, Is.Zero);
-            Assert.That(world.Player.Health, Is.EqualTo(14));
         }
 
         [Test]
@@ -397,10 +436,10 @@ namespace WelpTimeToDie.RectanglePrototype.Tests
         [Test]
         public void KnockbackCarriesAnEnemyThroughHitstun()
         {
-            var world = RectangleCombat.CreateBasic(FighterClass.Barbarian);
+            var world = RectangleCombat.CreateBasic(FighterClass.Barbarian, stunSeed: 4);
             var enemy = world.Fighters[1];
             world.Start(0, CombatMove.Kick, 1, 0);
-            Advance(world, 7);
+            Advance(world, 3);
             float impactX = enemy.X;
             Assert.That(enemy.Stun, Is.EqualTo(9));
             Advance(world, 4);
@@ -414,13 +453,44 @@ namespace WelpTimeToDie.RectanglePrototype.Tests
         public void FrontalBlockReducesHeavyDamageWithoutHitstun()
         {
             var world = RectangleCombat.Create(FighterClass.Barbarian);
-            world.Fighters[1].Elapsed = 5;
+            world.Fighters[1].Elapsed = 1;
             world.Start(0, CombatMove.Block, 1, 0);
             for (int i = 0; i < 4; i++) world.Step();
             Assert.That(world.Player.Health, Is.EqualTo(13));
             Assert.That(world.Player.Stun, Is.Zero);
             Assert.That(world.Player.Move, Is.EqualTo(CombatMove.Block));
             Assert.That(world.LastEvent, Does.Contain("blocked"));
+        }
+
+        [TestCase(1, 0.75f)]
+        [TestCase(-1, 3f)]
+        public void BlockReducesOnlyFrontalDamageBySeventyFivePercent(int direction, float damage)
+        {
+            var world = RectangleCombat.CreateBasic(FighterClass.Barbarian);
+            var enemy = world.Fighters[1];
+            enemy.Move = CombatMove.Kick;
+            enemy.Elapsed = 2;
+            Assert.That(world.Start(0, CombatMove.Block, direction, 0, blockFrames: 7), Is.True);
+            world.Step();
+            Assert.That(world.Player.Health, Is.EqualTo(14 - damage));
+            Assert.That(world.Player.Cooldowns[(int)CombatMove.Block], Is.EqualTo(direction == 1 ? 0 : 4));
+        }
+
+        [TestCase(5, 3)]
+        [TestCase(6, 3)]
+        public void CustomBlockDurationRechargesForHalfItsLengthAfterGuarding(int duration, int recharge)
+        {
+            var world = RectangleCombat.CreateBasic(FighterClass.Barbarian);
+            world.Fighters[1].Stun = 100;
+            var plan = RectanglePlan.Create(world, CombatMove.Block, 1, 0, 1, duration);
+            Assert.That(plan.Frames.Count, Is.EqualTo(duration));
+            var result = plan.Frames[duration - 1].Copy();
+            Assert.That(result.Player.IsReady, Is.True);
+            Assert.That(result.Player.Cooldowns[(int)CombatMove.Block], Is.EqualTo(recharge));
+            Advance(result, recharge - 1);
+            Assert.That(result.CanStart(0, CombatMove.Block), Is.False);
+            Advance(result, 1);
+            Assert.That(result.CanStart(0, CombatMove.Block), Is.True);
         }
 
         [Test]
@@ -444,7 +514,7 @@ namespace WelpTimeToDie.RectanglePrototype.Tests
             var world = RectangleCombat.Create(FighterClass.Wizard);
             world.Fighters[1].X = 16;
             world.Start(0, CombatMove.Special, 1, 0);
-            for (int i = 0; i < 9; i++) world.Step();
+            Advance(world, 5);
             Assert.That(world.Projectiles, Is.Empty);
             world.Step();
             Assert.That(world.Projectiles.Count, Is.EqualTo(1));
@@ -491,6 +561,104 @@ namespace WelpTimeToDie.RectanglePrototype.Tests
             Assert.That(world.Player.Health, Is.EqualTo(world.Player.MaxHealth));
             Advance(world, 1);
             Assert.That(world.Player.Health, Is.EqualTo(world.Player.MaxHealth - 4));
+        }
+
+        [Test]
+        public void KickHasTwoRechargeFramesAfterRecovery()
+        {
+            var world = RectangleCombat.CreateBasic(FighterClass.Barbarian);
+            world.Fighters[1].Stun = 100;
+            Assert.That(world.Start(0, CombatMove.Kick, 1, 0), Is.True);
+            Advance(world, 12);
+            Assert.That(world.Player.IsReady, Is.True);
+            Assert.That(world.Player.Cooldowns[(int)CombatMove.Kick], Is.EqualTo(2));
+            Assert.That(world.CanStart(0, CombatMove.Kick), Is.False);
+            Advance(world, 1);
+            Assert.That(world.CanStart(0, CombatMove.Kick), Is.False);
+            Advance(world, 1);
+            Assert.That(world.CanStart(0, CombatMove.Kick), Is.True);
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void RaiseRockStrikesTheOriginalTileOnFrameEight(bool dodge)
+        {
+            var world = RectangleCombat.CreateBasic(FighterClass.Barbarian, golemEncounter: true);
+            var golem = world.Fighters[1];
+            golem.Move = CombatMove.None;
+            golem.X = 17;
+            world.Player.X = 8.5f;
+            world.TacticalEnemies = true;
+            world.PlanEnemies();
+            Assert.That(golem.Move, Is.EqualTo(CombatMove.RaiseRock));
+            if (dodge) world.Player.X += 2;
+
+            Advance(world, 7);
+            Assert.That(world.Player.Health, Is.EqualTo(world.Player.MaxHealth));
+            Assert.That(golem.RockSpikeUntil, Is.Zero);
+            world.Step();
+            int damage = dodge ? 0 : RectangleCombat.Spec(golem, CombatMove.Punch).Damage;
+            Assert.That(world.Player.Health, Is.EqualTo(world.Player.MaxHealth - damage));
+            Assert.That(golem.IsReady, Is.True);
+            Assert.That(golem.RockSpike.xMin, Is.EqualTo(8));
+            Assert.That(golem.RockSpikeUntil, Is.EqualTo(world.Frame + 4));
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void CoreLaserFiresForSixFramesAndHitsAtMostOnce(bool outOfRange)
+        {
+            var world = RectangleCombat.CreateBasic(FighterClass.Barbarian, golemEncounter: true);
+            var golem = world.Fighters[1];
+            golem.Move = CombatMove.None;
+            golem.X = world.Player.X + 5;
+            world.TacticalEnemies = true;
+            world.PlanEnemies();
+            Assert.That(golem.Move, Is.EqualTo(CombatMove.CoreLaser));
+            if (outOfRange) world.Player.X -= 2;
+
+            Advance(world, 14);
+            Assert.That(world.Player.Health, Is.EqualTo(world.Player.MaxHealth));
+            int damage = outOfRange ? 0 : RectangleCombat.Spec(golem, CombatMove.Heavy).Damage;
+            for (int activeFrame = 0; activeFrame < 6; activeFrame++)
+            {
+                Advance(world, 1);
+                Assert.That(golem.Move, Is.EqualTo(CombatMove.CoreLaser));
+                Assert.That(world.Player.Health, Is.EqualTo(world.Player.MaxHealth - damage));
+            }
+            world.Step();
+            Assert.That(golem.IsReady, Is.True);
+        }
+
+        [Test]
+        public void CoreLaserTracksUntilTheFiringFrameAndThenLocks()
+        {
+            var world = RectangleCombat.CreateBasic(FighterClass.Barbarian, golemEncounter: true);
+            var golem = world.Fighters[1];
+            golem.Move = CombatMove.None;
+            golem.X = world.Player.X + 5;
+            Assert.That(world.Start(1, CombatMove.CoreLaser, -1, 0), Is.True);
+            Advance(world, 13);
+            Assert.That(golem.AimX, Is.LessThan(0));
+
+            world.Player.X = golem.X + 4;
+            world.Player.Y += 2;
+            world.Step();
+            Assert.That(golem.AimX, Is.GreaterThan(0));
+            Assert.That(golem.AimY, Is.GreaterThan(0));
+            Assert.That(world.Player.Health, Is.EqualTo(14));
+
+            world.Player.X = golem.X - 4;
+            world.Step();
+            Assert.That(golem.AimX, Is.LessThan(0));
+            Assert.That(world.Player.Health, Is.EqualTo(8));
+            float firingAimX = golem.AimX, firingAimY = golem.AimY;
+
+            world.Player.X = golem.X + 4;
+            world.Step();
+            Assert.That(golem.AimX, Is.EqualTo(firingAimX));
+            Assert.That(golem.AimY, Is.EqualTo(firingAimY));
+            Assert.That(world.Player.Health, Is.EqualTo(8));
         }
 
         [Test]

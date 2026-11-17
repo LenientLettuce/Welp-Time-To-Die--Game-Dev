@@ -12,12 +12,23 @@ namespace WelpTimeToDie.RectanglePrototype
         public static RectanglePlan Create(RectangleCombat live, CombatMove move, float direction, float strength = 1)
             => Create(live, move, direction, 0, strength);
 
-        public static RectanglePlan Create(RectangleCombat live, CombatMove move, float aimX, float aimY, float strength)
+        public static int RecommendBlockDuration(RectangleCombat live, float direction)
+        {
+            if (!live.CanStart(0, CombatMove.Block)) return 0;
+            var simulation = live.Copy();
+            simulation.Start(0, CombatMove.Block, direction, 0, blockFrames: RectangleCombat.MaxBlockFrames);
+            while (simulation.Player.Move == CombatMove.Block && !simulation.Finished)
+                simulation.Step();
+            return Math.Max(0, simulation.LastPlayerBlockFrame - live.Frame);
+        }
+
+        public static RectanglePlan Create(RectangleCombat live, CombatMove move, float aimX, float aimY, float strength,
+            int blockFrames = RectangleCombat.DefaultBlockFrames)
         {
             if (live.Finished || (live.Player.IsReady && !live.CanStart(0, move))) return null;
             var simulation = live.Copy();
             var plan = new RectanglePlan { MoveName = live.Player.IsReady ? RectangleCombat.Spec(live.Player, move).Name : "Finish move" };
-            if (simulation.Player.IsReady) simulation.Start(0, move, aimX, aimY, strength);
+            if (simulation.Player.IsReady) simulation.Start(0, move, aimX, aimY, strength, blockFrames);
             for (int frame = 0; frame < RectangleCombat.PreviewFrames; frame++)
             {
                 simulation.Step();
@@ -25,12 +36,15 @@ namespace WelpTimeToDie.RectanglePrototype
                 plan.Frames.Add(simulation.Copy());
                 if (simulation.Player.IsReady || simulation.Finished) break;
             }
-            int dealt = live.Fighters[1].Health - simulation.Fighters[1].Health;
-            int taken = live.Player.Health - simulation.Player.Health;
+            float dealt = live.Fighters[1].Health - simulation.Fighters[1].Health;
+            float taken = live.Player.Health - simulation.Player.Health;
             if (simulation.Lost) plan.Summary = "You would die. Try another move.";
             else if (simulation.Won) plan.Summary = "Enemy defeated. You win.";
             else if (dealt > 0 && taken > 0) plan.Summary = $"Both get hit: enemy loses {dealt} HP; you lose {taken} HP.";
             else if (dealt > 0) plan.Summary = $"Attack hits: enemy loses {dealt} HP. You take no damage.";
+            else if (simulation.LastPlayerBlockFrame > live.Frame)
+                plan.Summary = $"You block an attack and lose {taken} HP.";
+            else if (move == CombatMove.Block && taken > 0) plan.Summary = $"You take {taken} HP during this move.";
             else if (taken > 0) plan.Summary = $"You get hit: lose {taken} HP. Try blocking or moving away.";
             else if (!live.Player.IsReady) plan.Summary = "Your move finishes. Ready to choose again.";
             else if (move == CombatMove.Sweep) plan.Summary = "Sweep misses. Aim at a nearby grounded enemy.";

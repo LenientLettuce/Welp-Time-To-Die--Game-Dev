@@ -1,9 +1,11 @@
 using System;
 
+using UnityEngine;
+
 namespace WelpTimeToDie.RectanglePrototype
 {
     public enum FighterClass { Barbarian, Rogue, Wizard }
-    public enum CombatMove { None, Move, Dash, Jump, Punch, Heavy, Block, Special, Wait, Uppercut, Kick, DashKick, Sweep, Backstep }
+    public enum CombatMove { None, Move, Dash, Jump, Punch, Heavy, Block, Special, Wait, Uppercut, Kick, DashKick, Sweep, Backstep, RaiseRock, CoreLaser }
     public sealed class RectangleFighter
     {
         public string Name;
@@ -17,10 +19,14 @@ namespace WelpTimeToDie.RectanglePrototype
         public float BodyHeight => BaseHeight * SizeMultiplier;
         public float X, Y, VelocityX, VelocityY;
         public int Facing = 1;
-        public int MaxHealth, Health, Stun, HurtFlash, HazardCooldown;
+        public float Health;
+        public int MaxHealth, Stun, HurtFlash, HazardCooldown;
         public CombatMove Move;
         public int Elapsed;
+        public int BlockFrames = RectangleCombat.DefaultBlockFrames;
         public int HitTargets;
+        public Rect RockSpike;
+        public int RockSpikeUntil;
         public float AimX = 1, AimY, Power = 1;
         public int[] Cooldowns = new int[Enum.GetValues(typeof(CombatMove)).Length];
         public bool IsAlive => Health > 0;

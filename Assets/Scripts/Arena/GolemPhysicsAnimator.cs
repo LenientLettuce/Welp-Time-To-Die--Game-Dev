@@ -278,6 +278,14 @@ namespace WelpTimeToDie.RectanglePrototype
                     new Pose(12, 6, -35, -10, -0.1f, 1),
                     new Pose(-15, -10, 150, 20, 0.04f, 1.8f),
                     new Pose(-4, -2, 40, 0, 0, 1));
+                case CombatMove.RaiseRock:
+                    return e < spec.Startup - 3
+                        ? new Pose(20, 18, 20, 10, -0.10f, 1.4f)
+                        : new Pose(-10, -12, 115, 90, 0.02f, 1.8f);
+                case CombatMove.CoreLaser:
+                    return e < spec.Startup
+                        ? new Pose(8, 5, 55, 50, -0.05f, 1.4f)
+                        : new Pose(-12, 0, -40, -35, 0.02f, 1.8f);
                 default: return idle;
             }
         }

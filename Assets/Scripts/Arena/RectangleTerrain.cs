@@ -17,6 +17,7 @@ namespace WelpTimeToDie.RectanglePrototype
         public float MaxX => origin.x + map.Width * cellSize.x;
         public float MinY => origin.y;
         public float MaxY => origin.y + map.Height * cellSize.y;
+        public float BlockWidth => cellSize.x;
         private const float Skin = 0.002f;
 
         public RectangleTerrain(ProceduralTerrainMap terrain) : this(terrain.HeightMap,
@@ -31,6 +32,48 @@ namespace WelpTimeToDie.RectanglePrototype
         }
 
         public RectangleTerrain Copy() => new RectangleTerrain(map, State.Copy(), origin, cellSize, revealDistance);
+
+        internal Rect SpikeAtFeet(RectangleFighter fighter)
+        {
+            int column = Mathf.FloorToInt((fighter.X - origin.x) / cellSize.x);
+            int left = Mathf.FloorToInt((fighter.X - fighter.HalfWidth + Skin - origin.x) / cellSize.x);
+            int right = Mathf.FloorToInt((fighter.X + fighter.HalfWidth - Skin - origin.x) / cellSize.x);
+            int row = Mathf.RoundToInt((fighter.Y - origin.y) / cellSize.y) - 1;
+            if (!IsSolid(column, row))
+            {
+                for (int c = left; c <= right; c++)
+                {
+                    if (!IsSolid(c, row)) continue;
+                    column = c;
+                    break;
+                }
+            }
+            return new Rect(origin.x + column * cellSize.x, origin.y + (row + 1) * cellSize.y, cellSize.x, cellSize.y);
+        }
+
+        internal Vector2 ClipBeam(Vector2 start, Vector2 end)
+        {
+            Vector2 delta = end - start;
+            int left = Mathf.Max(0, Mathf.FloorToInt((Mathf.Min(start.x, end.x) - origin.x) / cellSize.x));
+            int right = Mathf.Min(map.Width - 1, Mathf.FloorToInt((Mathf.Max(start.x, end.x) - origin.x) / cellSize.x));
+            int bottom = Mathf.Max(0, Mathf.FloorToInt((Mathf.Min(start.y, end.y) - origin.y) / cellSize.y));
+            int top = Mathf.Min(map.Height - 1, Mathf.FloorToInt((Mathf.Max(start.y, end.y) - origin.y) / cellSize.y));
+            float extent = 1;
+            for (int c = left; c <= right; c++)
+                for (int r = bottom; r <= top; r++)
+                {
+                    if (!IsSolid(c, r)) continue;
+                    float x = origin.x + c * cellSize.x, y = origin.y + r * cellSize.y;
+                    float entry = 0, exit = extent;
+                    if (RectangleCombat.Clip(start.x, delta.x, x, x + cellSize.x, ref entry, ref exit) &&
+                        RectangleCombat.Clip(start.y, delta.y, y, y + cellSize.y, ref entry, ref exit))
+                        extent = entry;
+                }
+            return start + delta * extent;
+        }
+
+        private bool IsSolid(int column, int row) =>
+            map.IsSolid(column, row) && !State.IsRemoved(new Vector3Int(column, row));
 
         public float Surface(float x, float halfWidth = RectangleFighter.BaseHalfWidth)
         {
@@ -52,7 +95,7 @@ namespace WelpTimeToDie.RectanglePrototype
             int top = Mathf.FloorToInt((y + height - Skin - origin.y) / cellSize.y);
             for (int c = left; c <= right; c++)
                 for (int r = bottom; r <= top; r++)
-                    if (map.IsSolid(c, r) && !State.IsRemoved(new Vector3Int(c, r))) return false;
+                    if (IsSolid(c, r)) return false;
             return true;
         }
 
@@ -128,7 +171,7 @@ namespace WelpTimeToDie.RectanglePrototype
                 var point = Vector2.Lerp(a, b, i / (float)steps);
                 int c = Mathf.FloorToInt((point.x - origin.x) / cellSize.x);
                 int r = Mathf.FloorToInt((point.y - origin.y) / cellSize.y);
-                if (map.IsSolid(c, r) && !State.IsRemoved(new Vector3Int(c, r))) return false;
+                if (IsSolid(c, r)) return false;
             }
             return true;
         }

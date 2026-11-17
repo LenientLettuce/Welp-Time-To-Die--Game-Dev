@@ -44,6 +44,11 @@ namespace WelpTimeToDie.RectanglePrototype
         private VisualElement movementPanel;
         private Label movementTitle, movementReadout;
         private MovementAimDial movementDial;
+        private VisualElement blockPanel;
+        private SliderInt blockDuration;
+        private Label blockReadout;
+        private Button blockRecommendation;
+        private int recommendedBlockFrames;
 
         private bool Choosing => !playing && world != null && !world.Finished && world.Player.IsReady;
         private bool UsesMovementAim => RectangleCombat.UsesMovementAim(selected);
@@ -97,6 +102,14 @@ namespace WelpTimeToDie.RectanglePrototype
             movementDial = new MovementAimDial();
             movementPanel.Insert(1, movementDial);
             movementDial.AimChanged += SetMovementAim;
+            blockPanel = root.Q("blockPanel");
+            blockDuration = blockPanel.Q<SliderInt>("blockDuration");
+            blockDuration.lowValue = 1;
+            blockDuration.highValue = RectangleCombat.MaxBlockFrames;
+            blockDuration.RegisterValueChangedCallback(OnBlockDurationChanged);
+            blockReadout = blockPanel.Q<Label>("blockReadout");
+            blockRecommendation = blockPanel.Q<Button>("blockRecommendation");
+            blockRecommendation.clicked += UseRecommendedBlock;
             if (terrain != null) terrain.Generated += Restart;
             Restart();
         }
@@ -178,7 +191,9 @@ namespace WelpTimeToDie.RectanglePrototype
             direction = 1;
             movementAims[CombatMove.Dash] = Vector2.right * DefaultMovementPower;
             movementAims[CombatMove.DashKick] = Vector2.right * DefaultMovementPower;
+            movementAims[CombatMove.Heavy] = Vector2.right * DefaultMovementPower;
             movementAims[CombatMove.Jump] = new Vector2(0.2f, 1f).normalized * DefaultMovementPower;
+            blockDuration.SetValueWithoutNotify(RectangleCombat.DefaultBlockFrames);
             playing = false;
             activePlan = null;
             playbackTime = 0;
@@ -231,13 +246,26 @@ namespace WelpTimeToDie.RectanglePrototype
             previewPlan = null;
         }
 
+        private void OnBlockDurationChanged(ChangeEvent<int> change) => RefreshPrediction();
+
+        private void UseRecommendedBlock()
+        {
+            if (recommendedBlockFrames > 0) blockDuration.value = recommendedBlockFrames;
+        }
+
         private void RefreshPrediction()
         {
+            recommendedBlockFrames = 0;
             if (UsesMovementAim)
             {
                 Vector2 aim = movementAims[selected];
                 Vector2 unit = aim.normalized;
                 plan = RectanglePlan.Create(world, selected, unit.x, unit.y, aim.magnitude);
+            }
+            else if (selected == CombatMove.Block)
+            {
+                plan = RectanglePlan.Create(world, selected, direction, 0, 1, blockDuration.value);
+                if (Choosing) recommendedBlockFrames = RectanglePlan.RecommendBlockDuration(world, direction);
             }
             else plan = RectanglePlan.Create(world, selected, direction);
             Render();
@@ -342,10 +370,15 @@ namespace WelpTimeToDie.RectanglePrototype
             bool choosing = Choosing;
             foreach (var pair in moves)
             {
+                var move = RectangleCombat.Spec(world.Player, pair.Key);
+                int recharge = world.Player.Cooldowns[(int)pair.Key];
+                int duration = pair.Key == CombatMove.Block ? blockDuration.value : move.Duration;
+                string name = pair.Key == CombatMove.Wait ? "Wait" : move.Name;
+                pair.Value.text = recharge > 0 ? $"{name}\nRecharge {recharge}f" : $"{name}\n{duration}f";
                 pair.Value.SetEnabled(choosing && world.CanStart(0, pair.Key));
                 pair.Value.EnableInClassList("selected", selected == pair.Key);
             }
-            goButton.text = !world.Player.IsReady && !world.Finished ? "Continue  ›" : "Commit move  ›";
+            goButton.text = !world.Player.IsReady && !world.Finished ? "Continue  ›" : "Execute move  ›";
             goButton.SetEnabled(!playing && plan != null);
             string moveName = plan?.MoveName ?? RectangleCombat.Spec(world.Player, selected).Name;
             string aim = direction < 0 ? "left" : "right";
@@ -358,6 +391,18 @@ namespace WelpTimeToDie.RectanglePrototype
                 : $"{(choosing ? choice : moveName)}. {plan.Summary}";
             aimLeft.SetEnabled(choosing);
             aimRight.SetEnabled(choosing);
+            bool showBlock = selected == CombatMove.Block && !world.Finished;
+            blockPanel.EnableInClassList("hidden", !showBlock);
+            blockPanel.SetEnabled(choosing);
+            if (showBlock)
+            {
+                int duration = blockDuration.value;
+                blockReadout.text = $"{duration}f guard · {RectangleCombat.BlockRecharge(duration)}f recharge";
+                blockRecommendation.text = recommendedBlockFrames > 0 ? $"Use recommended {recommendedBlockFrames}f"
+                    : world.Player.Cooldowns[(int)CombatMove.Block] > 0 ? "Block is recharging"
+                    : "No blockable hit forecast";
+                blockRecommendation.SetEnabled(recommendedBlockFrames > 0);
+            }
             movementPanel.EnableInClassList("hidden", !UsesMovementAim || world.Finished);
             movementPanel.SetEnabled(choosing && plan != null);
             float facing = direction;
@@ -419,6 +464,8 @@ namespace WelpTimeToDie.RectanglePrototype
             if (rematchButton != null) rematchButton.clicked -= Restart;
             previewToggle?.UnregisterValueChangedCallback(OnPreviewChanged);
             if (movementDial != null) movementDial.AimChanged -= SetMovementAim;
+            blockDuration?.UnregisterValueChangedCallback(OnBlockDurationChanged);
+            if (blockRecommendation != null) blockRecommendation.clicked -= UseRecommendedBlock;
             moves.Clear();
             if (terrain != null) terrain.Generated -= Restart;
             HidePreview();

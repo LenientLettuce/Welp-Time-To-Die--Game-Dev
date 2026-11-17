@@ -218,7 +218,7 @@ namespace WelpTimeToDie.RectanglePrototype
                         new Vector2(-size, 0f), new Vector2(0f, size), new Vector2(size, 0f), new Vector2(0f, -size), new Vector2(-size, 0f));
                     return;
                 }
-                if (!fighter.IsAlive || fighter.Stun > 0) return;
+                if (!fighter.IsAlive || fighter.Stun > 0 || RectangleCombat.IsGolemRangedMove(fighter.Move)) return;
                 if (fighter.Move == CombatMove.Block)
                 {
                     SetCue(feet, side, WithAlpha(tint, alpha * 0.95f),

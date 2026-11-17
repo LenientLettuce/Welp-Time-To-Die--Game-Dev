@@ -27,16 +27,22 @@
         <ui:Label name="movementTitle" class="eyebrow movement-title" />
         <ui:Label name="movementReadout" class="movement-readout" />
       </ui:VisualElement>
+      <ui:VisualElement name="blockPanel" class="block-panel hidden">
+        <ui:Label text="BLOCK DURATION" class="eyebrow block-title" />
+        <ui:SliderInt name="blockDuration" tooltip="Set how many combat frames to guard. Recharge is half the guard time, rounded up." />
+        <ui:Label name="blockReadout" class="block-readout" />
+        <ui:Button name="blockRecommendation" tooltip="Use the shortest guard that covers the predicted hits from your chosen side." />
+      </ui:VisualElement>
     </ui:VisualElement>
     <ui:VisualElement name="arenaFooter" class="arena-footer">
       <ui:VisualElement class="arena-row move-row">
         <ui:Label text="STRIKE" class="eyebrow group-label" />
-        <ui:Button name="movePunch" text="Punch" tooltip="4-frame startup. Fast interrupt; 9 frames total." />
-        <ui:Button name="moveUppercut" text="Uppercut" tooltip="6-frame startup. Launches the target; 15 frames total." />
-        <ui:Button name="moveKick" text="Kick" tooltip="7-frame startup. Long reach and knockback; 16 frames total." />
-        <ui:Button name="moveDashKick" text="Dash kick" tooltip="Aim the rush with the movement dial. The kick strikes forward after 8 frames." />
-        <ui:Button name="moveSweep" text="Sweep" tooltip="5-frame startup. Trips a grounded enemy for 11 frames of stun. Grounded only." />
-        <ui:Button name="moveHeavy" text="Heavy strike" tooltip="9-frame startup. Deals 4 damage, or 1 through a frontal block." />
+        <ui:Button name="movePunch" text="Punch" tooltip="1-frame startup. Fast interrupt." />
+        <ui:Button name="moveUppercut" text="Uppercut" tooltip="2-frame startup. Launches the target." />
+        <ui:Button name="moveKick" text="Kick" tooltip="3-frame startup. Long reach and knockback." />
+        <ui:Button name="moveDashKick" text="Dash kick" tooltip="4-frame startup. Aim the rush with the movement dial." />
+        <ui:Button name="moveSweep" text="Sweep" tooltip="2-frame startup. Hits grounded enemies, with a 25% chance to stun for 11 frames. Grounded only." />
+        <ui:Button name="moveHeavy" text="Heavy strike" tooltip="Aim the dash with the movement dial. Strikes after 5 frames for 4 damage." />
       </ui:VisualElement>
       <ui:VisualElement class="arena-row move-row mobility-row">
         <ui:Label text="TACTICS" class="eyebrow group-label" />
@@ -44,7 +50,7 @@
         <ui:Button name="moveDash" text="Dash" tooltip="6 frames. Use the movement dial to set direction and power." />
         <ui:Button name="moveJump" text="Jump" tooltip="12 frames. Aim with the movement dial. Can be used in the air when recharged." />
         <ui:Button name="moveBackstep" text="Backstep" tooltip="Retreat opposite your aim without turning around. Grounded only." />
-        <ui:Button name="moveBlock" text="Block" tooltip="Guard your chosen side for 8 frames." />
+        <ui:Button name="moveBlock" text="Block" tooltip="Reduce frontal damage by 75%. Set the duration in the top-right panel." />
         <ui:Button name="moveWait" text="Wait" tooltip="Advance 4 combat frames." />
       </ui:VisualElement>
       <ui:VisualElement class="arena-row action-row">
@@ -53,7 +59,7 @@
         <ui:Button name="aimRight" text="Right ›" />
         <ui:Toggle name="showPreview" text="Show preview" value="true" class="preview-toggle"
           tooltip="Cyan traces your move. Amber is the Golem. The diamond marks your endpoint, and white marks contact." />
-        <ui:Button name="goAction" class="go-action" text="Commit move  ›" />
+        <ui:Button name="goAction" class="go-action" text="Execute move  ›" />
       </ui:VisualElement>
       <ui:Label name="arenaHelp" class="arena-help" />
       <ui:Foldout name="mapOptions" text="Map &amp; advanced controls" value="false">

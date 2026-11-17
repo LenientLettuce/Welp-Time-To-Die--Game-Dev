@@ -21,6 +21,8 @@ namespace WelpTimeToDie.RectanglePrototype
 
         private RectangleGhostPreview ghosts;
         private SpriteRenderer aimMarker;
+        private RectangleCombat drawnWorld;
+        private int attackOverlayStart;
 
         public void PreparePreview(RectangleCombat origin, RectanglePlan plan)
         {
@@ -31,13 +33,16 @@ namespace WelpTimeToDie.RectanglePrototype
         public RectangleCombat DrawPreview(RectangleCombat origin, RectanglePlan plan, float time)
         {
             if (aimMarker != null) aimMarker.enabled = false;
-            return ghosts.Draw(origin, plan, time);
+            var future = ghosts.Draw(origin, plan, time);
+            DrawGolemAttacks(future);
+            return future;
         }
 
         public void HidePreview()
         {
             ghosts?.Hide();
             if (aimMarker != null) aimMarker.enabled = true;
+            if (drawnWorld != null) DrawGolemAttacks(drawnWorld);
         }
 
         private void OnDestroy() => ghosts?.Dispose();
@@ -143,9 +148,50 @@ namespace WelpTimeToDie.RectanglePrototype
                 ? Box(world.Player.X + aimDirection * 0.9f, world.Player.Y + 0.9f, 0.35f, 0.08f, Blue)
                 : null;
             
-            for (int i = used; i < overlays.Count; i++) overlays[i].enabled = false;
+            drawnWorld = world;
+            attackOverlayStart = used;
+            DrawGolemAttacks(world);
             
             if (!useMapCamera) FitCamera(framing ?? world);
+        }
+
+        private void DrawGolemAttacks(RectangleCombat world)
+        {
+            used = attackOverlayStart;
+            var amber = new Color(1f, 0.63f, 0.28f);
+            foreach (var fighter in world.Fighters)
+            {
+                if (fighter.RockSpikeUntil > world.Frame)
+                {
+                    Rect spike = fighter.RockSpike;
+                    Box(spike.center.x, spike.yMin + spike.height * 0.30f, spike.width * 0.30f, spike.height * 0.62f,
+                        new Color(0.54f, 0.33f, 0.23f), -25);
+                    Box(spike.center.x, spike.yMin + spike.height * 0.42f, spike.width * 0.42f, spike.height * 0.67f,
+                        new Color(0.76f, 0.49f, 0.30f), 18);
+                    Box(spike.center.x - spike.width * 0.12f, spike.yMin + spike.height * 0.72f,
+                        spike.width * 0.30f, spike.height * 0.30f, amber, 45);
+                }
+
+                if (fighter.Move == CombatMove.RaiseRock)
+                {
+                    Rect spike = fighter.RockSpike;
+                    Box(spike.center.x, spike.yMin + 0.04f, spike.width, 0.08f, amber);
+                }
+                else if (fighter.Move == CombatMove.CoreLaser)
+                {
+                    var start = RectangleCombat.CorePosition(fighter);
+                    var delta = world.LaserEnd(fighter) - start;
+                    bool firing = fighter.Elapsed >= RectangleCombat.Spec(fighter, fighter.Move).Startup;
+                    float angle = Mathf.Atan2(delta.y, delta.x) * Mathf.Rad2Deg;
+                    var midpoint = start + delta / 2;
+                    float glowSize = firing ? 0.32f : 0.24f;
+                    Box(start.x, start.y, glowSize, glowSize, amber, 45);
+                    var beam = firing ? amber : new Color(amber.r, amber.g, amber.b, 0.48f);
+                    Box(midpoint.x, midpoint.y, delta.magnitude, firing ? 0.22f : 0.035f, beam, angle);
+                    if (firing) Box(midpoint.x, midpoint.y, delta.magnitude, 0.08f, Color.white, angle);
+                }
+            }
+            for (int i = used; i < overlays.Count; i++) overlays[i].enabled = false;
         }
 
         private void DrawBody(SpriteRenderer body, RectangleFighter fighter, RectangleFighter next, float blend, Color color, float aim = 0)
@@ -181,7 +227,8 @@ namespace WelpTimeToDie.RectanglePrototype
             }
             if (action == CombatMove.Block && fighter.Stun == 0)
                 Box(x + facing * 0.62f, y + 0.9f, 0.08f, 1.65f, new Color(0.55f, 0.9f, 1, 0.8f));
-            if (fighter.Stun > 0 || spec.Damage <= 0 || spec.Projectile || strike <= 0.001f) return;
+            if (fighter.Stun > 0 || spec.Damage <= 0 || spec.Projectile || strike <= 0.001f ||
+                RectangleCombat.IsGolemRangedMove(action)) return;
             
             bool kick = action == CombatMove.Kick || action == CombatMove.DashKick || action == CombatMove.Sweep;
             float height = action == CombatMove.Sweep ? 0.25f : kick ? 0.55f : 1.15f;
