@@ -13,7 +13,7 @@ the blue rectangle player. Victory or defeat stops combat until Reset.
 | Kick | 7f | 16f | 16f |
 | Dash kick | 8f | 21f | 24f |
 | Block | Immediate | 8f | 4f |
-| Wait | Immediate | 4f | None |
+| Wait | Immediate | 0f | None |
 | Dash | Immediate | 6f | 12f |
 | Jump | Immediate | 12f | 16f |
 
@@ -22,6 +22,7 @@ rehearses the next player decision interval without committing it. Go plays the
 same cached snapshots; copies protect the plan from later mutations. Unavailable
 moves stay selected and explain the cooldown/ground requirement. Next frame
 advances one action frame, or one idle combat frame when selection is unavailable.
+Wait advances one combat tick without adding recovery or recharge.
 Pause preserves the current action and bone pose. R/Reset restores the encounter
 and the seed's original unbroken terrain. Enter commits outside text entry.
 

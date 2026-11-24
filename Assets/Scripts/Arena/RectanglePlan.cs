@@ -8,6 +8,7 @@ namespace WelpTimeToDie.RectanglePrototype
         public readonly List<RectangleCombat> Frames = new List<RectangleCombat>();
         public string Summary { get; private set; }
         public string MoveName { get; private set; }
+        internal CombatMove StartedMove { get; private set; }
 
         public static RectanglePlan Create(RectangleCombat live, CombatMove move, float direction, float strength = 1)
             => Create(live, move, direction, 0, strength);
@@ -28,7 +29,8 @@ namespace WelpTimeToDie.RectanglePrototype
             if (live.Finished || (live.Player.IsReady && !live.CanStart(0, move))) return null;
             var simulation = live.Copy();
             var plan = new RectanglePlan { MoveName = live.Player.IsReady ? RectangleCombat.Spec(live.Player, move).Name : "Finish move" };
-            if (simulation.Player.IsReady) simulation.Start(0, move, aimX, aimY, strength, blockFrames);
+            if (simulation.Player.IsReady && simulation.Start(0, move, aimX, aimY, strength, blockFrames))
+                plan.StartedMove = move;
             for (int frame = 0; frame < RectangleCombat.PreviewFrames; frame++)
             {
                 simulation.Step();

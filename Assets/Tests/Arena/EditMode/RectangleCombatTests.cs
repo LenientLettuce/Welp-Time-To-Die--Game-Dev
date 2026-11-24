@@ -405,7 +405,18 @@ namespace WelpTimeToDie.RectanglePrototype.Tests
             float dashSpeed = world.Player.VelocityX;
             Assert.That(dashSpeed, Is.GreaterThan(0));
 
+            foreach (CombatMove move in System.Enum.GetValues(typeof(CombatMove)))
+            {
+                if (move != CombatMove.None && move != CombatMove.Wait)
+                    world.Player.Cooldowns[(int)move] = 1;
+            }
+            var wait = RectangleCombat.Spec(world.Player, CombatMove.Wait);
+            Assert.That(wait.Duration, Is.Zero);
+            Assert.That(wait.Recharge, Is.Zero);
             var plan = RectanglePlan.Create(world, CombatMove.Wait, 1);
+            Assert.That(plan.Frames.Count, Is.EqualTo(1));
+            Assert.That(plan.Frames[0].Player.IsReady, Is.True);
+            Assert.That(plan.Frames[0].CanStart(0, CombatMove.Dash), Is.True);
             Assert.That(world.Player.VelocityX, Is.EqualTo(dashSpeed));
             Assert.That(world.Start(0, CombatMove.Wait, 1, 0), Is.True);
             foreach (var frame in plan.Frames)
@@ -414,7 +425,7 @@ namespace WelpTimeToDie.RectanglePrototype.Tests
                 Assert.That(world.Player.X, Is.EqualTo(frame.Player.X));
                 Assert.That(world.Player.VelocityX, Is.EqualTo(frame.Player.VelocityX));
             }
-            Assert.That(world.Player.X, Is.GreaterThan(dashEnd + 1));
+            Assert.That(world.Player.X, Is.GreaterThan(dashEnd));
             Assert.That(world.Player.VelocityX, Is.InRange(0.1f, dashSpeed - 0.1f));
         }
 

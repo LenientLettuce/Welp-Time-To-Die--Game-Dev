@@ -51,7 +51,7 @@
         <ui:Button name="moveJump" text="Jump" tooltip="12 frames. Aim with the movement dial. Can be used in the air when recharged." />
         <ui:Button name="moveBackstep" text="Backstep" tooltip="Retreat opposite your aim without turning around. Grounded only." />
         <ui:Button name="moveBlock" text="Block" tooltip="Reduce frontal damage by 75%. Set the duration in the top-right panel." />
-        <ui:Button name="moveWait" text="Wait" tooltip="Advance 4 combat frames." />
+        <ui:Button name="moveWait" text="Wait" tooltip="Advance one combat tick with no recovery or recharge." />
       </ui:VisualElement>
       <ui:VisualElement class="arena-row action-row">
         <ui:Label text="AIM" class="eyebrow group-label" />

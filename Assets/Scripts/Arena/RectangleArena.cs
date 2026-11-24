@@ -10,6 +10,7 @@ namespace WelpTimeToDie.RectanglePrototype
         [SerializeField] private RectangleStage stage;
         private readonly Dictionary<CombatMove, Button> moves = new Dictionary<CombatMove, Button>();
         private RectangleCombat world, playbackOrigin;
+        private readonly ArenaAnalytics analytics = new ArenaAnalytics();
         [SerializeField] private UnityEngine.UIElements.VisualTreeAsset hudAsset;
         [SerializeField] private PanelSettings savedPanel;
         [SerializeField] private WelpTimeToDie.Levels.ProceduralTerrainMap terrain;
@@ -38,7 +39,7 @@ namespace WelpTimeToDie.RectanglePrototype
         private Label status, help;
         private Label playerHealth, enemyHealth, resultTitle, resultDetails;
         private VisualElement playerHealthFill, enemyHealthFill, resultOverlay, header, footer;
-        private Button rematchButton;
+        private Button rematchButton, resetButton;
         private Button goButton, aimLeft, aimRight;
         private Toggle previewToggle;
         private VisualElement movementPanel;
@@ -91,7 +92,8 @@ namespace WelpTimeToDie.RectanglePrototype
             previewToggle = root.Q<Toggle>("showPreview");
             previewToggle.SetValueWithoutNotify(showPreview);
             previewToggle.RegisterValueChangedCallback(OnPreviewChanged);
-            root.Q<Button>("resetEncounter").clicked += Restart;
+            resetButton = root.Q<Button>("resetEncounter");
+            resetButton.clicked += Restart;
             root.Q<Button>("pauseAction").clicked += () => paused = !paused;
             root.Q<Button>("stepFrame").clicked += StepFrame;
             aimLeft = root.Q<Button>("aimLeft"); aimLeft.clicked += () => Aim(-1);
@@ -110,8 +112,12 @@ namespace WelpTimeToDie.RectanglePrototype
             blockReadout = blockPanel.Q<Label>("blockReadout");
             blockRecommendation = blockPanel.Q<Button>("blockRecommendation");
             blockRecommendation.clicked += UseRecommendedBlock;
-            if (terrain != null) terrain.Generated += Restart;
-            Restart();
+            if (terrain != null) terrain.Generated += RestartForNewMap;
+            Application.wantsToQuit += FinishRunOnQuit;
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.playModeStateChanged += FinishRunOnPlayModeExit;
+#endif
+            Restart("game_start");
         }
 
         private bool IsOverHud(Vector2 screen)
@@ -148,22 +154,28 @@ namespace WelpTimeToDie.RectanglePrototype
             if (world == null || world.Finished) return;
             if (!playing && plan == null)
             {
-                world = world.Copy(); world.Step(); world.PlanEnemies();
+                var next = world.Copy(); next.Step(); next.PlanEnemies();
+                ApplyCombatFrame(next);
                 paused = true; RefreshPrediction(); stage.AdvanceRig(1f / RectangleStage.PlaybackRate);
                 return;
             }
             if (!playing) Commit();
             if (!playing) return;
             paused = true;
-            world = activePlan.Frames[playbackIndex++].Copy();
+            AdvancePlanFrame();
             playbackTime = 0;
             if (playbackIndex == activePlan.Frames.Count) { playing = false; RefreshPrediction(); }
             else Render();
             stage.AdvanceRig(1f / RectangleStage.PlaybackRate);
         }
 
-        public void Restart()
+        public void Restart() => Restart("reset");
+
+        private void RestartForNewMap() => Restart("map_changed");
+
+        private void Restart(string reason)
         {
+            analytics.EndRun(reason);
             HidePreview();
             paused = false;
             world = RectangleCombat.CreateBasic(FighterClass.Barbarian, golemEncounter: true);
@@ -197,6 +209,7 @@ namespace WelpTimeToDie.RectanglePrototype
             playing = false;
             activePlan = null;
             playbackTime = 0;
+            if (Application.isPlaying) analytics.StartRun(world, reason);
             RefreshPrediction();
             mapCamera?.FollowPlayer(stage.PlayerFollowTarget);
         }
@@ -283,8 +296,26 @@ namespace WelpTimeToDie.RectanglePrototype
             Render();
         }
 
+        private bool AdvancePlanFrame()
+        {
+            var next = activePlan.Frames[playbackIndex];
+            bool impact = next.Player.Health < world.Player.Health || next.Fighters[1].Health < world.Fighters[1].Health;
+            if (playbackIndex == 0) analytics.RecordMove(world.Player, activePlan.StartedMove);
+            playbackIndex++;
+            ApplyCombatFrame(next.Copy());
+            return impact;
+        }
+
+        private void ApplyCombatFrame(RectangleCombat next)
+        {
+            var previous = world;
+            world = next;
+            analytics.RecordFrame(previous, next);
+        }
+
         private void Update()
         {
+            analytics.SendStartupEvents();
             if (world == null) return;
             var keyboard = Keyboard.current;
             var focused = root?.focusController?.focusedElement as VisualElement;
@@ -320,9 +351,7 @@ namespace WelpTimeToDie.RectanglePrototype
             while (playing && playbackTime >= 1d / RectangleStage.PlaybackRate)
             {
                 playbackTime -= 1d / RectangleStage.PlaybackRate;
-                var next = activePlan.Frames[playbackIndex++];
-                bool impact = next.Player.Health < world.Player.Health || next.Fighters[1].Health < world.Fighters[1].Health;
-                world = next.Copy();
+                bool impact = AdvancePlanFrame();
                 if (playbackIndex == activePlan.Frames.Count)
                 {
                     playbackTime = 0;
@@ -458,16 +487,35 @@ namespace WelpTimeToDie.RectanglePrototype
             rematchButton.Focus();
         }
 
+        private bool FinishRunOnQuit()
+        {
+            analytics.EndRun("quit");
+            return true;
+        }
+
+#if UNITY_EDITOR
+        private void FinishRunOnPlayModeExit(UnityEditor.PlayModeStateChange state)
+        {
+            if (state == UnityEditor.PlayModeStateChange.ExitingPlayMode) FinishRunOnQuit();
+        }
+#endif
+
         private void OnDisable()
         {
+            Application.wantsToQuit -= FinishRunOnQuit;
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.playModeStateChanged -= FinishRunOnPlayModeExit;
+#endif
+            analytics.EndRun("arena_closed");
             playing = false;
             if (rematchButton != null) rematchButton.clicked -= Restart;
+            if (resetButton != null) resetButton.clicked -= Restart;
             previewToggle?.UnregisterValueChangedCallback(OnPreviewChanged);
             if (movementDial != null) movementDial.AimChanged -= SetMovementAim;
             blockDuration?.UnregisterValueChangedCallback(OnBlockDurationChanged);
             if (blockRecommendation != null) blockRecommendation.clicked -= UseRecommendedBlock;
             moves.Clear();
-            if (terrain != null) terrain.Generated -= Restart;
+            if (terrain != null) terrain.Generated -= RestartForNewMap;
             HidePreview();
         }
     }

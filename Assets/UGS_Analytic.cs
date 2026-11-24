@@ -1,20 +1,21 @@
-using System.Collections;
-using System.Collections.Generic;
+using System;
 using UnityEngine;
-using Unity.Services.Analytics;
 using Unity.Services.Core;
-using Unity.Services.Core.Analytics;
 using UnityEngine.UnityConsent;
-
-
-
 
 public class UGS_Analytics : MonoBehaviour
 {
-    async void Start()
+    private async void Start()
     {
+        try
+        {
             await UnityServices.InitializeAsync();
-            GiveConsent(); //Get user consent according to various legislations
+            if (this != null && isActiveAndEnabled) GiveConsent();
+        }
+        catch (Exception error)
+        {
+            Debug.LogWarning($"Unity Analytics initialization failed: {error.Message}");
+        }
     }
 
 
@@ -23,10 +24,8 @@ public class UGS_Analytics : MonoBehaviour
         // Call if consent has been given by the user
         EndUserConsent.SetConsentState(new ConsentState
         {
-             AnalyticsIntent = ConsentStatus.Granted,
+            AnalyticsIntent = ConsentStatus.Granted,
         });
         Debug.Log($"Consent has been provided. The SDK is now collecting data!");
     }
-
-
 }

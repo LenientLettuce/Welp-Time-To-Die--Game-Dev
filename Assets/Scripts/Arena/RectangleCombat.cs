@@ -59,6 +59,9 @@ namespace WelpTimeToDie.RectanglePrototype
             Terrain == null ? Width - 0.6f * fighter.SizeMultiplier : Terrain.MaxX - fighter.HalfWidth;
         public int Frame { get; private set; }
         internal int LastPlayerBlockFrame { get; private set; }
+        private List<(string Move, float Damage)> playerHitsThisFrame;
+        internal IReadOnlyList<(string Move, float Damage)> PlayerHitsThisFrame => playerHitsThisFrame;
+        internal bool RockSpikeRaisedThisFrame { get; private set; }
         public string LastEvent { get; private set; } = "Read enemy intent, choose a move, then preview before committing.";
         public RectangleFighter Player => Fighters[0];
         public bool Lost => !Player.IsAlive;
@@ -100,7 +103,8 @@ namespace WelpTimeToDie.RectanglePrototype
             var copy = new RectangleCombat(stunRandomState)
             {
                 Frame = Frame, LastEvent = LastEvent, HazardsEnabled = HazardsEnabled,
-                TacticalEnemies = TacticalEnemies, Terrain = Terrain?.Copy(), LastPlayerBlockFrame = LastPlayerBlockFrame
+                TacticalEnemies = TacticalEnemies, Terrain = Terrain?.Copy(), LastPlayerBlockFrame = LastPlayerBlockFrame,
+                playerHitsThisFrame = playerHitsThisFrame, RockSpikeRaisedThisFrame = RockSpikeRaisedThisFrame
             };
             foreach (var fighter in Fighters) copy.Fighters.Add(fighter.Copy());
             foreach (var projectile in Projectiles) copy.Projectiles.Add(projectile.Copy());
@@ -165,7 +169,7 @@ namespace WelpTimeToDie.RectanglePrototype
                     if (fighter.Class == FighterClass.Wizard) return new MoveSpec("Fireball", 10, 16, 28, 3, 0, 7, 6, true);
                     if (fighter.Class == FighterClass.Rogue) return new MoveSpec("Throw dagger", 5, 11, 18, 2, 0, 3, 4, true);
                     return new MoveSpec("Uppercut", 7, 14, 22, 3, 2.6f, 6, 8, launch: 8);
-                case CombatMove.Wait: return new MoveSpec("Hold", 0, 4);
+                case CombatMove.Wait: return new MoveSpec("Hold", 0, fighter.IsPlayer ? 0 : 4);
                 default: return new MoveSpec("Ready", 0, 0);
             }
         }
@@ -314,6 +318,8 @@ namespace WelpTimeToDie.RectanglePrototype
 
        public bool Step()
         {
+            playerHitsThisFrame = null;
+            RockSpikeRaisedThisFrame = false;
             if (Finished) return true;
             PlanEnemies();
             Frame++;
@@ -409,7 +415,11 @@ namespace WelpTimeToDie.RectanglePrototype
         {
             var attacker = Fighters[index];
             bool raisingRock = attacker.Move == CombatMove.RaiseRock;
-            if (raisingRock) attacker.RockSpikeUntil = Frame + RockSpikeFrames;
+            if (raisingRock)
+            {
+                attacker.RockSpikeUntil = Frame + RockSpikeFrames;
+                RockSpikeRaisedThisFrame = true;
+            }
             if (attacker.HitTargets != 0) return;
 
             Rect spike = attacker.RockSpike;
@@ -621,7 +631,14 @@ namespace WelpTimeToDie.RectanglePrototype
             if (!target.IsAlive) return;
             bool blocking = target.Move == CombatMove.Block && target.Stun == 0 && (attacker.X - target.X) * target.Facing >= 0;
             float damage = blocking ? hit.Spec.Damage * 0.25f : hit.Spec.Damage;
+            float healthBefore = target.Health;
             target.Health = Math.Max(0, target.Health - damage); target.HurtFlash = 4;
+            if (target.IsPlayer && target.Health < healthBefore)
+            {
+                // Start a fresh list before adding hits to a newly simulated frame.
+                playerHitsThisFrame ??= new List<(string, float)>();
+                playerHitsThisFrame.Add((hit.Spec.Name, healthBefore - target.Health));
+            }
             if (blocking)
             {
                 if (target.IsPlayer) LastPlayerBlockFrame = Frame;
