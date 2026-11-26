@@ -37,8 +37,8 @@ namespace WelpTimeToDie.RectanglePrototype
         private bool playing, showPreview = true;
         private UIDocument document;
         private Label status, help;
-        private Label playerHealth, enemyHealth, resultTitle, resultDetails;
-        private VisualElement playerHealthFill, enemyHealthFill, resultOverlay, header, footer;
+        private Label playerHealth, enemyHealth, secondEnemyHealth, resultTitle, resultDetails;
+        private VisualElement playerHealthFill, enemyHealthFill, secondEnemyHealthFill, resultOverlay, header, footer;
         private Button rematchButton, resetButton;
         private Button goButton, aimLeft, aimRight;
         private Toggle previewToggle;
@@ -72,8 +72,10 @@ namespace WelpTimeToDie.RectanglePrototype
             footer = root.Q("arenaFooter");
             playerHealth = root.Q<Label>("playerHealth");
             enemyHealth = root.Q<Label>("enemyHealth");
+            secondEnemyHealth = root.Q<Label>("secondEnemyHealth");
             playerHealthFill = root.Q("playerHealthFill");
             enemyHealthFill = root.Q("enemyHealthFill");
+            secondEnemyHealthFill = root.Q("secondEnemyHealthFill");
             resultOverlay = root.Q("resultOverlay");
             resultTitle = root.Q<Label>("resultTitle");
             resultDetails = root.Q<Label>("resultDetails");
@@ -178,8 +180,7 @@ namespace WelpTimeToDie.RectanglePrototype
             analytics.EndRun(reason);
             HidePreview();
             paused = false;
-            world = RectangleCombat.CreateBasic(FighterClass.Barbarian, golemEncounter: true);
-            world.TacticalEnemies = true;
+            world = RectangleCombat.CreateGolemPair(FighterClass.Barbarian);
             if (terrain != null && terrain.HeightMap != null)
             {
                 if (initialMap != terrain.HeightMap)
@@ -190,12 +191,7 @@ namespace WelpTimeToDie.RectanglePrototype
                 world.Player.X = center - 1.5f;
                 world.Player.Y = world.Terrain.Surface(world.Player.X);
                 world.Player.TerrainGrounded = true;
-                var golem = world.Fighters[1];
-                golem.X = Mathf.Min(world.Terrain.MaxX - golem.HalfWidth, center + 1.5f);
-                golem.Y = world.Terrain.Surface(golem.X, golem.HalfWidth); golem.TerrainGrounded = true;
-                golem.Move = CombatMove.None;
-                System.Array.Clear(golem.Cooldowns, 0, golem.Cooldowns.Length);
-                world.PlanEnemies();
+                world.PositionGolemPair();
             }
             else stage.SetStartingPositions(world);
             stage.ResetRig();
@@ -299,7 +295,8 @@ namespace WelpTimeToDie.RectanglePrototype
         private bool AdvancePlanFrame()
         {
             var next = activePlan.Frames[playbackIndex];
-            bool impact = next.Player.Health < world.Player.Health || next.Fighters[1].Health < world.Fighters[1].Health;
+            bool impact = false;
+            for (int i = 0; i < world.Fighters.Count; i++) impact |= next.Fighters[i].Health < world.Fighters[i].Health;
             if (playbackIndex == 0) analytics.RecordMove(world.Player, activePlan.StartedMove);
             playbackIndex++;
             ApplyCombatFrame(next.Copy());
@@ -373,28 +370,39 @@ namespace WelpTimeToDie.RectanglePrototype
             float bottom = (panel.yMax - footer.worldBound.yMin + 6f) / panel.height;
             float top = (panel.yMax - header.worldBound.yMax - 6f) / panel.height;
             if (float.IsNaN(bottom) || float.IsNaN(top)) return;
+            Vector2 enemyBounds = stage.EnemyVerticalBounds;
             mapCamera.SetCombatFraming(new Vector2(Mathf.Clamp01(bottom), Mathf.Clamp01(top)),
-                new Vector2(world.Player.Y, world.Fighters[1].Y),
-                new Vector2(world.Player.BodyHeight, stage.EnemyVisualHeight));
+                new Vector2(world.Player.Y, enemyBounds.x),
+                new Vector2(world.Player.BodyHeight, enemyBounds.y - enemyBounds.x));
+        }
+
+        private static string EnemyIntent(RectangleFighter enemy)
+        {
+            var enemyMove = RectangleCombat.Spec(enemy, enemy.Move);
+            int untilStrike = enemyMove.Startup - enemy.Elapsed;
+            return !enemy.IsAlive ? "Defeated" : enemy.Stun > 0 ? $"Stunned · {enemy.Stun}f"
+                : enemy.Move == CombatMove.None ? "Ready"
+                : untilStrike > 0 ? $"{enemyMove.Name} · hits in {untilStrike}f"
+                : enemyMove.Damage > 0 && enemy.Elapsed >= enemyMove.Startup + enemyMove.Active ? $"Recovering · {enemy.Remaining}f"
+                : $"{enemyMove.Name} · {enemy.Remaining}f left";
+        }
+
+        private static void ShowHealth(RectangleFighter fighter, Label label, VisualElement fill)
+        {
+            label.text = $"{fighter.Health} / {fighter.MaxHealth} HP";
+            fill.style.width = Length.Percent(100f * fighter.Health / fighter.MaxHealth);
         }
 
         private WelpTimeToDie.Levels.TerrainFeatureState renderedTerrain;
         private void Render()
         {
-            var enemy = world.Fighters[1];
-            var enemyMove = RectangleCombat.Spec(enemy, enemy.Move);
-            int untilStrike = enemyMove.Startup - enemy.Elapsed;
-            string intent = !enemy.IsAlive ? "Defeated" : enemy.Stun > 0 ? $"Stunned · {enemy.Stun}f"
-                : enemy.Move == CombatMove.None ? "Ready"
-                : untilStrike > 0 ? $"{enemyMove.Name} · hits in {untilStrike}f"
-                : enemyMove.Damage > 0 && enemy.Elapsed >= enemyMove.Startup + enemyMove.Active ? $"Recovering · {enemy.Remaining}f"
-                : $"{enemyMove.Name} · {enemy.Remaining}f left";
-            status.text = intent;
+            var first = world.Fighters[1];
+            var second = world.Fighters[2];
+            status.text = $"{first.Name} · {EnemyIntent(first)}\n{second.Name} · {EnemyIntent(second)}";
             status.tooltip = world.LastEvent;
-            playerHealth.text = $"{world.Player.Health} / {world.Player.MaxHealth} HP";
-            enemyHealth.text = $"{enemy.Health} / {enemy.MaxHealth} HP";
-            playerHealthFill.style.width = Length.Percent(100f * world.Player.Health / world.Player.MaxHealth);
-            enemyHealthFill.style.width = Length.Percent(100f * enemy.Health / enemy.MaxHealth);
+            ShowHealth(world.Player, playerHealth, playerHealthFill);
+            ShowHealth(first, enemyHealth, enemyHealthFill);
+            ShowHealth(second, secondEnemyHealth, secondEnemyHealthFill);
             RenderResult();
             bool choosing = Choosing;
             foreach (var pair in moves)
@@ -482,8 +490,8 @@ namespace WelpTimeToDie.RectanglePrototype
             resultOverlay.EnableInClassList("result-loss", world.Lost);
             resultTitle.text = world.Lost ? "You Lose" : "You Win";
             resultDetails.text = world.Lost
-                ? world.Won ? "Both fighters fell." : "The Golem won this round."
-                : $"The Golem fell. You finished with {world.Player.Health} HP.";
+                ? world.Won ? "You and both golems fell." : "The golems won this round."
+                : $"Both golems fell. You finished with {world.Player.Health} HP.";
             rematchButton.Focus();
         }
 

@@ -38,12 +38,19 @@ namespace WelpTimeToDie.RectanglePrototype
                 plan.Frames.Add(simulation.Copy());
                 if (simulation.Player.IsReady || simulation.Finished) break;
             }
-            float dealt = live.Fighters[1].Health - simulation.Fighters[1].Health;
+            float dealt = 0;
+            for (int i = 1; i < live.Fighters.Count; i++)
+                dealt += live.Fighters[i].Health - simulation.Fighters[i].Health;
             float taken = live.Player.Health - simulation.Player.Health;
+            bool multipleEnemies = live.Fighters.Count > 2;
+            bool golemPair = live.Fighters.Count == 3 && live.Fighters[1].IsGolem && live.Fighters[2].IsGolem;
+            string enemyDamage = golemPair ? $"golems lose {dealt} HP total"
+                : multipleEnemies ? $"enemies lose {dealt} HP total" : $"enemy loses {dealt} HP";
             if (simulation.Lost) plan.Summary = "You would die. Try another move.";
-            else if (simulation.Won) plan.Summary = "Enemy defeated. You win.";
-            else if (dealt > 0 && taken > 0) plan.Summary = $"Both get hit: enemy loses {dealt} HP; you lose {taken} HP.";
-            else if (dealt > 0) plan.Summary = $"Attack hits: enemy loses {dealt} HP. You take no damage.";
+            else if (simulation.Won) plan.Summary = golemPair ? "Both golems defeated. You win."
+                : multipleEnemies ? "All enemies defeated. You win." : "Enemy defeated. You win.";
+            else if (dealt > 0 && taken > 0) plan.Summary = $"Trade hits: {enemyDamage}. You lose {taken} HP.";
+            else if (dealt > 0) plan.Summary = $"Attack hits: {enemyDamage}. You take no damage.";
             else if (simulation.LastPlayerBlockFrame > live.Frame)
                 plan.Summary = $"You block an attack and lose {taken} HP.";
             else if (move == CombatMove.Block && taken > 0) plan.Summary = $"You take {taken} HP during this move.";
@@ -53,16 +60,21 @@ namespace WelpTimeToDie.RectanglePrototype
             else if (RectangleCombat.Spec(live.Player, move).Damage > 0) plan.Summary = "Attack misses. Face the enemy and move closer.";
             else if (move == CombatMove.Backstep) plan.Summary = "You retreat while still facing the chosen side.";
             else if (move == CombatMove.Move) plan.Summary = Math.Abs(simulation.Player.X - live.Player.X) < 0.05f
-                ? "Movement blocked by the arena edge." : "Move finishes safely. Neither fighter takes damage.";
+                ? "Movement blocked." : "Move finishes safely. Nobody takes damage.";
             else if (move == CombatMove.Block)
             {
-                var enemy = simulation.Fighters[1];
-                var enemyMove = RectangleCombat.Spec(enemy, enemy.Move);
-                plan.Summary = enemy.Move != CombatMove.None && enemyMove.Damage > 0 && enemyMove.Startup > enemy.Elapsed
-                    ? "Block ends before the enemy strikes. You may need to block again."
-                    : "You guard safely. Neither fighter takes damage.";
+                plan.Summary = "You guard safely. Nobody takes damage.";
+                for (int i = 1; i < simulation.Fighters.Count; i++)
+                {
+                    var enemy = simulation.Fighters[i];
+                    var enemyMove = RectangleCombat.Spec(enemy, enemy.Move);
+                    if (!enemy.IsAlive || enemyMove.Damage <= 0 || enemyMove.Startup <= enemy.Elapsed) continue;
+                    string attacker = multipleEnemies ? enemy.Name : "the enemy";
+                    plan.Summary = $"Block ends before {attacker} strikes. You may need to block again.";
+                    break;
+                }
             }
-            else plan.Summary = "Time passes. Neither fighter takes damage.";
+            else plan.Summary = "Time passes. Nobody takes damage.";
             return plan;
         }
     }

@@ -69,7 +69,10 @@
 .health-fill { height: 100%; border-radius: 4px; }
 .player-card .health-fill { background-color: var(--cyan); }
 .enemy-card .health-fill { background-color: var(--amber); }
-.intent-card { width: 26%; min-width: 136px; align-items: center; padding: 0 8px; }
+.second-enemy-heading { margin-top: 6px; }
+.enemy-card .second-enemy-heading .eyebrow { color: rgb(219, 173, 255); }
+.enemy-card .second-enemy-fill { background-color: rgb(219, 173, 255); }
+.intent-card { width: 34%; min-width: 136px; align-items: center; padding: 0 8px; }
 .arena-status { margin: 2px 0 0; white-space: normal; -unity-text-align: middle-center; -unity-font-style: bold; }
 
 .arena-footer { bottom: 12px; background-color: rgba(17, 24, 34, 0.68); }

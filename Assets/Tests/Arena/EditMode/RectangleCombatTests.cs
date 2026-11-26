@@ -568,10 +568,74 @@ namespace WelpTimeToDie.RectanglePrototype.Tests
 
             Advance(world, 7);
             Assert.That(golem.X, Is.LessThan(startX - 2.5f));
-            Assert.That(golem.VelocityX, Is.EqualTo(-10.8f).Within(0.001f));
+            Assert.That(golem.VelocityX, Is.EqualTo(-13.5f).Within(0.001f));
             Assert.That(world.Player.Health, Is.EqualTo(world.Player.MaxHealth));
             Advance(world, 1);
             Assert.That(world.Player.Health, Is.EqualTo(world.Player.MaxHealth - 4));
+        }
+
+        [Test]
+        public void GolemPairOpensFromOppositeSidesWithPunchAndLaser()
+        {
+            var world = RectangleCombat.CreateGolemPair(FighterClass.Barbarian, stunSeed: 1);
+            Assert.That(world.Fighters.Count, Is.EqualTo(3));
+            var melee = world.Fighters[1];
+            var ranged = world.Fighters[2];
+            Assert.That(melee.X, Is.GreaterThan(world.Player.X));
+            Assert.That(ranged.X, Is.LessThan(world.Player.X));
+            Assert.That(melee.Move, Is.EqualTo(CombatMove.Punch));
+            Assert.That(ranged.Move, Is.EqualTo(CombatMove.CoreLaser));
+
+            // A ready partner can punish a player on the same frame the laser fires.
+            melee.Move = CombatMove.None;
+            melee.Cooldowns[(int)CombatMove.Punch] = 0;
+            int punchStartup = RectangleCombat.Spec(melee, CombatMove.Punch).Startup;
+            var laser = RectangleCombat.Spec(ranged, CombatMove.CoreLaser);
+            ranged.Elapsed = laser.Startup - punchStartup;
+            Advance(world, punchStartup - 1);
+            Assert.That(world.Player.Health, Is.EqualTo(world.Player.MaxHealth));
+            world.Step();
+            Assert.That(world.Player.Health, Is.EqualTo(world.Player.MaxHealth - laser.Damage - RectangleCombat.Spec(melee, CombatMove.Punch).Damage));
+            Assert.That(melee.Health, Is.EqualTo(melee.MaxHealth));
+        }
+
+        [Test]
+        public void GolemPairForecastCountsSecondGolemAndRequiresBothToFall()
+        {
+            var world = RectangleCombat.CreateGolemPair(FighterClass.Barbarian, stunSeed: 1);
+            var first = world.Fighters[1];
+            var second = world.Fighters[2];
+            first.Stun = second.Stun = 100;
+            second.X = world.Player.X - 2;
+            second.Move = CombatMove.None;
+            var plan = RectanglePlan.Create(world, CombatMove.Punch, -1);
+            var last = plan.Frames[plan.Frames.Count - 1];
+            Assert.That(last.Fighters[1].Health, Is.EqualTo(first.Health));
+            Assert.That(last.Fighters[2].Health, Is.EqualTo(second.Health - 2));
+            Assert.That(plan.Summary, Does.Contain("golems lose 2 HP total"));
+
+            first.Health = 0;
+            Assert.That(world.Won, Is.False);
+            second.Health = 0;
+            Assert.That(world.Won, Is.True);
+        }
+
+        [Test]
+        public void TrailingGolemTriesToReestablishTheFlankWhenPlayerGetsPastBoth()
+        {
+            var world = RectangleCombat.CreateGolemPair(FighterClass.Barbarian, stunSeed: 1);
+            var first = world.Fighters[1];
+            var second = world.Fighters[2];
+            first.X = world.Player.X + 1.8f;
+            second.X = world.Player.X + 4.5f;
+            second.Move = CombatMove.None;
+            second.Cooldowns[(int)CombatMove.RaiseRock] = 10;
+
+            world.PlanEnemies();
+
+            Assert.That(first.Move, Is.EqualTo(CombatMove.Punch));
+            Assert.That(second.Move, Is.EqualTo(CombatMove.Jump));
+            Assert.That(second.Facing, Is.EqualTo(-1));
         }
 
         [Test]

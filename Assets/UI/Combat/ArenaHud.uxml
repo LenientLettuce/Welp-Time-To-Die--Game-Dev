@@ -16,10 +16,15 @@
         </ui:VisualElement>
         <ui:VisualElement class="fighter-card enemy-card">
           <ui:VisualElement class="fighter-heading">
-            <ui:Label text="GOLEM" class="eyebrow" />
+            <ui:Label text="GOLEM 1" class="eyebrow" />
             <ui:Label name="enemyHealth" class="health-label" />
           </ui:VisualElement>
           <ui:VisualElement class="health-track"><ui:VisualElement name="enemyHealthFill" class="health-fill" /></ui:VisualElement>
+          <ui:VisualElement class="fighter-heading second-enemy-heading">
+            <ui:Label text="GOLEM 2" class="eyebrow" />
+            <ui:Label name="secondEnemyHealth" class="health-label" />
+          </ui:VisualElement>
+          <ui:VisualElement class="health-track"><ui:VisualElement name="secondEnemyHealthFill" class="health-fill second-enemy-fill" /></ui:VisualElement>
         </ui:VisualElement>
         <ui:Button name="resetEncounter" text="Reset" tooltip="Restart this encounter (R)." />
       </ui:VisualElement>

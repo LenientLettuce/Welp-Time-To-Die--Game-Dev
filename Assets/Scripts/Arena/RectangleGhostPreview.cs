@@ -12,47 +12,60 @@ namespace WelpTimeToDie.RectanglePrototype
         private const float PlaybackRate = 15f;
         private const float StartHold = 0.10f, ImpactHold = 0.08f, EndHold = 0.45f;
         private readonly Material material;
-        private readonly GhostFighter player, enemy;
+        private readonly GhostFighter player;
+        private readonly GhostFighter[] enemies;
         private int firstImpact;
 
-        public RectangleGhostPreview(PlayerPhysicsAnimator playerRig, GolemPhysicsAnimator enemyRig,
-            SpriteRenderer playerBody, SpriteRenderer enemyBody)
+        public RectangleGhostPreview(PlayerPhysicsAnimator playerRig, SpriteRenderer playerBody,
+            RectangleStage stage, int fighterCount)
         {
             var shader = Resources.Load<Shader>("CombatGhost") ?? Shader.Find("Sprites/Default");
             material = shader != null ? new Material(shader) { hideFlags = HideFlags.DontSave } : null;
             player = new GhostFighter("Player", playerRig != null ? playerRig.transform : playerBody.transform,
                 playerRig != null, material, new Color(0.47f, 0.91f, 1f), showPath: true);
-            enemy = new GhostFighter("Enemy", enemyRig != null ? enemyRig.transform : enemyBody.transform,
-                enemyRig != null, material, new Color(1f, 0.75f, 0.46f), showPath: false);
+            enemies = new GhostFighter[fighterCount - 1];
+            for (int i = 0; i < enemies.Length; i++)
+            {
+                var rig = stage.EnemyRig(i + 1);
+                var source = rig != null ? rig.transform : stage.EnemyBody(i + 1).transform;
+                Color tint = i == 0 ? new Color(1f, 0.75f, 0.46f) : new Color(0.86f, 0.68f, 1f);
+                enemies[i] = new GhostFighter($"Enemy {i + 1}", source, rig != null, material, tint, showPath: false);
+            }
         }
 
-        public void Capture(RectangleCombat origin, RectanglePlan plan, PlayerPhysicsAnimator playerRig, GolemPhysicsAnimator enemyRig)
+        public void Capture(RectangleCombat origin, RectanglePlan plan, PlayerPhysicsAnimator playerRig, RectangleStage stage)
         {
             playerRig?.BeginPreview();
-            enemyRig?.BeginPreview();
+            for (int i = 0; i < enemies.Length; i++) stage.EnemyRig(i + 1)?.BeginPreview();
             try
             {
                 firstImpact = 0;
                 player.Capture(0, origin.Player);
-                enemy.Capture(0, origin.Fighters[1]);
+                for (int i = 0; i < enemies.Length; i++) enemies[i].Capture(0, origin.Fighters[i + 1]);
                 for (int i = 0; i < plan.Frames.Count; i++)
                 {
                     var frame = plan.Frames[i];
                     playerRig?.Show(frame.Player, frame.Frame, false);
-                    enemyRig?.Show(frame.Fighters[1], frame.Frame, false);
                     playerRig?.Simulate(1f / RectangleStage.PlaybackRate);
-                    enemyRig?.Simulate(1f / RectangleStage.PlaybackRate);
                     player.Capture(i + 1, frame.Player);
-                    enemy.Capture(i + 1, frame.Fighters[1]);
-                    if (firstImpact == 0 && (frame.Player.HurtFlash == 4 || frame.Fighters[1].HurtFlash == 4))
-                        firstImpact = i + 1;
+                    bool impact = frame.Player.HurtFlash == 4;
+                    for (int j = 0; j < enemies.Length; j++)
+                    {
+                        var fighter = frame.Fighters[j + 1];
+                        var rig = stage.EnemyRig(j + 1);
+                        rig?.Show(fighter, frame.Frame, false);
+                        rig?.Simulate(1f / RectangleStage.PlaybackRate);
+                        enemies[j].Capture(i + 1, fighter);
+                        impact |= fighter.HurtFlash == 4;
+                    }
+                    if (firstImpact == 0 && impact) firstImpact = i + 1;
                 }
                 player.SetPath(plan.Frames.Count);
             }
             finally
             {
                 playerRig?.EndPreview();
-                enemyRig?.EndPreview();
+                for (int i = 0; i < enemies.Length; i++) stage.EnemyRig(i + 1)?.EndPreview();
             }
         }
 
@@ -75,12 +88,16 @@ namespace WelpTimeToDie.RectanglePrototype
             float alpha = Mathf.SmoothStep(0f, 1f, elapsed / StartHold)
                 * (1f - Mathf.SmoothStep(0f, 1f, (elapsed - finish - 0.23f) / (EndHold - 0.23f)));
             bool playerHit = index > 0 && frame.Player.HurtFlash == 4;
-            bool enemyHit = index > 0 && frame.Fighters[1].HurtFlash == 4;
-            bool contact = playerHit || enemyHit;
-            bool close = Mathf.Abs(frame.Player.X - frame.Fighters[1].X) < 2.4f
-                && Mathf.Abs(frame.Player.Y - frame.Fighters[1].Y) < 1.6f;
+            bool contact = playerHit;
+            for (int i = 0; i < enemies.Length; i++) contact |= index > 0 && frame.Fighters[i + 1].HurtFlash == 4;
             bool playerCue = player.Draw(index, next, sample - index, alpha, playerHit, !contact);
-            enemy.Draw(index, next, sample - index, alpha, enemyHit, !contact && (!close || !playerCue));
+            for (int i = 0; i < enemies.Length; i++)
+            {
+                var fighter = frame.Fighters[i + 1];
+                bool close = Mathf.Abs(frame.Player.X - fighter.X) < 2.4f && Mathf.Abs(frame.Player.Y - fighter.Y) < 1.6f;
+                enemies[i].Draw(index, next, sample - index, alpha, index > 0 && fighter.HurtFlash == 4,
+                    !contact && (!close || !playerCue));
+            }
             return frame;
         }
 
@@ -96,13 +113,13 @@ namespace WelpTimeToDie.RectanglePrototype
         public void Hide()
         {
             player.Hide();
-            enemy.Hide();
+            foreach (var enemy in enemies) enemy.Hide();
         }
 
         public void Dispose()
         {
             player.Dispose();
-            enemy.Dispose();
+            foreach (var enemy in enemies) enemy.Dispose();
             if (material != null) UnityEngine.Object.Destroy(material);
         }
 

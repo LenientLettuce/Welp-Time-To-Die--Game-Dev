@@ -37,7 +37,8 @@ namespace WelpTimeToDie.RectanglePrototype
         public const float Width = 30, Height = 12, Ground = 1.4f;
         public const float SpikeLeft = 17, SpikeRight = 20;
         public const float BodySpacing = 1.1f;
-        private const float GolemSpeedMultiplier = 1.5f;
+        private const float GolemSpeedMultiplier = 1.5f * 1.25f;
+        internal const float CloseGolemOffset = 3f, FarGolemOffset = -5f;
         private const int RockSpikeFrames = 4;
         private const int MotionSubsteps = 2;
         private const float MotionStep = 1f / (FramesPerSecond * MotionSubsteps);
@@ -96,6 +97,35 @@ namespace WelpTimeToDie.RectanglePrototype
             if (golemEncounter) enemy.Health = enemy.MaxHealth = enemy.MaxHealth * 3 / 2;
             world.HazardsEnabled = false;
             return world;
+        }
+
+        public static RectangleCombat CreateGolemPair(FighterClass character, uint? stunSeed = null)
+        {
+            var world = CreateBasic(character, golemEncounter: true, stunSeed: stunSeed);
+            world.TacticalEnemies = true;
+            var first = world.Fighters[1];
+            first.Name = "Golem 1";
+            var second = first.Copy();
+            second.Name = "Golem 2";
+            world.Fighters.Add(second);
+            world.PositionGolemPair();
+            return world;
+        }
+
+        internal void PositionGolemPair()
+        {
+            for (int i = 1; i < Fighters.Count; i++)
+            {
+                var golem = Fighters[i];
+                float offset = i == 1 ? CloseGolemOffset : FarGolemOffset;
+                golem.X = Clamp(Player.X + offset, LeftLimit(golem), RightLimit(golem));
+                golem.Y = Terrain?.Surface(golem.X, golem.HalfWidth) ?? Ground;
+                golem.TerrainGrounded = Terrain == null ? null : true;
+                golem.Facing = golem.X < Player.X ? 1 : -1;
+                EndMove(golem);
+                Array.Clear(golem.Cooldowns, 0, golem.Cooldowns.Length);
+            }
+            PlanEnemies();
         }
 
         public RectangleCombat Copy()
@@ -229,6 +259,12 @@ namespace WelpTimeToDie.RectanglePrototype
         public void PlanEnemies()
         {
             if (Finished) return;
+            if (Fighters.Count == 3 && Fighters[1].IsGolem && Fighters[2].IsGolem &&
+                Fighters[1].IsAlive && Fighters[2].IsAlive)
+            {
+                PlanGolemPair();
+                return;
+            }
             for (int i = 1; i < Fighters.Count; i++)
             {
                 var enemy = Fighters[i];
@@ -253,6 +289,67 @@ namespace WelpTimeToDie.RectanglePrototype
                     move = CombatMove.Jump;
                 Start(i, move, dx, 0);
             }
+        }
+
+        private void PlanGolemPair()
+        {
+            // Let the farther golem cover the approach while the closer one keeps the player busy.
+            int near = Math.Abs(Player.X - Fighters[1].X) <= Math.Abs(Player.X - Fighters[2].X) ? 1 : 2;
+            int far = 3 - near;
+            var partner = Fighters[near];
+            if (!IsGolemRangedMove(partner.Move) && !IsGolemRangedMove(Fighters[far].Move) &&
+                partner.Stun == 0 && Math.Abs(Player.X - partner.X) <= 6f)
+            {
+                var ranged = ChooseGolemRangedMove(far);
+                if (ranged != CombatMove.None)
+                    Start(far, ranged, Player.X - Fighters[far].X, 0);
+            }
+
+            PlanGolemPressure(near, far);
+            PlanGolemPressure(far, near);
+        }
+
+        private void PlanGolemPressure(int index, int partnerIndex)
+        {
+            var golem = Fighters[index];
+            if (!golem.IsReady) return;
+            var partner = Fighters[partnerIndex];
+            float dx = Player.X - golem.X;
+            int facing = dx < 0 ? -1 : 1;
+            float distance = Math.Abs(dx);
+            float partnerDistance = (Player.X - partner.X) * facing;
+            bool clear = Terrain == null || Terrain.ClearStrike(golem, Player);
+
+            // If the player gets past both golems, the trailing golem tries to leap across and restore the flank.
+            if (partnerDistance > 0 && partnerDistance < distance && distance <= 5f &&
+                !IsGolemRangedMove(partner.Move) && CanStart(index, CombatMove.Jump) &&
+                (facing > 0 ? RightLimit(golem) - Player.X : Player.X - LeftLimit(golem)) > BodySpacing &&
+                (Terrain == null || Terrain.Fits(golem.X + facing * 0.65f, golem.Y + golem.BodyHeight, golem)))
+            {
+                Start(index, CombatMove.Jump, dx, 0);
+                return;
+            }
+
+            if (clear && OverlapHeight(golem, Player, 0.2f))
+            {
+                if (distance < Spec(golem, CombatMove.Punch).Reach + golem.HalfWidth + Player.HalfWidth &&
+                    (partner.Move != CombatMove.Punch || golem.Cooldowns[(int)CombatMove.Kick] > 0) &&
+                    Start(index, CombatMove.Punch, dx, 0)) return;
+                if (distance < Spec(golem, CombatMove.Kick).Reach + golem.HalfWidth + Player.HalfWidth &&
+                    Start(index, CombatMove.Kick, dx, 0)) return;
+                if (distance < 6f && distance >= 4f && golem.IsGrounded && !IsGolemRangedMove(partner.Move) &&
+                    Start(index, CombatMove.DashKick, dx, 0)) return;
+            }
+
+            if (Terrain != null && CanStart(index, CombatMove.Jump) && Terrain.Fits(golem.X, golem.Y + 0.5f, golem) &&
+                ((Player.IsGrounded && Player.Y > golem.Y + 1.2f) ||
+                    !Terrain.Fits(golem.X + facing * 0.65f, golem.Y + 1.01f, golem)))
+            {
+                Start(index, CombatMove.Jump, dx, 0);
+                return;
+            }
+
+            Start(index, distance > 2.4f || !clear ? CombatMove.Move : CombatMove.Wait, dx, 0);
         }
 
         private CombatMove ChooseGolemRangedMove(int index)

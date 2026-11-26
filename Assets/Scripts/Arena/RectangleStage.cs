@@ -12,10 +12,31 @@ namespace WelpTimeToDie.RectanglePrototype
         [SerializeField] private GolemPhysicsAnimator enemyGolem;
         [SerializeField] private PlayerPhysicsAnimator playerAnimator;
         [SerializeField] private bool useMapCamera;
+        private GolemPhysicsAnimator secondGolem;
+        private SpriteRenderer secondEnemyBody;
+
+        private void EnsureSecondGolem(int fighterCount)
+        {
+            if (fighterCount < 3 || secondGolem != null || secondEnemyBody != null) return;
+            if (enemyGolem != null)
+            {
+                secondGolem = Instantiate(enemyGolem, enemyGolem.transform.parent);
+                secondGolem.name = "Golem 2";
+            }
+            else
+            {
+                secondEnemyBody = Instantiate(enemyBody, enemyBody.transform.parent);
+                secondEnemyBody.name = "Golem 2";
+            }
+        }
+
+        internal GolemPhysicsAnimator EnemyRig(int index) => index == 1 ? enemyGolem : secondGolem;
+        internal SpriteRenderer EnemyBody(int index) => index == 1 ? enemyBody : secondEnemyBody;
 
         public void AdvanceRig(float seconds) 
         {
             enemyGolem?.Simulate(Mathf.Min(seconds, 0.1f));
+            secondGolem?.Simulate(Mathf.Min(seconds, 0.1f));
             playerAnimator?.Simulate(Mathf.Min(seconds, 0.1f));
         }
 
@@ -26,8 +47,9 @@ namespace WelpTimeToDie.RectanglePrototype
 
         public void PreparePreview(RectangleCombat origin, RectanglePlan plan)
         {
-            ghosts ??= new RectangleGhostPreview(playerAnimator, enemyGolem, playerBody, enemyBody);
-            ghosts.Capture(origin, plan, playerAnimator, enemyGolem);
+            EnsureSecondGolem(origin.Fighters.Count);
+            ghosts ??= new RectangleGhostPreview(playerAnimator, playerBody, this, origin.Fighters.Count);
+            ghosts.Capture(origin, plan, playerAnimator, this);
         }
 
         public RectangleCombat DrawPreview(RectangleCombat origin, RectanglePlan plan, float time)
@@ -45,11 +67,17 @@ namespace WelpTimeToDie.RectanglePrototype
             if (drawnWorld != null) DrawGolemAttacks(drawnWorld);
         }
 
-        private void OnDestroy() => ghosts?.Dispose();
+        private void OnDestroy()
+        {
+            ghosts?.Dispose();
+            if (secondGolem != null) Destroy(secondGolem.gameObject);
+            if (secondEnemyBody != null) Destroy(secondEnemyBody.gameObject);
+        }
 
         public void ResetRig() 
         {
             enemyGolem?.ResetRig();
+            secondGolem?.ResetRig();
             playerAnimator?.ResetRig();
         }
 
@@ -78,10 +106,11 @@ namespace WelpTimeToDie.RectanglePrototype
         private bool captured;
         private int used;
         public Camera ArenaCamera => arenaCamera;
-        public float EnemyVisualHeight { get; private set; }
+        public Vector2 EnemyVerticalBounds { get; private set; }
         public Transform PlayerFollowTarget => playerAnimator != null ? playerAnimator.transform : playerBody.transform;
         private static readonly Color Blue = new Color(0.25f, 0.8f, 1f);
-        private static readonly Color Red = new Color(1f, 0.35f, 0.40f);
+        private static readonly Color Amber = new Color(1f, 0.75f, 0.46f);
+        private static readonly Color Violet = new Color(0.86f, 0.68f, 1f);
 
         public void SetStartingPositions(RectangleCombat world)
         {
@@ -92,6 +121,11 @@ namespace WelpTimeToDie.RectanglePrototype
                 captured = true;
             }
             SetPosition(world.Player, initialPlayer);
+            if (world.Fighters.Count == 3 && world.Fighters[1].IsGolem && world.Fighters[2].IsGolem)
+            {
+                world.PositionGolemPair();
+                return;
+            }
             SetPosition(world.Fighters[1], initialEnemy);
             var enemy = world.Fighters[1];
             enemy.Move = CombatMove.None;
@@ -126,23 +160,33 @@ namespace WelpTimeToDie.RectanglePrototype
                 DrawBody(playerBody, world.Player, next?.Player, blend, Blue, aimDirection);
             }
 
-            // Draw Enemy or Physics Rig
-            if (enemyGolem != null)
+            EnsureSecondGolem(world.Fighters.Count);
+            float enemyFeet = float.PositiveInfinity, enemyTop = float.NegativeInfinity;
+            for (int i = 1; i < world.Fighters.Count; i++)
             {
-                var fighter = world.Fighters[1].Copy();
-                fighter.X = Mathf.Lerp(fighter.X, next?.Fighters[1].X ?? fighter.X, blend);
-                fighter.Y = Mathf.Lerp(fighter.Y, next?.Fighters[1].Y ?? fighter.Y, blend);
-                enemyGolem.Show(fighter, world.Frame, false);
-                float visualTop = enemyGolem.VisualTop(fighter.Y + fighter.BodyHeight);
-                EnemyVisualHeight = visualTop - fighter.Y;
-                DrawHealthBar(fighter.X, visualTop, fighter, Red);
-                enemyBody.enabled = false;
+                var fighter = world.Fighters[i].Copy();
+                fighter.X = Mathf.Lerp(fighter.X, next?.Fighters[i].X ?? fighter.X, blend);
+                fighter.Y = Mathf.Lerp(fighter.Y, next?.Fighters[i].Y ?? fighter.Y, blend);
+                var rig = EnemyRig(i);
+                var body = EnemyBody(i);
+                Color color = i == 1 ? Amber : Violet;
+                float visualTop = fighter.Y + fighter.BodyHeight;
+                if (rig != null)
+                {
+                    rig.Show(fighter, world.Frame, false);
+                    visualTop = rig.VisualTop(visualTop);
+                    DrawHealthBar(fighter.X, visualTop, fighter, color);
+                    if (body != null) body.enabled = false;
+                }
+                else DrawBody(body, fighter, null, 0, color);
+
+                if (!fighter.IsAlive) continue;
+                enemyFeet = Mathf.Min(enemyFeet, fighter.Y);
+                enemyTop = Mathf.Max(enemyTop, visualTop);
             }
-            else 
-            {
-                EnemyVisualHeight = world.Fighters[1].BodyHeight;
-                DrawBody(enemyBody, world.Fighters[1], next?.Fighters[1], blend, Red);
-            }
+            EnemyVerticalBounds = float.IsPositiveInfinity(enemyFeet)
+                ? new Vector2(world.Player.Y, world.Player.Y + world.Player.BodyHeight)
+                : new Vector2(enemyFeet, enemyTop);
 
             aimMarker = aimDirection != 0 && world.Player.IsAlive
                 ? Box(world.Player.X + aimDirection * 0.9f, world.Player.Y + 0.9f, 0.35f, 0.08f, Blue)
@@ -281,8 +325,14 @@ namespace WelpTimeToDie.RectanglePrototype
         private void FitCamera(RectangleCombat world)
         {
             if (arenaCamera == null) return;
-            float left = Mathf.Min(world.Player.X, world.Fighters[1].X);
-            float right = Mathf.Max(world.Player.X, world.Fighters[1].X);
+            float left = world.Player.X, right = world.Player.X;
+            for (int i = 1; i < world.Fighters.Count; i++)
+            {
+                var enemy = world.Fighters[i];
+                if (!enemy.IsAlive) continue;
+                left = Mathf.Min(left, enemy.X);
+                right = Mathf.Max(right, enemy.X);
+            }
             float size = Mathf.Max(4.2f, (right - left + 7) / (2 * Mathf.Max(0.3f, arenaCamera.aspect)));
             float smoothing = Application.isPlaying ? 1 - Mathf.Exp(-10 * Time.unscaledDeltaTime) : 1;
             arenaCamera.orthographicSize = Mathf.Lerp(arenaCamera.orthographicSize, size, smoothing);
